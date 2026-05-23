@@ -17,7 +17,7 @@ export default function Navbar() {
 } 
   return (
     <nav className="w-full border-b border-orange-500/20 bg-black">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between gap-4">
         
         <div>
           <h1 className="text-orange-500 font-black text-2xl">
@@ -25,7 +25,7 @@ export default function Navbar() {
           </h1>
 
           <p className="text-gray-500 text-sm">
-            Powered by Oboro Labs
+            Powered by Oboro Lab
           </p>
         </div>
 
@@ -75,9 +75,9 @@ export default function Navbar() {
           
         <button
   onClick={() => setMenuAbierto(!menuAbierto)}
-  className="md:hidden text-white text-2xl"
+  className="md:hidden rounded-xl border border-orange-600/40 px-3 py-2 text-sm font-bold text-white"
 >
-  ☰
+  Menu
 </button>
       </div>
     {menuAbierto && (

@@ -56,7 +56,7 @@ const { data, error } = await supabase
       return
     }
 
-    setMensaje('Servicio guardado correctamente ✅')
+    setMensaje('Servicio guardado correctamente.')
     setNombre('')
     setDuracion('')
     setPrecio('')
@@ -78,7 +78,7 @@ const { data, error } = await supabase
     return
   }
 
-  setMensaje('Estado del servicio actualizado ✅')
+  setMensaje('Estado del servicio actualizado.')
   cargarServicios()
 }
   useEffect(() => {
@@ -97,26 +97,26 @@ const { data, error } = await supabase
   verificarSesion()
 }, [])
   return (
-    <main className="min-h-screen bg-black text-white p-10">
-      <section className="max-w-6xl mx-auto">
-        <p className="text-orange-500 font-bold tracking-[4px]">
+    <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
+      <section className="mx-auto w-full max-w-6xl">
+        <p className="text-sm font-bold tracking-[4px] text-orange-500">
           OBORO BOOKING
         </p>
 
-        <h1 className="text-5xl font-bold mt-2">
+        <h1 className="mt-2 text-4xl font-black leading-tight md:text-5xl">
           Servicios
         </h1>
 
-        <p className="text-zinc-400 mt-3 mb-10">
+        <p className="mt-3 mb-8 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
           Administra los servicios que ofrece cada negocio.
         </p>
 
         <form
           onSubmit={guardarServicio}
-          className="grid md:grid-cols-4 gap-4 mb-10"
+          className="mb-8 grid grid-cols-1 gap-3 rounded-2xl border border-orange-600/30 bg-zinc-950/70 p-4 shadow-2xl shadow-orange-950/20 sm:gap-4 sm:p-5 md:grid-cols-4"
         >
           <input
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
+            className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
             placeholder="Nombre del servicio"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
@@ -124,8 +124,8 @@ const { data, error } = await supabase
           />
 
           <input
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
-            placeholder="Duración en minutos"
+            className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+            placeholder="Duracion en minutos"
             type="number"
             value={duracion}
             onChange={(e) => setDuracion(e.target.value)}
@@ -133,7 +133,7 @@ const { data, error } = await supabase
           />
 
           <input
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
+            className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
             placeholder="Precio"
             type="number"
             value={precio}
@@ -143,7 +143,7 @@ const { data, error } = await supabase
 
           <button
             type="submit"
-            className="rounded-xl bg-orange-600 hover:bg-orange-700 font-bold"
+            className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700"
           >
             Guardar servicio
           </button>
@@ -159,18 +159,18 @@ const { data, error } = await supabase
           {servicios.map((servicio) => (
             <div
               key={servicio.ID}
-              className="border border-orange-600/50 bg-zinc-950 rounded-3xl p-6"
+              className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20"
             >
               <h2 className="text-2xl font-bold text-orange-500">
                 {servicio['Nombre del servicio']}
               </h2>
 
               <p className="text-zinc-300 mt-4">
-                ⏱ Duración: {servicio['Duración en minutos']} min
+                Duracion: {servicio['Duración en minutos']} min
               </p>
 
               <p className="text-zinc-300">
-                💰 Precio: ${servicio['Precio del servicio']}
+                Precio: ${servicio['Precio del servicio']}
               </p>
 
               <p className="text-zinc-500 mt-4">
@@ -183,7 +183,7 @@ const { data, error } = await supabase
                     servicio.ACTIVO
                  )
               }
-              className={`mt-5 rounded-xl px-4 py-2 font-bold text-white ${
+              className={`mt-5 min-h-11 w-full rounded-xl px-4 py-2 font-bold text-white sm:w-auto ${
                 servicio.ACTIVO
                  ? 'bg-red-600 hover:bg-red-700'
                  : 'bg-green-600 hover:bg-green-700'

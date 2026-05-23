@@ -55,7 +55,7 @@ const { data, error } = await supabase
       return
     }
 
-    setMensaje('Empleado guardado correctamente ✅')
+    setMensaje('Empleado guardado correctamente.')
     setNombre('')
     setCargo('')
     setTelefono('')
@@ -79,26 +79,26 @@ const { data, error } = await supabase
 }, [])
 
   return (
-    <main className="min-h-screen bg-black text-white p-10">
-      <section className="max-w-6xl mx-auto">
-        <p className="text-orange-500 font-bold tracking-[4px]">
+    <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
+      <section className="mx-auto w-full max-w-6xl">
+        <p className="text-sm font-bold tracking-[4px] text-orange-500">
           OBORO BOOKING
         </p>
 
-        <h1 className="text-5xl font-bold mt-2">
+        <h1 className="mt-2 text-4xl font-black leading-tight md:text-5xl">
           Empleados
         </h1>
 
-        <p className="text-zinc-400 mt-3 mb-10">
+        <p className="mt-3 mb-8 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
           Administra los profesionales que atienden las citas.
         </p>
 
         <form
           onSubmit={guardarEmpleado}
-          className="grid md:grid-cols-4 gap-4 mb-10"
+          className="mb-8 grid grid-cols-1 gap-3 rounded-2xl border border-orange-600/30 bg-zinc-950/70 p-4 shadow-2xl shadow-orange-950/20 sm:gap-4 sm:p-5 md:grid-cols-4"
         >
           <input
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
+            className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
             placeholder="Nombre del empleado"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
@@ -106,7 +106,7 @@ const { data, error } = await supabase
           />
 
           <input
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
+            className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
             placeholder="Cargo o especialidad"
             value={cargo}
             onChange={(e) => setCargo(e.target.value)}
@@ -114,15 +114,15 @@ const { data, error } = await supabase
           />
 
           <input
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
-            placeholder="Teléfono"
+            className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+            placeholder="Telefono"
             value={telefono}
             onChange={(e) => setTelefono(e.target.value)}
           />
 
           <button
             type="submit"
-            className="rounded-xl bg-orange-600 hover:bg-orange-700 font-bold"
+            className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700"
           >
             Guardar empleado
           </button>
@@ -138,18 +138,18 @@ const { data, error } = await supabase
           {empleados.map((empleado) => (
             <div
               key={empleado.ID}
-              className="border border-orange-600/50 bg-zinc-950 rounded-3xl p-6"
+              className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20"
             >
               <h2 className="text-2xl font-bold text-orange-500">
                 {empleado.Nombre}
               </h2>
 
               <p className="text-zinc-300 mt-4">
-                💼 Cargo: {empleado.Cargo}
+                Cargo: {empleado.Cargo}
               </p>
 
               <p className="text-zinc-300">
-                📞 Teléfono: {empleado.Telefono}
+                Telefono: {empleado.Telefono}
               </p>
 
               <p className="text-zinc-500 mt-4">

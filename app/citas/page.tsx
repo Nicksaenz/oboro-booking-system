@@ -131,7 +131,7 @@ if (!user) {
 }
 
 if (!clienteId || !servicioId || !empleadoId || !fecha || !hora) {
-  setMensaje('Por favor completa todos los campos antes de guardar la cita ❌')
+  setMensaje('Por favor completa todos los campos antes de guardar la cita.')
   setGuardandoCita(false)
   return
 }
@@ -145,7 +145,8 @@ if (!clienteId || !servicioId || !empleadoId || !fecha || !hora) {
   .neq('Estado', 'cancelada')
 
 if (citaExistente && citaExistente.length > 0) {
-  setMensaje('Ese empleado ya tiene una cita en ese horario ❌')
+  setMensaje('Ese empleado ya tiene una cita en ese horario.')
+  setGuardandoCita(false)
   return
 }
     
@@ -163,10 +164,11 @@ if (citaExistente && citaExistente.length > 0) {
 
     if (error) {
       setMensaje(`Error: ${error.message}`)
+      setGuardandoCita(false)
       return
     }
 
-    setMensaje('Cita guardada correctamente ✅')
+    setMensaje('Cita guardada correctamente.')
     setClienteId('')
     setServicioId('')
     setEmpleadoId('')
@@ -186,7 +188,7 @@ if (citaExistente && citaExistente.length > 0) {
     return
   }
 
-  setMensaje(`Cita marcada como ${nuevoEstado} ✅`)
+  setMensaje(`Cita marcada como ${nuevoEstado}.`)
   cargarDatos()
 }
 
@@ -201,7 +203,7 @@ async function eliminarCita(id: string) {
     return
   }
 
-  setMensaje('Cita eliminada correctamente ✅')
+  setMensaje('Cita eliminada correctamente.')
   cargarDatos()
 }
 
@@ -230,7 +232,7 @@ async function guardarEdicionCita() {
     return
   }
 
-  setMensaje('Cita actualizada correctamente ✅')
+  setMensaje('Cita actualizada correctamente.')
 
   setCitaEditando(null)
 
@@ -253,26 +255,26 @@ async function guardarEdicionCita() {
 }, [])
 
   return (
-    <main className="min-h-screen bg-black text-white p-10">
-      <section className="max-w-7xl mx-auto px-2 md:px-4">
-        <p className="text-orange-500 font-bold tracking-[4px]">
+    <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
+      <section className="mx-auto w-full max-w-7xl">
+        <p className="text-sm font-bold tracking-[4px] text-orange-500">
           OBORO BOOKING
         </p>
 
-        <h1 className="text-3xl md:text-5xl font-bold mt-2">
+        <h1 className="mt-2 text-4xl font-black leading-tight md:text-5xl">
           Citas
         </h1>
 
-        <p className="text-zinc-400 mt-3 mb-10">
+        <p className="mt-3 mb-8 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
           Agenda reservas conectando clientes, servicios y empleados.
         </p>
 
         <form
           onSubmit={guardarCita}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"
+          className="mb-8 grid grid-cols-1 gap-3 rounded-2xl border border-orange-600/30 bg-zinc-950/70 p-4 shadow-2xl shadow-orange-950/20 sm:gap-4 sm:p-5 md:grid-cols-3"
           >
           <select
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
+            className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm outline-none transition focus:border-orange-400"
             value={clienteId}
             onChange={(e) => setClienteId(e.target.value)}
             
@@ -286,7 +288,7 @@ async function guardarEdicionCita() {
           </select>
 
           <select
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
+            className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm outline-none transition focus:border-orange-400"
             value={servicioId}
             onChange={(e) => setServicioId(e.target.value)}
             
@@ -300,7 +302,7 @@ async function guardarEdicionCita() {
           </select>
 
           <select
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
+            className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm outline-none transition focus:border-orange-400"
             value={empleadoId}
             onChange={(e) => setEmpleadoId(e.target.value)}
             
@@ -314,7 +316,7 @@ async function guardarEdicionCita() {
           </select>
 
           <input
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
+            className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm outline-none transition focus:border-orange-400"
             type="date"
             value={fecha}
             onChange={(e) => setFecha(e.target.value)}
@@ -322,7 +324,7 @@ async function guardarEdicionCita() {
           />
 
           <input
-            className="rounded-xl bg-zinc-950 border border-orange-600/50 p-4 outline-none"
+            className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm outline-none transition focus:border-orange-400"
             type="time"
             value={hora}
             onChange={(e) => setHora(e.target.value)}
@@ -332,20 +334,20 @@ async function guardarEdicionCita() {
           <button
             type="submit"
             disabled={guardandoCita}
-            className="rounded-xl bg-orange-600 hover:bg-orange-700 font-bold"
+            className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {guardandoCita ? 'Guardando...' : 'Guardar cita'} 
           </button>
         </form>
 
         {mensaje && (
-  <div className="fixed top-6 right-6 z-50 rounded-2xl border border-orange-600/50 bg-zinc-950 px-6 py-4 text-orange-400 shadow-xl shadow-orange-950/40">
+  <div className="fixed left-4 right-4 top-4 z-50 rounded-2xl border border-orange-600/50 bg-zinc-950 px-5 py-4 text-sm text-orange-300 shadow-xl shadow-orange-950/40 sm:left-auto sm:right-6 sm:max-w-md">
     {mensaje}
   </div>
 )}
 
-        <div className="mt-6 md:mt-10 mb-8 col-span-full w-full border border-orange-600/50 bg-zinc-950 rounded-3xl p-4 md:p-6">
-       <h2 className="text-2x1 font-bold text-orange-500 mb-4">
+        <div className="col-span-full mb-8 mt-6 w-full rounded-2xl border border-orange-600/40 bg-zinc-950 p-4 shadow-2xl shadow-orange-950/20 md:mt-10 md:p-6">
+       <h2 className="mb-4 text-2xl font-bold text-orange-500">
     Calendario de citas
   </h2>
 
@@ -356,13 +358,13 @@ async function guardarEdicionCita() {
     placeholder="Buscar cliente..."
     value={busqueda}
     onChange={(e) => setBusqueda(e.target.value)}
-    className="rounded-xl bg-zinc-950 border border-orange-600/50 p-3 text-white"
+    className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-3 text-white outline-none"
   />
 
   <select
     value={filtroEmpleado}
     onChange={(e) => setFiltroEmpleado(e.target.value)}
-    className="rounded-xl bg-zinc-950 border border-orange-600/50 p-3 text-white"
+    className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-3 text-white outline-none"
   >
     <option value="">Todos los empleados</option>
 
@@ -376,7 +378,7 @@ async function guardarEdicionCita() {
   <select
     value={filtroEstado}
     onChange={(e) => setFiltroEstado(e.target.value)}
-    className="rounded-xl bg-zinc-950 border border-orange-600/50 p-3 text-white"
+    className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-3 text-white outline-none"
   >
     <option value="">Todos los estados</option>
     <option value="pendiente">Pendiente</option>
@@ -385,28 +387,28 @@ async function guardarEdicionCita() {
   </select>
 
 </div>
-  <div className="md:hidden mt-6">
-  <div className="flex items-center justify-between mb-4">
+  <div className="mt-6 md:hidden">
+  <div className="mb-4 flex items-center justify-between gap-3">
     <button
       onClick={() => cambiarMes(-1)}
-      className="rounded-xl border border-orange-600/50 px-4 py-2 text-white"
+      className="min-h-11 rounded-xl border border-orange-600/50 px-4 py-2 text-white"
     >
       ←
     </button>
 
-    <h3 className="text-xl font-bold text-orange-500 capitalize">
+    <h3 className="text-center text-lg font-bold capitalize text-orange-500">
       {nombreMes}
     </h3>
 
     <button
       onClick={() => cambiarMes(1)}
-      className="rounded-xl border border-orange-600/50 px-4 py-2 text-white"
+      className="min-h-11 rounded-xl border border-orange-600/50 px-4 py-2 text-white"
     >
       →
     </button>
   </div>
 
-  <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-orange-500 mb-2">
+  <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-orange-500">
     <span>Dom</span>
     <span>Lun</span>
     <span>Mar</span>
@@ -427,7 +429,7 @@ async function guardarEdicionCita() {
       return (
         <div
           key={index}
-          className="min-h-[58px] rounded-xl border border-orange-600/40 bg-zinc-950 p-1"
+          className="min-h-[62px] rounded-xl border border-orange-600/40 bg-black p-1"
         >
           {dia && (
             <>
@@ -437,7 +439,7 @@ async function guardarEdicionCita() {
                 <div
                   key={cita.ID}
                   onClick={() => setCitaDetalle(cita)}
-                  className="mt-1 rounded-md bg-orange-600 px-1 py-0.5 text-[9px] font-bold text-black truncate"
+                  className="mt-1 cursor-pointer truncate rounded-md bg-orange-600 px-1 py-1 text-[10px] font-bold text-black"
                 >
                   {cita.Hora}
                 </div>
@@ -449,21 +451,21 @@ async function guardarEdicionCita() {
     })}
   </div>
 </div>
-  <div className="md:hidden mt-6 space-y-4">
+  <div className="mt-6 space-y-4 md:hidden">
   {citasFiltradas.map((cita) => (
     <div
       key={cita.ID}
-      className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-4"
+      className="rounded-2xl border border-orange-600/40 bg-black p-4 shadow-lg shadow-orange-950/20"
     >
-      <h3 className="text-lg font-bold text-orange-500 mb-3">
+      <h3 className="mb-3 text-lg font-bold text-orange-500">
         Cita programada
       </h3>
 
-      <p className="text-sm text-zinc-300">📅 Fecha: {cita.Fecha}</p>
-      <p className="text-sm text-zinc-300">🕒 Hora: {cita.Hora}</p>
-      <p className="text-sm text-zinc-300">👤 Cliente: {cita.Clientes?.Nombre}</p>
-      <p className="text-sm text-zinc-300">✂️ Servicio: {cita.SERVICIOS?.['Nombre del servicio']}</p>
-      <p className="text-sm text-zinc-300">🧑‍💼 Empleado: {cita.Empleados?.Nombre}</p>
+      <p className="text-sm leading-6 text-zinc-300">Fecha: {cita.Fecha}</p>
+      <p className="text-sm leading-6 text-zinc-300">Hora: {cita.Hora}</p>
+      <p className="text-sm leading-6 text-zinc-300">Cliente: {cita.Clientes?.Nombre}</p>
+      <p className="text-sm leading-6 text-zinc-300">Servicio: {cita.SERVICIOS?.['Nombre del servicio']}</p>
+      <p className="text-sm leading-6 text-zinc-300">Empleado: {cita.Empleados?.Nombre}</p>
 
       <p className="mt-3 text-sm font-bold text-yellow-400">
         Estado: {cita.Estado}
@@ -472,21 +474,21 @@ async function guardarEdicionCita() {
       <div className="mt-4 grid grid-cols-2 gap-2">
         <button
           onClick={() => actualizarEstado(cita.ID, 'confirmada')}
-          className="rounded-xl bg-green-600 py-2 text-sm font-bold"
+          className="min-h-11 rounded-xl bg-green-600 px-3 py-2 text-sm font-bold"
         >
           Confirmar
         </button>
 
         <button
           onClick={() => actualizarEstado(cita.ID, 'completada')}
-          className="rounded-xl bg-blue-600 py-2 text-sm font-bold"
+          className="min-h-11 rounded-xl bg-blue-600 px-3 py-2 text-sm font-bold"
         >
           Completar
         </button>
 
         <button
           onClick={() => abrirModalEditar(cita)}
-          className="rounded-xl bg-yellow-500 py-2 text-sm font-bold text-black"
+          className="min-h-11 rounded-xl bg-yellow-500 px-3 py-2 text-sm font-bold text-black"
         >
           Editar
         </button>
@@ -498,7 +500,7 @@ async function guardarEdicionCita() {
               eliminarCita(cita.ID)
             }
           }}
-          className="rounded-xl bg-red-600 py-2 text-sm font-bold"
+          className="min-h-11 rounded-xl bg-red-600 px-3 py-2 text-sm font-bold"
         >
           Cancelar
         </button>

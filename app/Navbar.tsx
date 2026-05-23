@@ -3,7 +3,7 @@ import Link from 'next/link'
 export default function Navbar() {
   return (
     <nav className="w-full border-b border-orange-500/20 bg-black">
-      <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between gap-4">
         
         <div>
           <h1 className="text-orange-500 font-black text-2xl">
@@ -11,7 +11,7 @@ export default function Navbar() {
           </h1>
 
           <p className="text-gray-500 text-sm">
-            Powered by Oboro Labs
+            Powered by Oboro Lab
           </p>
         </div>
 

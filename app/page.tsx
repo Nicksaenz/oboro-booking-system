@@ -93,66 +93,66 @@ setUltimasCitas(citasData || [])
   }, [])
 
   return (
-    <main className="min-h-screen bg-black text-white p-10">
+    <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
 
-      <section className="max-w-7xl mx-auto">
+      <section className="mx-auto w-full max-w-7xl">
 
-        <p className="text-orange-500 font-bold tracking-[4px]">
+        <p className="text-sm font-bold tracking-[4px] text-orange-500">
           OBORO BOOKING
         </p>
 
-        <h1 className="text-5xl font-bold mt-2">
+        <h1 className="mt-2 text-4xl font-black leading-tight md:text-5xl">
           Dashboard
         </h1>
 
-        <p className="text-zinc-400 mt-4">
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
           Visualiza el estado general de tu negocio.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-10">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-          <div className="border border-orange-600/50 bg-zinc-950 rounded-3xl p-6">
+          <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
             <p className="text-zinc-400">Clientes</p>
             <h2 className="text-4xl font-bold text-orange-500 mt-2">
               {clientes}
             </h2>
           </div>
 
-          <div className="border border-orange-600/50 bg-zinc-950 rounded-3xl p-6">
+          <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
             <p className="text-zinc-400">Empleados</p>
             <h2 className="text-4xl font-bold text-orange-500 mt-2">
               {empleados}
             </h2>
           </div>
 
-          <div className="border border-orange-600/50 bg-zinc-950 rounded-3xl p-6">
+          <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
             <p className="text-zinc-400">Servicios</p>
             <h2 className="text-4xl font-bold text-orange-500 mt-2">
               {servicios}
             </h2>
           </div>
 
-          <div className="border border-orange-600/50 bg-zinc-950 rounded-3xl p-6">
+          <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
             <p className="text-zinc-400">Citas</p>
             <h2 className="text-4xl font-bold text-orange-500 mt-2">
               {citas}
             </h2>
           </div>
-          <div className="border border-orange-600/50 rounded-3xl p-6 bg-zinc-950">
+          <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
   <p className="text-zinc-300">Citas hoy</p>
   <h2 className="text-4xl font-bold text-orange-500 mt-4">
     {citasHoy}
   </h2>
 </div>
 
-<div className="border border-orange-600/50 rounded-3xl p-6 bg-zinc-950">
+<div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
   <p className="text-zinc-300">Pendientes</p>
   <h2 className="text-4xl font-bold text-orange-500 mt-4">
     {citasPendientes}
   </h2>
 </div>
 
-<div className="border border-green-600/50 bg-zinc-950 rounded-3xl p-6">
+<div className="rounded-2xl border border-green-600/50 bg-zinc-950 p-5 shadow-lg shadow-green-950/20">
   <p className="text-zinc-400">Ingresos estimados</p>
 
   <h2 className="text-4xl font-bold text-green-500 mt-2">
@@ -163,7 +163,7 @@ setUltimasCitas(citasData || [])
 
           <div className="mt-14">
 
-  <h2 className="text-2xl font-bold text-white mb-6">
+  <h2 className="mb-5 text-2xl font-bold text-white">
     Últimas citas
   </h2>
 
@@ -173,7 +173,7 @@ setUltimasCitas(citasData || [])
 
       <div
         key={cita.ID}
-        className="border border-orange-600/50 bg-zinc-950 rounded-3xl p-6"
+        className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20"
       >
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -184,17 +184,17 @@ setUltimasCitas(citasData || [])
             </h3>
 
             <p className="text-zinc-300 mt-2">
-              ✂️ {cita.SERVICIOS?.["Nombre del servicio"]}
+              Servicio: {cita.SERVICIOS?.["Nombre del servicio"]}
             </p>
 
             <p className="text-zinc-400">
-              🧑‍💼 {cita.Empleados?.Nombre}
+              Empleado: {cita.Empleados?.Nombre}
             </p>
           </div>
 
           <div className="text-zinc-400">
-            <p>📅 {cita.Fecha}</p>
-            <p>🕒 {cita.Hora}</p>
+            <p>Fecha: {cita.Fecha}</p>
+            <p>Hora: {cita.Hora}</p>
           </div>
 
         </div>
