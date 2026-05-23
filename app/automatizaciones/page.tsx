@@ -48,6 +48,8 @@ const VARIABLES = [
 export default function AutomatizacionesPage() {
   const [status, setStatus] = useState<WhatsAppStatus | null>(null)
   const [cargando, setCargando] = useState(true)
+  const [probando, setProbando] = useState(false)
+  const [mensajePrueba, setMensajePrueba] = useState('')
 
   useEffect(() => {
     async function cargarStatus() {
@@ -60,6 +62,39 @@ export default function AutomatizacionesPage() {
 
     cargarStatus()
   }, [])
+
+  async function enviarPrueba() {
+    setProbando(true)
+    setMensajePrueba('')
+
+    const { supabase } = await import('@/lib/supabase')
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+
+    if (!token) {
+      setMensajePrueba('Inicia sesion de nuevo para enviar la prueba.')
+      setProbando(false)
+      return
+    }
+
+    const response = await fetch('/api/whatsapp/enviar-prueba', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    const resultado = await response.json()
+
+    if (!response.ok) {
+      setMensajePrueba(resultado.error ?? 'No se pudo enviar la prueba.')
+      setProbando(false)
+      return
+    }
+
+    setMensajePrueba('WhatsApp de prueba enviado correctamente.')
+    setProbando(false)
+  }
 
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
@@ -133,6 +168,36 @@ export default function AutomatizacionesPage() {
             Esta URL se pega en Meta Developers para recibir confirmaciones de
             mensajes enviados, entregados, leidos o fallidos.
           </p>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm text-zinc-500">Prueba rapida</p>
+              <h2 className="mt-2 text-2xl font-bold text-orange-500">
+                Enviar WhatsApp de prueba
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                Usa el telefono guardado en la suscripcion de esta cuenta y la
+                misma plantilla que usaran las citas.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={enviarPrueba}
+              disabled={probando || !status?.listo}
+              className="min-h-12 rounded-xl bg-orange-600 px-5 py-3 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {probando ? 'Enviando...' : 'Enviar prueba'}
+            </button>
+          </div>
+
+          {mensajePrueba && (
+            <p className="mt-4 rounded-xl border border-orange-500/40 bg-black px-4 py-3 text-sm text-orange-200">
+              {mensajePrueba}
+            </p>
+          )}
         </div>
 
         <div className="mt-8 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
