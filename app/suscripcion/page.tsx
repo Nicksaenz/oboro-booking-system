@@ -10,6 +10,8 @@ type Suscripcion = {
   plan: string | null
 }
 
+const ESTADOS_VALIDOS = ['trial', 'activa', 'activo', 'pagada', 'paid']
+
 const PLANES = [
   {
     id: 'basico',
@@ -143,6 +145,10 @@ export default function SuscripcionPage() {
     window.location.assign(resultado.url)
   }
 
+  function entrarDashboard() {
+    router.replace('/')
+  }
+
   if (cargando) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center px-6">
@@ -164,6 +170,11 @@ export default function SuscripcionPage() {
         ? 'Pago cancelado. Puedes intentar de nuevo cuando quieras.'
         : ''
   const mensajeVisible = mensaje || mensajeCheckout
+  const estadoActual = String(suscripcion?.estado ?? '').toLowerCase()
+  const tieneAcceso =
+    ESTADOS_VALIDOS.includes(estadoActual) &&
+    (!suscripcion?.fecha_vencimiento ||
+      new Date(suscripcion.fecha_vencimiento).getTime() >= Date.now())
 
   return (
     <main className="min-h-screen bg-black text-white px-5 py-12">
@@ -173,12 +184,13 @@ export default function SuscripcionPage() {
         </p>
 
         <h1 className="text-4xl sm:text-5xl font-bold mt-3">
-          Suscripcion requerida
+          {tieneAcceso ? 'Suscripcion activa' : 'Suscripcion requerida'}
         </h1>
 
         <p className="text-zinc-400 mt-4">
-          Tu cuenta necesita una suscripcion activa para entrar al panel de
-          reservas.
+          {tieneAcceso
+            ? 'Tu cuenta ya puede entrar al panel de reservas.'
+            : 'Tu cuenta necesita una suscripcion activa para entrar al panel de reservas.'}
         </p>
 
         <div className="grid sm:grid-cols-3 gap-4 mt-8">
@@ -208,6 +220,16 @@ export default function SuscripcionPage() {
           <p className="mt-6 rounded-xl border border-orange-500/40 bg-orange-950/30 px-4 py-3 text-orange-200">
             {mensajeVisible}
           </p>
+        )}
+
+        {tieneAcceso && (
+          <button
+            type="button"
+            onClick={entrarDashboard}
+            className="mt-8 w-full rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700"
+          >
+            Entrar al dashboard
+          </button>
         )}
 
         <div className="mt-8 rounded-xl border border-zinc-800 bg-black p-5">

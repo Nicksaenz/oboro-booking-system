@@ -9,6 +9,57 @@ function limpiarTexto(valor: unknown, respaldo = '') {
   return typeof valor === 'string' ? valor.trim() : respaldo
 }
 
+export async function GET(request: Request) {
+  try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'No hay una sesion activa' },
+        { status: 401 }
+      )
+    }
+
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    })
+    const supabaseAdmin = getSupabaseAdmin()
+
+    const { data: userData, error: userError } = await supabaseAuth.auth.getUser()
+
+    if (userError || !userData.user) {
+      return NextResponse.json(
+        { error: 'Sesion invalida o expirada' },
+        { status: 401 }
+      )
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('suscripciones')
+      .select('estado, fecha_vencimiento, plan')
+      .eq('usuario_id', userData.user.id)
+      .maybeSingle()
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ suscripcion: data })
+  } catch {
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()

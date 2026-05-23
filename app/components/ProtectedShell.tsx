@@ -45,13 +45,22 @@ export default function ProtectedShell({
         return
       }
 
-      const { data: suscripcion, error } = await supabase
-        .from('suscripciones')
-        .select('estado, fecha_vencimiento')
-        .eq('usuario_id', user.id)
-        .maybeSingle()
+      const accessToken = sessionData.session?.access_token
 
-      if (error || !suscripcion) {
+      if (!accessToken) {
+        router.replace('/login')
+        return
+      }
+
+      const response = await fetch('/api/suscripcion', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      const resultado = await response.json()
+      const suscripcion = resultado.suscripcion
+
+      if (!response.ok || !suscripcion) {
         if (!esRutaSuscripcion) {
           router.replace('/suscripcion')
           return
