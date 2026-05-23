@@ -51,7 +51,7 @@ export async function GET(
     const [{ data: servicios }, { data: empleados }] = await Promise.all([
       supabase
         .from('SERVICIOS')
-        .select('ID, "Nombre del servicio", "Precio del servicio", "DuraciÃ³n en minutos", ACTIVO')
+        .select('ID, "Nombre del servicio", "Precio del servicio", ACTIVO')
         .eq('ID DE USUARIO', usuarioId)
         .eq('ACTIVO', true)
         .order('Nombre del servicio', { ascending: true }),

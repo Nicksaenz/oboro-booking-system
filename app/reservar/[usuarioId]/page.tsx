@@ -7,7 +7,6 @@ type Servicio = {
   ID: string
   'Nombre del servicio': string
   'Precio del servicio': number
-  'DuraciÃ³n en minutos'?: number
 }
 
 type Empleado = {
@@ -23,6 +22,7 @@ export default function ReservaPublicaPage() {
   const [servicios, setServicios] = useState<Servicio[]>([])
   const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [cargando, setCargando] = useState(true)
+  const [agendaDisponible, setAgendaDisponible] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [form, setForm] = useState({
@@ -42,6 +42,7 @@ export default function ReservaPublicaPage() {
 
       if (!response.ok) {
         setMensaje(data.error ?? 'No se pudo cargar la agenda.')
+        setAgendaDisponible(false)
         setCargando(false)
         return
       }
@@ -49,6 +50,7 @@ export default function ReservaPublicaPage() {
       setNegocio(data.negocio?.nombre ?? 'Oboro Booking')
       setServicios(data.servicios ?? [])
       setEmpleados(data.empleados ?? [])
+      setAgendaDisponible(true)
       setCargando(false)
     }
 
@@ -116,6 +118,26 @@ export default function ReservaPublicaPage() {
             <p className="py-10 text-center font-bold text-orange-400">
               Cargando agenda...
             </p>
+          ) : !agendaDisponible ? (
+            <div className="py-8 text-center">
+              <h2 className="text-2xl font-bold text-orange-500">
+                Agenda no disponible
+              </h2>
+              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-400">
+                Este negocio aun no tiene activada la agenda publica para
+                reservas por QR.
+              </p>
+            </div>
+          ) : servicios.length === 0 || empleados.length === 0 ? (
+            <div className="py-8 text-center">
+              <h2 className="text-2xl font-bold text-orange-500">
+                Agenda en configuracion
+              </h2>
+              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-400">
+                El negocio debe agregar servicios y empleados activos antes de
+                recibir reservas por este link.
+              </p>
+            </div>
           ) : (
             <form onSubmit={crearReserva} className="grid gap-3">
               <input
@@ -200,7 +222,7 @@ export default function ReservaPublicaPage() {
             </form>
           )}
 
-          {mensaje && (
+          {mensaje && agendaDisponible && (
             <p className="mt-4 rounded-xl border border-orange-500/40 bg-black px-4 py-3 text-sm text-orange-200">
               {mensaje}
             </p>

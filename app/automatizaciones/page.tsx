@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 const TEMPLATE_KEY = 'oboro_whatsapp_template'
 const TEMPLATE_NEGOCIO_KEY = 'oboro_whatsapp_template_negocio'
@@ -11,11 +12,15 @@ const MENSAJE_NEGOCIO_DEFAULT =
   'Recordatorio: tienes una cita con {{cliente}} el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Atiende: {{empleado}}.'
 
 export default function AutomatizacionesPage() {
+  const router = useRouter()
   const [mensaje, setMensaje] = useState(MENSAJE_DEFAULT)
   const [mensajeNegocio, setMensajeNegocio] = useState(MENSAJE_NEGOCIO_DEFAULT)
   const [guardado, setGuardado] = useState(false)
   const [reservaUrl, setReservaUrl] = useState('')
   const [linkCopiado, setLinkCopiado] = useState(false)
+  const [planActual, setPlanActual] = useState('')
+  const tieneAutomatizaciones = ['pro', 'business', 'premium'].includes(planActual)
+  const tieneQrPublico = ['pro', 'business', 'premium'].includes(planActual)
 
   useEffect(() => {
     const guardadoLocal = window.localStorage.getItem(TEMPLATE_KEY)
@@ -38,9 +43,20 @@ export default function AutomatizacionesPage() {
     async function cargarLinkPublico() {
       const { data } = await supabase.auth.getSession()
       const userId = data.session?.user?.id
+      const token = data.session?.access_token
 
       if (userId) {
         setReservaUrl(`${window.location.origin}/reservar/${userId}`)
+      }
+
+      if (token) {
+        const response = await fetch('/api/suscripcion', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        const resultado = response.ok ? await response.json() : null
+        setPlanActual(String(resultado?.suscripcion?.plan ?? '').toLowerCase())
       }
     }
 
@@ -162,6 +178,11 @@ export default function AutomatizacionesPage() {
             envia desde el boton de cada cita para que salgan desde su propio
             WhatsApp.
           </p>
+          {!tieneAutomatizaciones && (
+            <p className="mt-4 rounded-xl border border-orange-600/40 bg-black px-4 py-3 text-sm font-bold text-orange-200">
+              Los recordatorios automaticos se activan desde el plan Pro.
+            </p>
+          )}
         </div>
 
         <div className="mt-4 grid gap-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20 md:grid-cols-[1fr_auto] md:items-center">
@@ -174,7 +195,7 @@ export default function AutomatizacionesPage() {
               Tus clientes pueden escoger servicio, empleado, fecha y hora sin
               escribirte primero.
             </p>
-            {reservaUrl && (
+            {reservaUrl && tieneQrPublico && (
               <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
                 <div className="rounded-xl border border-zinc-800 bg-black p-3 text-sm text-orange-200 break-all">
                   {reservaUrl}
@@ -188,9 +209,27 @@ export default function AutomatizacionesPage() {
                 </button>
               </div>
             )}
+            {!tieneQrPublico && (
+              <div className="mt-4 rounded-xl border border-zinc-800 bg-black p-4">
+                <p className="font-bold text-orange-400">
+                  Disponible desde Pro
+                </p>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  El QR publico para que los clientes agenden solos se activa
+                  en los planes Pro y Business.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => router.push('/suscripcion')}
+                  className="mt-4 min-h-11 rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold transition hover:bg-orange-700"
+                >
+                  Ver planes
+                </button>
+              </div>
+            )}
           </div>
 
-          {reservaUrl && (
+          {reservaUrl && tieneQrPublico && (
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(reservaUrl)}`}
               alt="QR publico para agendar"
