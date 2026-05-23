@@ -50,9 +50,12 @@ export default function FinanzasPage() {
   const [gastos, setGastos] = useState<Gasto[]>([])
   const [mensaje, setMensaje] = useState('')
   const [gastosActivos, setGastosActivos] = useState(true)
+  const [accesoFinanzas, setAccesoFinanzas] = useState(true)
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [comision, setComision] = useState(50)
+  const [adminPin, setAdminPin] = useState('')
+  const [adminActivo, setAdminActivo] = useState(false)
   const [gastoForm, setGastoForm] = useState({
     fecha: new Date().toISOString().slice(0, 10),
     categoria: 'General',
@@ -112,11 +115,16 @@ export default function FinanzasPage() {
     const data = await response.json()
 
     if (!response.ok) {
+      if (response.status === 403) {
+        setAccesoFinanzas(false)
+      }
+
       setMensaje(data.error ?? 'No se pudo cargar finanzas.')
       setCargando(false)
       return
     }
 
+    setAccesoFinanzas(true)
     setCitas(data.citas ?? [])
     setGastos(data.gastos ?? [])
     setGastosActivos(!data.gastosPendientes)
@@ -144,6 +152,7 @@ export default function FinanzasPage() {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
+        ...(adminPin ? { 'x-finanzas-admin-pin': adminPin } : {}),
       },
       body: JSON.stringify(gastoForm),
     })
@@ -151,7 +160,9 @@ export default function FinanzasPage() {
 
     if (!response.ok) {
       setMensaje(
-        data.error?.includes('gastos')
+        data.error?.includes('administrador')
+          ? 'Solo la cuenta administradora puede editar finanzas. Ingresa la clave admin.'
+          : data.error?.includes('gastos')
           ? 'El registro de gastos aun no esta activo. Oboro Lab debe activar esta funcion una sola vez.'
           : data.error ?? 'No se pudo guardar el gasto.'
       )
@@ -183,12 +194,17 @@ export default function FinanzasPage() {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
+        ...(adminPin ? { 'x-finanzas-admin-pin': adminPin } : {}),
       },
     })
     const data = await response.json()
 
     if (!response.ok) {
-      setMensaje(data.error ?? 'No se pudo eliminar el gasto.')
+      setMensaje(
+        data.error?.includes('administrador')
+          ? 'Solo la cuenta administradora puede editar finanzas. Ingresa la clave admin.'
+          : data.error ?? 'No se pudo eliminar el gasto.'
+      )
       return
     }
 
@@ -203,8 +219,29 @@ export default function FinanzasPage() {
   }
 
   useEffect(() => {
+    const pinGuardado = window.sessionStorage.getItem('oboro_finanzas_admin_pin')
+
+    if (pinGuardado) {
+      setAdminPin(pinGuardado)
+      setAdminActivo(true)
+    }
+
     cargarFinanzas()
   }, [mes])
+
+  function desbloquearAdmin(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (!adminPin.trim()) {
+      setMensaje('Ingresa la clave admin para editar finanzas.')
+      return
+    }
+
+    window.sessionStorage.setItem('oboro_finanzas_admin_pin', adminPin.trim())
+    setAdminPin(adminPin.trim())
+    setAdminActivo(true)
+    setMensaje('Modo administrador financiero activo en este navegador.')
+  }
 
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
@@ -236,6 +273,57 @@ export default function FinanzasPage() {
             {mensaje}
           </div>
         )}
+
+        {!accesoFinanzas ? (
+          <div className="mt-8 rounded-2xl border border-orange-600/40 bg-zinc-950 p-6 shadow-2xl shadow-orange-950/20">
+            <h2 className="text-3xl font-black text-orange-500">
+              Disponible en Business
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
+              Finanzas, gastos y liquidacion de colaboradores pertenecen al
+              plan Business. Actualiza el plan para activar esta parte del
+              negocio.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push('/suscripcion')}
+              className="mt-5 min-h-12 rounded-xl bg-orange-600 px-5 py-3 font-bold transition hover:bg-orange-700"
+            >
+              Ver planes
+            </button>
+          </div>
+        ) : (
+          <>
+
+        <form
+          onSubmit={desbloquearAdmin}
+          className="mt-6 grid gap-3 rounded-2xl border border-green-600/40 bg-green-950/10 p-4 sm:grid-cols-[1fr_auto]"
+        >
+          <div>
+            <p className="font-bold text-green-300">
+              Acceso administrador financiero
+            </p>
+            <p className="mt-1 text-sm leading-6 text-zinc-400">
+              Solo quien tenga la clave admin puede crear o eliminar gastos.
+            </p>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-[180px_auto]">
+            <input
+              type="password"
+              value={adminPin}
+              onChange={(e) => setAdminPin(e.target.value)}
+              placeholder="Clave admin"
+              className="min-h-12 rounded-xl border border-green-600/50 bg-black p-4 outline-none"
+            />
+            <button
+              type="submit"
+              className="min-h-12 rounded-xl bg-green-600 px-5 py-3 font-bold transition hover:bg-green-700"
+            >
+              {adminActivo ? 'Activo' : 'Desbloquear'}
+            </button>
+          </div>
+        </form>
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-green-600/40 bg-green-950/10 p-5 shadow-lg shadow-green-950/20">
@@ -316,11 +404,13 @@ export default function FinanzasPage() {
 
               <button
                 type="submit"
-                disabled={guardando || !gastosActivos}
+                disabled={guardando || !gastosActivos || !adminActivo}
                 className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {!gastosActivos
                   ? 'Activacion pendiente'
+                  : !adminActivo
+                    ? 'Bloqueado por admin'
                   : guardando
                     ? 'Guardando...'
                     : 'Guardar gasto'}
@@ -357,6 +447,7 @@ export default function FinanzasPage() {
                     <button
                       type="button"
                       onClick={() => eliminarGasto(gasto.id)}
+                      disabled={!adminActivo}
                       className="rounded-xl border border-red-600/60 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
                     >
                       Eliminar
@@ -423,6 +514,8 @@ export default function FinanzasPage() {
             ))}
           </div>
         </div>
+          </>
+        )}
       </section>
     </main>
   )

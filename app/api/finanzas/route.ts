@@ -42,6 +42,14 @@ async function tienePlanBusiness(usuarioId: string) {
   )
 }
 
+function puedeEditarFinanzas(request: Request) {
+  const pin = process.env.FINANZAS_ADMIN_PIN
+
+  if (!pin) return true
+
+  return request.headers.get('x-finanzas-admin-pin') === pin
+}
+
 async function obtenerUsuario(request: Request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
 
@@ -157,6 +165,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
+
+    if (!puedeEditarFinanzas(request)) {
+      return NextResponse.json(
+        { error: 'Solo el administrador puede editar finanzas.' },
+        { status: 403 }
+      )
+    }
+
     const fecha = limpiarTexto(body.fecha)
     const categoria = limpiarTexto(body.categoria, 'General')
     const descripcion = limpiarTexto(body.descripcion)
@@ -213,6 +229,14 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
+
+    if (!puedeEditarFinanzas(request)) {
+      return NextResponse.json(
+        { error: 'Solo el administrador puede editar finanzas.' },
+        { status: 403 }
+      )
+    }
+
     const id = searchParams.get('id')
 
     if (!id) {
