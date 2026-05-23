@@ -1,5 +1,5 @@
 import './globals.css'
-import Navbar from './components/Navbar'
+import ProtectedShell from './components/ProtectedShell'
 
 export const metadata = {
   title: 'Oboro Booking',
@@ -14,8 +14,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="bg-black">
-        <Navbar />
-        {children}
+        <ProtectedShell>{children}</ProtectedShell>
       </body>
     </html>
   )
