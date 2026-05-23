@@ -21,39 +21,6 @@ type WhatsAppConfiguracion = {
   activo: boolean
 }
 
-const VARIABLES = [
-  {
-    key: 'cronSecret',
-    label: 'CRON_SECRET',
-    detalle: 'Protege la ruta programada para que no quede abierta.',
-  },
-  {
-    key: 'phoneNumberId',
-    label: 'META_WHATSAPP_PHONE_NUMBER_ID',
-    detalle: 'ID del numero conectado en Meta WhatsApp.',
-  },
-  {
-    key: 'accessToken',
-    label: 'META_WHATSAPP_ACCESS_TOKEN',
-    detalle: 'Token permanente para enviar mensajes.',
-  },
-  {
-    key: 'verifyToken',
-    label: 'META_WHATSAPP_VERIFY_TOKEN',
-    detalle: 'Token privado que Meta usa para verificar el webhook.',
-  },
-  {
-    key: 'templateName',
-    label: 'META_WHATSAPP_TEMPLATE_RECORDATORIO',
-    detalle: 'Nombre exacto de la plantilla aprobada.',
-  },
-  {
-    key: 'templateLanguage',
-    label: 'META_WHATSAPP_TEMPLATE_LANGUAGE',
-    detalle: 'Idioma de la plantilla, por ejemplo es_CO.',
-  },
-]
-
 const PASOS = [
   {
     titulo: '1. Tu cliente queda agendado',
@@ -77,6 +44,7 @@ export default function AutomatizacionesPage() {
   const [probando, setProbando] = useState(false)
   const [mensajePrueba, setMensajePrueba] = useState('')
   const [mensajeConfig, setMensajeConfig] = useState('')
+  const [mostrarAvanzado, setMostrarAvanzado] = useState(false)
   const [telefonoNegocio, setTelefonoNegocio] = useState('')
   const [phoneNumberId, setPhoneNumberId] = useState('')
   const [accessToken, setAccessToken] = useState('')
@@ -229,9 +197,9 @@ export default function AutomatizacionesPage() {
                 ? 'Revisando...'
                 : status?.listo
                   ? 'Listo para enviar'
-                  : configuracion?.activo
+                : configuracion?.activo
                     ? 'Numero conectado'
-                    : 'Configurar numero'}
+                    : 'Sin conectar'}
             </p>
           </div>
         </div>
@@ -302,12 +270,11 @@ export default function AutomatizacionesPage() {
           <h2 className="mt-2 text-2xl font-bold text-orange-500">
             {configuracion?.activo
               ? configuracion.telefono_negocio
-              : 'WhatsApp Business del negocio'}
+              : 'Conecta el WhatsApp de tu negocio'}
           </h2>
           <p className="mt-3 text-sm leading-6 text-zinc-400">
-            Cada negocio conecta aqui su propio numero de WhatsApp Business.
-            Los recordatorios de sus citas salen desde ese numero, no desde el
-            WhatsApp de Oboro Lab.
+            Los recordatorios de tus citas saldran desde el numero de tu
+            negocio. Tus clientes veran tu marca y podran responderte a ti.
           </p>
         </div>
 
@@ -316,62 +283,97 @@ export default function AutomatizacionesPage() {
           className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20"
         >
           <h2 className="text-2xl font-bold">
-            Conectar WhatsApp Business del negocio
+            Conectar mi WhatsApp Business
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
-            Estos datos salen de Meta Developers. En una version posterior se
-            puede automatizar con Embedded Signup; por ahora se guardan por
-            negocio para que cada cuenta envie desde su propio numero.
+            Para activar los recordatorios desde tu numero, primero debes tener
+            WhatsApp Business verificado en Meta. Si no sabes como hacerlo,
+            solicita ayuda y Oboro Lab te guia en la conexion.
           </p>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="mt-5 grid gap-3">
             <input
               className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
-              placeholder="WhatsApp del negocio, ej: 573001234567"
+              placeholder="Numero de WhatsApp del negocio, ej: 573001234567"
               value={telefonoNegocio}
               onChange={(e) => setTelefonoNegocio(e.target.value)}
             />
+          </div>
 
-            <input
-              className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
-              placeholder="Phone Number ID de Meta"
-              value={phoneNumberId}
-              onChange={(e) => setPhoneNumberId(e.target.value)}
-            />
-
-            <input
-              className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none md:col-span-2"
-              placeholder={
-                configuracion?.access_token_configurado
-                  ? 'Access Token configurado. Escribe uno nuevo solo si deseas cambiarlo.'
-                  : 'Access Token permanente de Meta'
-              }
-              value={accessToken}
-              onChange={(e) => setAccessToken(e.target.value)}
-            />
-
-            <input
-              className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
-              placeholder="Plantilla aprobada"
-              value={templateRecordatorio}
-              onChange={(e) => setTemplateRecordatorio(e.target.value)}
-            />
-
-            <input
-              className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
-              placeholder="Idioma, ej: es_CO"
-              value={templateLanguage}
-              onChange={(e) => setTemplateLanguage(e.target.value)}
-            />
+          <div className="mt-4 rounded-xl border border-zinc-800 bg-black p-4">
+            <h3 className="font-bold text-white">
+              Conexion asistida
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">
+              Si no tienes los datos de Meta, guarda este numero y pide a Oboro
+              Lab que lo conecte. Cuando quede activo, esta pantalla mostrara
+              Numero conectado.
+            </p>
           </div>
 
           <button
-            type="submit"
-            disabled={guardando}
-            className="mt-5 min-h-12 rounded-xl bg-orange-600 px-5 py-3 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
+            type="button"
+            onClick={() => setMostrarAvanzado(!mostrarAvanzado)}
+            className="mt-5 rounded-xl border border-orange-600/60 px-5 py-3 font-bold text-orange-200 transition hover:bg-orange-600/10"
           >
-            {guardando ? 'Guardando...' : 'Guardar conexion'}
+            {mostrarAvanzado
+              ? 'Ocultar configuracion avanzada'
+              : 'Ya tengo los datos de Meta'}
           </button>
+
+          {mostrarAvanzado && (
+            <div className="mt-5 grid gap-3 rounded-xl border border-zinc-800 bg-black p-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <h3 className="font-bold text-white">
+                  Configuracion avanzada
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-500">
+                  Esta parte normalmente la completa Oboro Lab durante la
+                  conexion del WhatsApp Business.
+                </p>
+              </div>
+
+              <input
+                className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+                placeholder="Phone Number ID de Meta"
+                value={phoneNumberId}
+                onChange={(e) => setPhoneNumberId(e.target.value)}
+              />
+
+              <input
+                className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+                placeholder={
+                  configuracion?.access_token_configurado
+                    ? 'Token configurado. Escribe uno nuevo solo si deseas cambiarlo.'
+                    : 'Access Token permanente de Meta'
+                }
+                value={accessToken}
+                onChange={(e) => setAccessToken(e.target.value)}
+              />
+
+              <input
+                className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+                placeholder="Plantilla aprobada"
+                value={templateRecordatorio}
+                onChange={(e) => setTemplateRecordatorio(e.target.value)}
+              />
+
+              <input
+                className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+                placeholder="Idioma, ej: es_CO"
+                value={templateLanguage}
+                onChange={(e) => setTemplateLanguage(e.target.value)}
+              />
+
+              <button
+                type="submit"
+                disabled={guardando}
+                className="min-h-12 rounded-xl bg-orange-600 px-5 py-3 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
+              >
+                {guardando ? 'Guardando...' : 'Guardar conexion'}
+              </button>
+            </div>
+          )}
 
           {mensajeConfig && (
             <p className="mt-4 rounded-xl border border-orange-500/40 bg-black px-4 py-3 text-sm text-orange-200">
@@ -408,48 +410,6 @@ export default function AutomatizacionesPage() {
               {mensajePrueba}
             </p>
           )}
-        </div>
-
-        <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
-          <h2 className="text-2xl font-bold">
-            Configuracion tecnica de Oboro Lab
-          </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">
-            Esta parte muestra variables globales del sistema. La conexion de
-            cada negocio se guarda arriba, en su propia cuenta.
-          </p>
-
-          <div className="mt-5 grid gap-3">
-            {VARIABLES.map((variable) => {
-              const configurada = Boolean(status?.variables?.[variable.key])
-
-              return (
-                <div
-                  key={variable.key}
-                  className="grid gap-3 rounded-xl border border-zinc-800 bg-black p-4 md:grid-cols-[1fr_auto]"
-                >
-                  <div>
-                    <p className="break-all font-bold text-white">
-                      {variable.label}
-                    </p>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      {variable.detalle}
-                    </p>
-                  </div>
-
-                  <span
-                    className={`h-fit rounded-full px-4 py-2 text-sm font-bold ${
-                      configurada
-                        ? 'bg-green-500/15 text-green-300'
-                        : 'bg-orange-500/15 text-orange-300'
-                    }`}
-                  >
-                    {configurada ? 'Configurada' : 'Pendiente'}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
         </div>
 
         <div className="mt-8 rounded-2xl border border-zinc-800 bg-black p-5">
