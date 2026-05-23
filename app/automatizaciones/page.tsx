@@ -45,6 +45,21 @@ const VARIABLES = [
   },
 ]
 
+const PASOS = [
+  {
+    titulo: '1. Tu cliente queda agendado',
+    texto: 'El negocio crea una cita con cliente, fecha, hora, servicio y empleado.',
+  },
+  {
+    titulo: '2. Oboro prepara el mensaje',
+    texto: 'El sistema toma los datos de la cita y arma el recordatorio con la plantilla aprobada.',
+  },
+  {
+    titulo: '3. WhatsApp lo entrega',
+    texto: 'El mensaje sale desde el numero de WhatsApp Business conectado para el negocio.',
+  },
+]
+
 export default function AutomatizacionesPage() {
   const [status, setStatus] = useState<WhatsAppStatus | null>(null)
   const [cargando, setCargando] = useState(true)
@@ -131,16 +146,47 @@ export default function AutomatizacionesPage() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        <div className="mt-8 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
+          <h2 className="text-2xl font-bold">
+            Como funcionara para tu cliente
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
+            El negocio no tiene que copiar mensajes ni abrir WhatsApp a mano.
+            Cuando haya citas creadas, Oboro Booking enviara recordatorios
+            automaticamente desde el WhatsApp Business conectado.
+          </p>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {PASOS.map((paso) => (
+              <div
+                key={paso.titulo}
+                className="rounded-xl border border-zinc-800 bg-black p-4"
+              >
+                <h3 className="font-bold text-orange-500">
+                  {paso.titulo}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  {paso.texto}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
-            <p className="text-sm text-zinc-500">Horario</p>
+            <p className="text-sm text-zinc-500">Recordatorio automatico</p>
             <h2 className="mt-2 text-2xl font-bold text-orange-500">
               {status?.schedule ?? 'Todos los dias a las 8:00 a. m. Colombia'}
             </h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">
+              Revisa las citas del dia siguiente y envia el mensaje si todo
+              esta configurado.
+            </p>
           </div>
 
           <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
-            <p className="text-sm text-zinc-500">Plantilla</p>
+            <p className="text-sm text-zinc-500">Mensaje aprobado</p>
             <h2 className="mt-2 text-2xl font-bold text-orange-500">
               {status?.template ?? 'recordatorio_cita'}
             </h2>
@@ -150,23 +196,26 @@ export default function AutomatizacionesPage() {
           </div>
 
           <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
-            <p className="text-sm text-zinc-500">Ruta tecnica</p>
-            <h2 className="mt-2 break-all text-lg font-bold text-orange-500">
-              {status?.endpoint ?? '/api/whatsapp/recordatorios'}
+            <p className="text-sm text-zinc-500">Envio manual</p>
+            <h2 className="mt-2 text-2xl font-bold text-orange-500">
+              Desde Citas
             </h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">
+              En cada cita aparece el boton Enviar WhatsApp para reenviar un
+              recordatorio cuando el negocio lo necesite.
+            </p>
           </div>
         </div>
 
         <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
-          <p className="text-sm text-zinc-500">Webhook para Meta</p>
-          <h2 className="mt-2 break-all text-lg font-bold text-orange-500">
-            {typeof window === 'undefined'
-              ? status?.webhookEndpoint
-              : `${window.location.origin}${status?.webhookEndpoint ?? '/api/whatsapp/webhook'}`}
+          <p className="text-sm text-zinc-500">Numero que enviara mensajes</p>
+          <h2 className="mt-2 text-2xl font-bold text-orange-500">
+            WhatsApp Business conectado
           </h2>
           <p className="mt-3 text-sm leading-6 text-zinc-400">
-            Esta URL se pega en Meta Developers para recibir confirmaciones de
-            mensajes enviados, entregados, leidos o fallidos.
+            Para el MVP, Oboro Lab configura el numero en Meta. Mas adelante
+            cada negocio podra conectar su propio WhatsApp Business desde esta
+            misma seccion.
           </p>
         </div>
 
@@ -200,10 +249,14 @@ export default function AutomatizacionesPage() {
           )}
         </div>
 
-        <div className="mt-8 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
+        <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
           <h2 className="text-2xl font-bold">
-            Variables necesarias
+            Configuracion tecnica de Oboro Lab
           </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">
+            Esta parte es para administrar la conexion con Meta y Vercel. No es
+            algo que el cliente final tenga que configurar.
+          </p>
 
           <div className="mt-5 grid gap-3">
             {VARIABLES.map((variable) => {
@@ -240,7 +293,7 @@ export default function AutomatizacionesPage() {
 
         <div className="mt-8 rounded-2xl border border-zinc-800 bg-black p-5">
           <h2 className="text-2xl font-bold">
-            Texto sugerido para la plantilla
+            Mensaje que recibira el cliente
           </h2>
           <p className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-sm leading-6 text-zinc-300">
             Hola {'{{1}}'}, te recordamos tu cita en Oboro Booking para el dia
