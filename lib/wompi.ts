@@ -59,6 +59,16 @@ export function getWompiCheckoutUrl() {
   return process.env.WOMPI_CHECKOUT_URL ?? 'https://checkout.wompi.co/p/'
 }
 
+export function getWompiApiUrl() {
+  const publicKey = getWompiPublicKey()
+
+  if (publicKey.startsWith('pub_test_')) {
+    return 'https://sandbox.wompi.co/v1'
+  }
+
+  return 'https://production.wompi.co/v1'
+}
+
 export function generarReferencia(usuarioId: string, plan: WompiPlan) {
   return `oboro-${usuarioId}-${plan}-${Date.now()}`
 }

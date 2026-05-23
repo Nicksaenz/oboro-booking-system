@@ -62,6 +62,50 @@ export default function SuscripcionPage() {
     cargarSuscripcion()
   }, [router])
 
+  useEffect(() => {
+    async function confirmarRetornoWompi() {
+      const transactionId = searchParams.get('id')
+
+      if (!transactionId) return
+
+      setMensaje('Confirmando pago aprobado con Wompi...')
+
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+
+      if (!token) {
+        router.replace('/login')
+        return
+      }
+
+      const response = await fetch('/api/wompi/confirmar-retorno', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transactionId }),
+      })
+
+      const resultado = await response.json()
+
+      if (!response.ok) {
+        setMensaje(resultado.error ?? 'No se pudo confirmar el pago con Wompi.')
+        return
+      }
+
+      setSuscripcion({
+        estado: resultado.estado,
+        fecha_vencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString(),
+        plan: resultado.plan,
+      })
+      setMensaje('Pago confirmado. Tu suscripcion ya esta activa.')
+    }
+
+    confirmarRetornoWompi()
+  }, [router, searchParams])
+
   async function cerrarSesion() {
     await supabase.auth.signOut()
     router.replace('/login')
