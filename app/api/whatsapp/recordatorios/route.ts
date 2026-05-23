@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase'
 import {
   CitaRecordatorio,
   sendAppointmentReminder,
+  WhatsAppCredentials,
 } from '@/lib/whatsapp'
 
 function formatDateForSupabase(date: Date) {
@@ -42,6 +43,7 @@ export async function GET(request: Request) {
     .from('Citas')
     .select(`
       ID,
+      ID_Usuario,
       Fecha,
       Hora,
       Estado,
@@ -65,10 +67,44 @@ export async function GET(request: Request) {
 
   const citas = (data || []) as CitaRecordatorio[]
   const resultados = []
+  const credencialesPorUsuario = new Map<string, WhatsAppCredentials | null>()
+
+  async function obtenerCredenciales(usuarioId?: string) {
+    if (!usuarioId) return null
+
+    if (credencialesPorUsuario.has(usuarioId)) {
+      return credencialesPorUsuario.get(usuarioId) ?? null
+    }
+
+    const { data: configuracion } = await supabase
+      .from('whatsapp_configuraciones')
+      .select('phone_number_id, access_token, template_recordatorio, template_language, activo')
+      .eq('usuario_id', usuarioId)
+      .maybeSingle()
+
+    const credentials = configuracion?.activo
+      ? {
+        phoneNumberId: configuracion.phone_number_id,
+        accessToken: configuracion.access_token,
+        templateName: configuracion.template_recordatorio,
+        languageCode: configuracion.template_language,
+      }
+      : null
+
+    credencialesPorUsuario.set(usuarioId, credentials)
+
+    return credentials
+  }
 
   for (const cita of citas) {
     try {
-      const respuesta = await sendAppointmentReminder(cita)
+      const credentials = await obtenerCredenciales(cita.ID_Usuario)
+
+      if (!credentials) {
+        throw new Error('El negocio no tiene WhatsApp Business conectado')
+      }
+
+      const respuesta = await sendAppointmentReminder(cita, credentials)
 
       resultados.push({
         citaId: cita.ID,

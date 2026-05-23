@@ -8,10 +8,12 @@ type SendTemplateInput = {
   templateName: string
   languageCode: string
   parameters: TemplateParameter[]
+  credentials?: WhatsAppCredentials
 }
 
 export type CitaRecordatorio = {
   ID: string
+  ID_Usuario?: string
   Fecha: string
   Hora: string
   Estado: string
@@ -25,6 +27,14 @@ export type CitaRecordatorio = {
   Empleados?: {
     Nombre?: string
   } | null
+}
+
+export type WhatsAppCredentials = {
+  phoneNumberId: string
+  accessToken: string
+  apiVersion?: string
+  templateName?: string
+  languageCode?: string
 }
 
 function getRequiredEnv(name: string) {
@@ -60,10 +70,14 @@ export async function sendWhatsAppTemplate({
   templateName,
   languageCode,
   parameters,
+  credentials,
 }: SendTemplateInput) {
-  const phoneNumberId = getRequiredEnv('META_WHATSAPP_PHONE_NUMBER_ID')
-  const accessToken = getRequiredEnv('META_WHATSAPP_ACCESS_TOKEN')
-  const apiVersion = process.env.META_WHATSAPP_API_VERSION || 'v24.0'
+  const phoneNumberId =
+    credentials?.phoneNumberId ?? getRequiredEnv('META_WHATSAPP_PHONE_NUMBER_ID')
+  const accessToken =
+    credentials?.accessToken ?? getRequiredEnv('META_WHATSAPP_ACCESS_TOKEN')
+  const apiVersion =
+    credentials?.apiVersion ?? process.env.META_WHATSAPP_API_VERSION ?? 'v24.0'
 
   const response = await fetch(
     `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`,
@@ -105,7 +119,10 @@ export async function sendWhatsAppTemplate({
   return data
 }
 
-export async function sendAppointmentReminder(cita: CitaRecordatorio) {
+export async function sendAppointmentReminder(
+  cita: CitaRecordatorio,
+  credentials?: WhatsAppCredentials
+) {
   const telefono = normalizeWhatsAppNumber(cita.Clientes?.Numero)
 
   if (!telefono) {
@@ -114,8 +131,9 @@ export async function sendAppointmentReminder(cita: CitaRecordatorio) {
 
   return sendWhatsAppTemplate({
     to: telefono,
-    templateName: getReminderTemplateName(),
-    languageCode: getReminderTemplateLanguage(),
+    templateName: credentials?.templateName ?? getReminderTemplateName(),
+    languageCode: credentials?.languageCode ?? getReminderTemplateLanguage(),
+    credentials,
     parameters: [
       { type: 'text', text: cita.Clientes?.Nombre || 'cliente' },
       { type: 'text', text: cita.Fecha },

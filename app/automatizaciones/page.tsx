@@ -12,6 +12,15 @@ type WhatsAppStatus = {
   variables: Record<string, boolean>
 }
 
+type WhatsAppConfiguracion = {
+  telefono_negocio: string
+  phone_number_id: string
+  access_token_configurado: boolean
+  template_recordatorio: string
+  template_language: string
+  activo: boolean
+}
+
 const VARIABLES = [
   {
     key: 'cronSecret',
@@ -62,21 +71,100 @@ const PASOS = [
 
 export default function AutomatizacionesPage() {
   const [status, setStatus] = useState<WhatsAppStatus | null>(null)
+  const [configuracion, setConfiguracion] = useState<WhatsAppConfiguracion | null>(null)
   const [cargando, setCargando] = useState(true)
+  const [guardando, setGuardando] = useState(false)
   const [probando, setProbando] = useState(false)
   const [mensajePrueba, setMensajePrueba] = useState('')
+  const [mensajeConfig, setMensajeConfig] = useState('')
+  const [telefonoNegocio, setTelefonoNegocio] = useState('')
+  const [phoneNumberId, setPhoneNumberId] = useState('')
+  const [accessToken, setAccessToken] = useState('')
+  const [templateRecordatorio, setTemplateRecordatorio] = useState('recordatorio_cita')
+  const [templateLanguage, setTemplateLanguage] = useState('es_CO')
 
   useEffect(() => {
     async function cargarStatus() {
-      const response = await fetch('/api/whatsapp/status')
-      const data = await response.json()
+      const { supabase } = await import('@/lib/supabase')
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      const [statusResponse, configResponse] = await Promise.all([
+        fetch('/api/whatsapp/status'),
+        token
+          ? fetch('/api/whatsapp/configuracion', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          : Promise.resolve(null),
+      ])
+      const data = await statusResponse.json()
 
       setStatus(data)
+
+      if (configResponse) {
+        const configData = await configResponse.json()
+        const config = configData.configuracion ?? null
+
+        setConfiguracion(config)
+
+        if (config) {
+          setTelefonoNegocio(config.telefono_negocio ?? '')
+          setPhoneNumberId(config.phone_number_id ?? '')
+          setTemplateRecordatorio(config.template_recordatorio ?? 'recordatorio_cita')
+          setTemplateLanguage(config.template_language ?? 'es_CO')
+        }
+      }
+
       setCargando(false)
     }
 
     cargarStatus()
   }, [])
+
+  async function guardarConfiguracion(e: React.FormEvent) {
+    e.preventDefault()
+    setGuardando(true)
+    setMensajeConfig('')
+
+    const { supabase } = await import('@/lib/supabase')
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+
+    if (!token) {
+      setMensajeConfig('Inicia sesion de nuevo para guardar la configuracion.')
+      setGuardando(false)
+      return
+    }
+
+    const response = await fetch('/api/whatsapp/configuracion', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        telefono_negocio: telefonoNegocio,
+        phone_number_id: phoneNumberId,
+        access_token: accessToken,
+        template_recordatorio: templateRecordatorio,
+        template_language: templateLanguage,
+      }),
+    })
+
+    const resultado = await response.json()
+
+    if (!response.ok) {
+      setMensajeConfig(resultado.error ?? 'No se pudo guardar la configuracion.')
+      setGuardando(false)
+      return
+    }
+
+    setConfiguracion(resultado.configuracion)
+    setAccessToken('')
+    setMensajeConfig('WhatsApp Business conectado para este negocio.')
+    setGuardando(false)
+  }
 
   async function enviarPrueba() {
     setProbando(true)
@@ -141,7 +229,9 @@ export default function AutomatizacionesPage() {
                 ? 'Revisando...'
                 : status?.listo
                   ? 'Listo para enviar'
-                  : 'Configuracion pendiente'}
+                  : configuracion?.activo
+                    ? 'Numero conectado'
+                    : 'Configurar numero'}
             </p>
           </div>
         </div>
@@ -153,7 +243,7 @@ export default function AutomatizacionesPage() {
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
             El negocio no tiene que copiar mensajes ni abrir WhatsApp a mano.
             Cuando haya citas creadas, Oboro Booking enviara recordatorios
-            automaticamente desde el WhatsApp Business conectado.
+            automaticamente desde el WhatsApp Business propio de ese negocio.
           </p>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -210,14 +300,85 @@ export default function AutomatizacionesPage() {
         <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
           <p className="text-sm text-zinc-500">Numero que enviara mensajes</p>
           <h2 className="mt-2 text-2xl font-bold text-orange-500">
-            WhatsApp Business conectado
+            {configuracion?.activo
+              ? configuracion.telefono_negocio
+              : 'WhatsApp Business del negocio'}
           </h2>
           <p className="mt-3 text-sm leading-6 text-zinc-400">
-            Para el MVP, Oboro Lab configura el numero en Meta. Mas adelante
-            cada negocio podra conectar su propio WhatsApp Business desde esta
-            misma seccion.
+            Cada negocio conecta aqui su propio numero de WhatsApp Business.
+            Los recordatorios de sus citas salen desde ese numero, no desde el
+            WhatsApp de Oboro Lab.
           </p>
         </div>
+
+        <form
+          onSubmit={guardarConfiguracion}
+          className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20"
+        >
+          <h2 className="text-2xl font-bold">
+            Conectar WhatsApp Business del negocio
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
+            Estos datos salen de Meta Developers. En una version posterior se
+            puede automatizar con Embedded Signup; por ahora se guardan por
+            negocio para que cada cuenta envie desde su propio numero.
+          </p>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <input
+              className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+              placeholder="WhatsApp del negocio, ej: 573001234567"
+              value={telefonoNegocio}
+              onChange={(e) => setTelefonoNegocio(e.target.value)}
+            />
+
+            <input
+              className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+              placeholder="Phone Number ID de Meta"
+              value={phoneNumberId}
+              onChange={(e) => setPhoneNumberId(e.target.value)}
+            />
+
+            <input
+              className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none md:col-span-2"
+              placeholder={
+                configuracion?.access_token_configurado
+                  ? 'Access Token configurado. Escribe uno nuevo solo si deseas cambiarlo.'
+                  : 'Access Token permanente de Meta'
+              }
+              value={accessToken}
+              onChange={(e) => setAccessToken(e.target.value)}
+            />
+
+            <input
+              className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+              placeholder="Plantilla aprobada"
+              value={templateRecordatorio}
+              onChange={(e) => setTemplateRecordatorio(e.target.value)}
+            />
+
+            <input
+              className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
+              placeholder="Idioma, ej: es_CO"
+              value={templateLanguage}
+              onChange={(e) => setTemplateLanguage(e.target.value)}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={guardando}
+            className="mt-5 min-h-12 rounded-xl bg-orange-600 px-5 py-3 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {guardando ? 'Guardando...' : 'Guardar conexion'}
+          </button>
+
+          {mensajeConfig && (
+            <p className="mt-4 rounded-xl border border-orange-500/40 bg-black px-4 py-3 text-sm text-orange-200">
+              {mensajeConfig}
+            </p>
+          )}
+        </form>
 
         <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -235,7 +396,7 @@ export default function AutomatizacionesPage() {
             <button
               type="button"
               onClick={enviarPrueba}
-              disabled={probando || !status?.listo}
+              disabled={probando || !configuracion?.activo}
               className="min-h-12 rounded-xl bg-orange-600 px-5 py-3 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {probando ? 'Enviando...' : 'Enviar prueba'}
@@ -254,8 +415,8 @@ export default function AutomatizacionesPage() {
             Configuracion tecnica de Oboro Lab
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">
-            Esta parte es para administrar la conexion con Meta y Vercel. No es
-            algo que el cliente final tenga que configurar.
+            Esta parte muestra variables globales del sistema. La conexion de
+            cada negocio se guarda arriba, en su propia cuenta.
           </p>
 
           <div className="mt-5 grid gap-3">
