@@ -9,6 +9,8 @@ const MENSAJE_DEFAULT =
   'Hola {{cliente}}, te recordamos tu cita en {{negocio}} para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}.\n\nConfirma aqui: {{confirmar}}\nCancela aqui: {{cancelar}}'
 const MENSAJE_NEGOCIO_DEFAULT =
   'Recordatorio: tienes una cita con {{cliente}} el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Atiende: {{empleado}}.'
+const OBORO_WHATSAPP =
+  process.env.NEXT_PUBLIC_OBORO_WHATSAPP_NUMBER ?? '573104040859'
 
 export default function AutomatizacionesPage() {
   const [mensaje, setMensaje] = useState(MENSAJE_DEFAULT)
@@ -144,6 +146,32 @@ export default function AutomatizacionesPage() {
             envia desde el boton de cada cita para que salgan desde su propio
             WhatsApp.
           </p>
+        </div>
+
+        <div className="mt-4 grid gap-4 rounded-2xl border border-green-600/40 bg-zinc-950 p-5 shadow-lg shadow-green-950/20 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-green-300">
+              Soporte de automatizaciones
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
+              Si el negocio necesita activar o revisar recordatorios
+              automaticos, puede escribir directamente al WhatsApp de Oboro
+              Lab. Este numero es el canal oficial para soporte de
+              automatizaciones.
+            </p>
+            <p className="mt-3 text-xl font-black text-orange-500">
+              +{OBORO_WHATSAPP}
+            </p>
+          </div>
+
+          <a
+            href={`https://wa.me/${OBORO_WHATSAPP}?text=${encodeURIComponent('Hola Oboro Lab, necesito ayuda con las automatizaciones de Oboro Booking.')}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-5 py-3 font-bold text-white transition hover:bg-green-700"
+          >
+            Escribir a Oboro
+          </a>
         </div>
 
         <div className="mt-4 grid gap-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20 md:grid-cols-[1fr_auto] md:items-center">

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
 
 const ESTADOS_VALIDOS = ['trial', 'activa', 'activo', 'pagada', 'paid']
+const PLANES_CON_AGENDA_PUBLICA = ['pro', 'business', 'premium']
 
 function limpiarTexto(valor: unknown, respaldo = '') {
   return typeof valor === 'string' ? valor.trim() : respaldo
@@ -16,6 +17,12 @@ function suscripcionVigente(suscripcion: any) {
   return ESTADOS_VALIDOS.includes(estado) && vence >= Date.now()
 }
 
+function tieneAgendaPublica(suscripcion: any) {
+  return PLANES_CON_AGENDA_PUBLICA.includes(
+    String(suscripcion?.plan ?? '').toLowerCase()
+  )
+}
+
 export async function GET(
   _request: Request,
   context: { params: Promise<{ usuarioId: string }> }
@@ -26,7 +33,7 @@ export async function GET(
 
     const { data: suscripcion, error: suscripcionError } = await supabase
       .from('suscripciones')
-      .select('nombre_negocio, estado, fecha_vencimiento')
+      .select('nombre_negocio, estado, fecha_vencimiento, plan')
       .eq('usuario_id', usuarioId)
       .maybeSingle()
 
@@ -34,7 +41,7 @@ export async function GET(
       return NextResponse.json({ error: suscripcionError.message }, { status: 500 })
     }
 
-    if (!suscripcionVigente(suscripcion)) {
+    if (!suscripcionVigente(suscripcion) || !tieneAgendaPublica(suscripcion)) {
       return NextResponse.json(
         { error: 'Este negocio no tiene reservas publicas activas.' },
         { status: 404 }
@@ -97,11 +104,11 @@ export async function POST(
 
     const { data: suscripcion } = await supabase
       .from('suscripciones')
-      .select('estado, fecha_vencimiento')
+      .select('estado, fecha_vencimiento, plan')
       .eq('usuario_id', usuarioId)
       .maybeSingle()
 
-    if (!suscripcionVigente(suscripcion)) {
+    if (!suscripcionVigente(suscripcion) || !tieneAgendaPublica(suscripcion)) {
       return NextResponse.json(
         { error: 'Este negocio no tiene reservas publicas activas.' },
         { status: 403 }

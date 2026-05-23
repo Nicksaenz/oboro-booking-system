@@ -22,6 +22,9 @@ type SuscripcionNegocio = {
   usuario_id: string
   nombre_negocio?: string | null
   telefono?: string | null
+  plan?: string | null
+  estado?: string | null
+  fecha_vencimiento?: string | null
 }
 
 function formatDateForSupabase(date: Date) {
@@ -40,6 +43,20 @@ function isAuthorized(request: Request) {
   if (!cronSecret) return false
 
   return request.headers.get('authorization') === `Bearer ${cronSecret}`
+}
+
+function tieneAutomatizaciones(suscripcion?: SuscripcionNegocio) {
+  const plan = String(suscripcion?.plan ?? '').toLowerCase()
+  const estado = String(suscripcion?.estado ?? '').toLowerCase()
+  const vence = suscripcion?.fecha_vencimiento
+    ? new Date(suscripcion.fecha_vencimiento).getTime()
+    : Date.now()
+
+  return (
+    ['pro', 'business', 'premium'].includes(plan) &&
+    ['trial', 'activa', 'activo', 'pagada', 'paid'].includes(estado) &&
+    vence >= Date.now()
+  )
 }
 
 export async function GET(request: Request) {
@@ -87,7 +104,7 @@ export async function GET(request: Request) {
   const { data: suscripciones, error: suscripcionesError } = usuarioIds.length
     ? await supabase
       .from('suscripciones')
-      .select('usuario_id, nombre_negocio, telefono')
+      .select('usuario_id, nombre_negocio, telefono, plan, estado, fecha_vencimiento')
       .in('usuario_id', usuarioIds)
     : { data: [], error: null }
 
@@ -108,6 +125,16 @@ export async function GET(request: Request) {
 
   for (const cita of citas) {
     const suscripcion = suscripcionesPorUsuario.get(cita.ID_Usuario)
+
+    if (!tieneAutomatizaciones(suscripcion)) {
+      resultados.push({
+        citaId: cita.ID,
+        usuarioId: cita.ID_Usuario,
+        enviado: false,
+        error: 'El plan no incluye recordatorio automatico al negocio.',
+      })
+      continue
+    }
 
     try {
       const respuesta = await sendBusinessAppointmentReminder({

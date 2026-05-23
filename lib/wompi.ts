@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-export type WompiPlan = 'basico' | 'pro' | 'premium'
+export type WompiPlan = 'basico' | 'pro' | 'business'
 
 export const WOMPI_PLANES: Record<
   WompiPlan,
@@ -9,17 +9,17 @@ export const WOMPI_PLANES: Record<
   basico: {
     nombre: 'Basico',
     precioCop: 70000,
-    descripcion: 'Para negocios que empiezan a ordenar sus reservas.',
+    descripcion: 'Agenda, clientes, servicios y recordatorios manuales.',
   },
   pro: {
     nombre: 'Pro',
     precioCop: 90000,
-    descripcion: 'Para vender Oboro Booking como SaaS profesional.',
+    descripcion: 'Reservas por QR, confirmacion y cancelacion por WhatsApp.',
   },
-  premium: {
-    nombre: 'Premium',
+  business: {
+    nombre: 'Business',
     precioCop: 120000,
-    descripcion: 'Para negocios con mas volumen y automatizaciones.',
+    descripcion: 'Finanzas, gastos, liquidaciones y automatizaciones avanzadas.',
   },
 }
 
@@ -74,7 +74,8 @@ export function generarReferencia(usuarioId: string, plan: WompiPlan) {
 }
 
 export function leerReferencia(reference: string) {
-  const [, usuarioId, plan] = reference.match(/^oboro-(.+)-(basico|pro|premium)-\d+$/) ?? []
+  const [, usuarioId, planRaw] = reference.match(/^oboro-(.+)-(basico|pro|premium|business)-\d+$/) ?? []
+  const plan = planRaw === 'premium' ? 'business' : planRaw
 
   if (!usuarioId || !esWompiPlan(plan)) {
     return null

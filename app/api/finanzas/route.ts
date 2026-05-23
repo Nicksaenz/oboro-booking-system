@@ -19,6 +19,29 @@ function obtenerRangoMes(mes: string | null) {
   return { mes: mesSeguro, inicio, fin }
 }
 
+async function tienePlanBusiness(usuarioId: string) {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('suscripciones')
+    .select('plan, estado, fecha_vencimiento')
+    .eq('usuario_id', usuarioId)
+    .maybeSingle()
+
+  if (error || !data) return false
+
+  const plan = String(data.plan ?? '').toLowerCase()
+  const estado = String(data.estado ?? '').toLowerCase()
+  const vence = data.fecha_vencimiento
+    ? new Date(data.fecha_vencimiento).getTime()
+    : Date.now()
+
+  return (
+    ['business', 'premium'].includes(plan) &&
+    ['trial', 'activa', 'activo', 'pagada', 'paid'].includes(estado) &&
+    vence >= Date.now()
+  )
+}
+
 async function obtenerUsuario(request: Request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
 
@@ -44,6 +67,13 @@ export async function GET(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Sesion invalida.' }, { status: 401 })
+    }
+
+    if (!(await tienePlanBusiness(user.id))) {
+      return NextResponse.json(
+        { error: 'Finanzas esta disponible en el plan Business.' },
+        { status: 403 }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -94,8 +124,7 @@ export async function GET(request: Request) {
         mes: rango.mes,
         citas: citas ?? [],
         gastos: [],
-        gastosError:
-          'Falta crear la tabla gastos en Supabase. Abre supabase/gastos.sql y ejecutalo una vez.',
+        gastosPendientes: true,
       })
     }
 
@@ -118,6 +147,13 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Sesion invalida.' }, { status: 401 })
+    }
+
+    if (!(await tienePlanBusiness(user.id))) {
+      return NextResponse.json(
+        { error: 'Finanzas esta disponible en el plan Business.' },
+        { status: 403 }
+      )
     }
 
     const body = await request.json()
@@ -167,6 +203,13 @@ export async function DELETE(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Sesion invalida.' }, { status: 401 })
+    }
+
+    if (!(await tienePlanBusiness(user.id))) {
+      return NextResponse.json(
+        { error: 'Finanzas esta disponible en el plan Business.' },
+        { status: 403 }
+      )
     }
 
     const { searchParams } = new URL(request.url)

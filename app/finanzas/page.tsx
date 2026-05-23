@@ -49,6 +49,7 @@ export default function FinanzasPage() {
   const [citas, setCitas] = useState<Cita[]>([])
   const [gastos, setGastos] = useState<Gasto[]>([])
   const [mensaje, setMensaje] = useState('')
+  const [gastosActivos, setGastosActivos] = useState(true)
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [comision, setComision] = useState(50)
@@ -118,7 +119,12 @@ export default function FinanzasPage() {
 
     setCitas(data.citas ?? [])
     setGastos(data.gastos ?? [])
-    setMensaje(data.gastosError ?? '')
+    setGastosActivos(!data.gastosPendientes)
+    setMensaje(
+      data.gastosPendientes
+        ? 'El registro de gastos esta casi listo. Oboro Lab debe activar esta funcion una sola vez en la base de datos.'
+        : ''
+    )
     setCargando(false)
   }
 
@@ -144,7 +150,11 @@ export default function FinanzasPage() {
     const data = await response.json()
 
     if (!response.ok) {
-      setMensaje(data.error ?? 'No se pudo guardar el gasto.')
+      setMensaje(
+        data.error?.includes('gastos')
+          ? 'El registro de gastos aun no esta activo. Oboro Lab debe activar esta funcion una sola vez.'
+          : data.error ?? 'No se pudo guardar el gasto.'
+      )
       setGuardando(false)
       return
     }
@@ -306,10 +316,14 @@ export default function FinanzasPage() {
 
               <button
                 type="submit"
-                disabled={guardando}
+                disabled={guardando || !gastosActivos}
                 className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {guardando ? 'Guardando...' : 'Guardar gasto'}
+                {!gastosActivos
+                  ? 'Activacion pendiente'
+                  : guardando
+                    ? 'Guardando...'
+                    : 'Guardar gasto'}
               </button>
             </div>
           </form>

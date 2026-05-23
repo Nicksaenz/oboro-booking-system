@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
 
-const PLANES_PERMITIDOS = ['trial', 'basico', 'pro', 'premium'] as const
+const PLANES_PERMITIDOS = ['trial', 'basico', 'pro', 'business', 'premium'] as const
 type Plan = (typeof PLANES_PERMITIDOS)[number]
 
 function limpiarTexto(valor: unknown, respaldo = '') {

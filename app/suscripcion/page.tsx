@@ -17,19 +17,40 @@ const PLANES = [
     id: 'basico',
     nombre: 'Basico',
     precio: '$70.000 COP / mes',
-    detalle: 'Para negocios que empiezan a ordenar sus reservas.',
+    recomendado: false,
+    detalle: 'Para negocios que quieren ordenar su agenda y dejar de manejar citas en papel.',
+    funciones: [
+      'Clientes, servicios, empleados y citas',
+      'Dashboard de reservas',
+      'WhatsApp manual al cliente',
+      'Soporte inicial de Oboro Lab',
+    ],
   },
   {
     id: 'pro',
     nombre: 'Pro',
     precio: '$90.000 COP / mes',
-    detalle: 'Para vender Oboro Booking como SaaS profesional.',
+    recomendado: true,
+    detalle: 'El plan mas equilibrado para negocios que quieren vender mas y ahorrar tiempo.',
+    funciones: [
+      'Todo lo del plan Basico',
+      'QR publico para que el cliente agende solo',
+      'Links de confirmar y cancelar cita',
+      'Recordatorio automatico al negocio',
+    ],
   },
   {
-    id: 'premium',
-    nombre: 'Premium',
+    id: 'business',
+    nombre: 'Business',
     precio: '$120.000 COP / mes',
-    detalle: 'Para negocios con mas volumen y automatizaciones.',
+    recomendado: false,
+    detalle: 'Para negocios con equipo, comisiones, gastos y mas control administrativo.',
+    funciones: [
+      'Todo lo del plan Pro',
+      'Modulo de finanzas',
+      'Registro de gastos',
+      'Liquidacion de colaboradores',
+    ],
   },
 ]
 
@@ -246,8 +267,17 @@ export default function SuscripcionPage() {
           {PLANES.map((plan) => (
             <div
               key={plan.id}
-              className="rounded-xl border border-orange-600/40 bg-black p-5"
+              className={`relative rounded-xl border bg-black p-5 ${
+                plan.recomendado
+                  ? 'border-green-500/70 shadow-xl shadow-green-950/30'
+                  : 'border-orange-600/40'
+              }`}
             >
+              {plan.recomendado && (
+                <span className="absolute right-4 top-4 rounded-full bg-green-600 px-3 py-1 text-xs font-black text-white">
+                  Recomendado
+                </span>
+              )}
               <h3 className="text-2xl font-bold text-orange-500">
                 {plan.nombre}
               </h3>
@@ -257,6 +287,11 @@ export default function SuscripcionPage() {
               <p className="text-zinc-500 mt-3 min-h-12">
                 {plan.detalle}
               </p>
+              <ul className="mt-4 space-y-2 text-sm text-zinc-300">
+                {plan.funciones.map((funcion) => (
+                  <li key={funcion}>✓ {funcion}</li>
+                ))}
+              </ul>
               <button
                 type="button"
                 disabled={planCargando !== null}
