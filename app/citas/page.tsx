@@ -23,7 +23,7 @@ export default function CitasPage() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const [busqueda, setBusqueda] = useState('')
   const [plantillaWhatsApp, setPlantillaWhatsApp] = useState(
-    'Hola {{cliente}}, te recordamos tu cita para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}. Si necesitas cambiar tu reserva, responde este mensaje.'
+    'Hola {{cliente}}, te recordamos tu cita en {{negocio}} para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}.\n\nConfirma aqui: {{confirmar}}\nCancela aqui: {{cancelar}}'
   )
   const [plantillaNegocioWhatsApp, setPlantillaNegocioWhatsApp] = useState(
     'Recordatorio: tienes una cita con {{cliente}} el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Atiende: {{empleado}}.'
@@ -254,6 +254,14 @@ function aplicarPlantillaWhatsApp(cita: any, plantilla: string) {
     )
     .replaceAll('{{empleado}}', cita.Empleados?.Nombre ?? 'equipo')
     .replaceAll('{{negocio}}', nombreNegocio || 'tu negocio')
+    .replaceAll('{{confirmar}}', construirLinkReserva(cita, 'confirmar'))
+    .replaceAll('{{cancelar}}', construirLinkReserva(cita, 'cancelar'))
+}
+
+function construirLinkReserva(cita: any, accion: 'confirmar' | 'cancelar') {
+  if (typeof window === 'undefined') return ''
+
+  return `${window.location.origin}/reserva/${cita.ID}?accion=${accion}`
 }
 
 function abrirWhatsAppConMensaje(telefonoDestino: unknown, texto: string, error: string) {

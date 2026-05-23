@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
 const TEMPLATE_KEY = 'oboro_whatsapp_template'
 const TEMPLATE_NEGOCIO_KEY = 'oboro_whatsapp_template_negocio'
 const MENSAJE_DEFAULT =
-  'Hola {{cliente}}, te recordamos tu cita para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}. Si necesitas cambiar tu reserva, responde este mensaje.'
+  'Hola {{cliente}}, te recordamos tu cita en {{negocio}} para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}.\n\nConfirma aqui: {{confirmar}}\nCancela aqui: {{cancelar}}'
 const MENSAJE_NEGOCIO_DEFAULT =
   'Recordatorio: tienes una cita con {{cliente}} el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Atiende: {{empleado}}.'
 
@@ -13,18 +14,37 @@ export default function AutomatizacionesPage() {
   const [mensaje, setMensaje] = useState(MENSAJE_DEFAULT)
   const [mensajeNegocio, setMensajeNegocio] = useState(MENSAJE_NEGOCIO_DEFAULT)
   const [guardado, setGuardado] = useState(false)
+  const [reservaUrl, setReservaUrl] = useState('')
+  const [linkCopiado, setLinkCopiado] = useState(false)
 
   useEffect(() => {
     const guardadoLocal = window.localStorage.getItem(TEMPLATE_KEY)
     const guardadoNegocioLocal = window.localStorage.getItem(TEMPLATE_NEGOCIO_KEY)
 
-    if (guardadoLocal) {
+    if (
+      guardadoLocal &&
+      guardadoLocal.includes('{{confirmar}}') &&
+      guardadoLocal.includes('{{cancelar}}')
+    ) {
       setMensaje(guardadoLocal)
+    } else {
+      window.localStorage.setItem(TEMPLATE_KEY, MENSAJE_DEFAULT)
     }
 
     if (guardadoNegocioLocal) {
       setMensajeNegocio(guardadoNegocioLocal)
     }
+
+    async function cargarLinkPublico() {
+      const { data } = await supabase.auth.getSession()
+      const userId = data.session?.user?.id
+
+      if (userId) {
+        setReservaUrl(`${window.location.origin}/reservar/${userId}`)
+      }
+    }
+
+    cargarLinkPublico()
   }, [])
 
   function guardarMensaje() {
@@ -41,6 +61,14 @@ export default function AutomatizacionesPage() {
     window.localStorage.setItem(TEMPLATE_NEGOCIO_KEY, MENSAJE_NEGOCIO_DEFAULT)
     setGuardado(true)
     setTimeout(() => setGuardado(false), 2500)
+  }
+
+  async function copiarLinkReserva() {
+    if (!reservaUrl) return
+
+    await navigator.clipboard.writeText(reservaUrl)
+    setLinkCopiado(true)
+    setTimeout(() => setLinkCopiado(false), 2500)
   }
 
   return (
@@ -118,13 +146,49 @@ export default function AutomatizacionesPage() {
           </p>
         </div>
 
+        <div className="mt-4 grid gap-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <h2 className="text-2xl font-bold">
+              QR publico para agendar
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
+              Comparte este codigo en recepcion, redes sociales o historias.
+              Tus clientes pueden escoger servicio, empleado, fecha y hora sin
+              escribirte primero.
+            </p>
+            {reservaUrl && (
+              <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+                <div className="rounded-xl border border-zinc-800 bg-black p-3 text-sm text-orange-200 break-all">
+                  {reservaUrl}
+                </div>
+                <button
+                  type="button"
+                  onClick={copiarLinkReserva}
+                  className="min-h-12 rounded-xl border border-orange-600/60 px-5 py-3 font-bold text-orange-200 transition hover:bg-orange-600/10"
+                >
+                  {linkCopiado ? 'Copiado' : 'Copiar link'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {reservaUrl && (
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(reservaUrl)}`}
+              alt="QR publico para agendar"
+              className="mx-auto h-48 w-48 rounded-2xl border border-zinc-800 bg-white p-3"
+            />
+          )}
+        </div>
+
         <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
           <h2 className="text-2xl font-bold">
             Mensaje para el cliente final
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
             Puedes cambiar el texto. Oboro reemplaza automaticamente las
-            palabras entre llaves con los datos reales de cada cita.
+            palabras entre llaves con los datos reales de cada cita y con los
+            enlaces para confirmar o cancelar.
           </p>
 
           <textarea
@@ -179,7 +243,7 @@ export default function AutomatizacionesPage() {
             Datos disponibles para el mensaje
           </h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {['{{cliente}}', '{{fecha}}', '{{hora}}', '{{servicio}}', '{{empleado}}'].map((campo) => (
+            {['{{cliente}}', '{{fecha}}', '{{hora}}', '{{servicio}}', '{{empleado}}', '{{negocio}}', '{{confirmar}}', '{{cancelar}}'].map((campo) => (
               <div
                 key={campo}
                 className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-center font-bold text-orange-400"

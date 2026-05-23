@@ -27,7 +27,10 @@ export default function ProtectedShell({
   const router = useRouter()
   const pathname = usePathname()
   const [estadoAcceso, setEstadoAcceso] = useState<EstadoAcceso>('cargando')
-  const esRutaPublica = RUTAS_PUBLICAS.includes(pathname)
+  const esRutaPublica =
+    RUTAS_PUBLICAS.includes(pathname) ||
+    pathname.startsWith('/reservar') ||
+    pathname.startsWith('/reserva/')
   const esRutaSuscripcion = RUTAS_SUSCRIPCION.includes(pathname)
 
   useEffect(() => {

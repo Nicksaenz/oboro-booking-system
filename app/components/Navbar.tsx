@@ -8,7 +8,11 @@ import { usePathname } from 'next/navigation'
 export default function Navbar() {
  const [menuAbierto, setMenuAbierto] = useState(false)
  const pathname = usePathname()
- if (pathname === '/login') {
+ if (
+  pathname === '/login' ||
+  pathname.startsWith('/reservar') ||
+  pathname.startsWith('/reserva/')
+ ) {
   return null
 }
  async function cerrarSesion() {
