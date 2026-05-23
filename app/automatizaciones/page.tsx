@@ -6,6 +6,7 @@ type WhatsAppStatus = {
   listo: boolean
   schedule: string
   endpoint: string
+  webhookEndpoint: string
   template: string
   language: string
   variables: Record<string, boolean>
@@ -26,6 +27,11 @@ const VARIABLES = [
     key: 'accessToken',
     label: 'META_WHATSAPP_ACCESS_TOKEN',
     detalle: 'Token permanente para enviar mensajes.',
+  },
+  {
+    key: 'verifyToken',
+    label: 'META_WHATSAPP_VERIFY_TOKEN',
+    detalle: 'Token privado que Meta usa para verificar el webhook.',
   },
   {
     key: 'templateName',
@@ -114,6 +120,19 @@ export default function AutomatizacionesPage() {
               {status?.endpoint ?? '/api/whatsapp/recordatorios'}
             </h2>
           </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
+          <p className="text-sm text-zinc-500">Webhook para Meta</p>
+          <h2 className="mt-2 break-all text-lg font-bold text-orange-500">
+            {typeof window === 'undefined'
+              ? status?.webhookEndpoint
+              : `${window.location.origin}${status?.webhookEndpoint ?? '/api/whatsapp/webhook'}`}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-zinc-400">
+            Esta URL se pega en Meta Developers para recibir confirmaciones de
+            mensajes enviados, entregados, leidos o fallidos.
+          </p>
         </div>
 
         <div className="mt-8 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
