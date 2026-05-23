@@ -56,7 +56,7 @@ export default function AutomatizacionesPage() {
               Recordatorios por WhatsApp
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-              Prepara mensajes para enviarlos manualmente desde el WhatsApp del
+              Mensajes manuales para clientes y recordatorio automatico para el
               negocio.
             </p>
           </div>
@@ -83,22 +83,34 @@ export default function AutomatizacionesPage() {
 
             <div className="rounded-xl border border-zinc-800 bg-black p-4">
               <h3 className="font-bold text-orange-500">
-                2. Elige a quien avisar
+                2. El cliente final es manual
               </h3>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Puedes abrir WhatsApp para el cliente final o para el negocio.
+                El negocio abre WhatsApp al cliente y presiona enviar.
               </p>
             </div>
 
             <div className="rounded-xl border border-zinc-800 bg-black p-4">
               <h3 className="font-bold text-orange-500">
-                3. Presiona enviar
+                3. El negocio recibe aviso
               </h3>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-            El mensaje sale desde el WhatsApp que el negocio tenga abierto.
+                Oboro le envia automatico al negocio un recordatorio de sus
+                citas del dia siguiente.
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-green-600/40 bg-green-950/10 p-5">
+          <h2 className="text-2xl font-bold text-green-300">
+            Recordatorio automatico al negocio
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-zinc-300">
+            Todos los dias, Oboro revisa las citas del dia siguiente y le envia
+            un WhatsApp al numero que el negocio registro al crear su cuenta.
+            Esto no requiere que el negocio conecte Meta.
+          </p>
         </div>
 
         <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
@@ -122,8 +134,8 @@ export default function AutomatizacionesPage() {
             Mensaje para el negocio
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
-            Este mensaje se abre para recordarle al dueño o encargado que tiene
-            una cita con su cliente.
+            Este mensaje tambien se usa para el recordatorio automatico al
+            negocio cuando la automatizacion central de Oboro Lab este activa.
           </p>
 
           <textarea
@@ -178,9 +190,9 @@ export default function AutomatizacionesPage() {
             Ventaja de este modo
           </h2>
           <p className="mt-3 text-sm leading-6 text-zinc-300">
-            No necesitas conectar Meta, tokens ni plantillas aprobadas. El
-            negocio envia manualmente desde su WhatsApp normal o WhatsApp
-            Business, y Oboro solo le deja el mensaje listo.
+            Para avisar al cliente final no necesitas conectar Meta, tokens ni
+            plantillas aprobadas. Para avisar automaticamente al negocio,
+            Oboro Lab configura una sola vez su WhatsApp central.
           </p>
         </div>
       </section>

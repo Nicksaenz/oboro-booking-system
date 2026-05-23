@@ -65,6 +65,13 @@ export function getReminderTemplateLanguage() {
   return process.env.META_WHATSAPP_TEMPLATE_LANGUAGE || 'es_CO'
 }
 
+export function getBusinessReminderTemplateName() {
+  return (
+    process.env.META_WHATSAPP_TEMPLATE_RECORDATORIO_NEGOCIO ||
+    'recordatorio_negocio'
+  )
+}
+
 export async function sendWhatsAppTemplate({
   to,
   templateName,
@@ -143,6 +150,44 @@ export async function sendAppointmentReminder(
         text: cita.SERVICIOS?.['Nombre del servicio'] || 'servicio',
       },
       { type: 'text', text: cita.Empleados?.Nombre || 'equipo' },
+    ],
+  })
+}
+
+export async function sendBusinessAppointmentReminder({
+  to,
+  negocio,
+  cliente,
+  fecha,
+  hora,
+  servicio,
+  empleado,
+}: {
+  to: string
+  negocio: string
+  cliente: string
+  fecha: string
+  hora: string
+  servicio: string
+  empleado: string
+}) {
+  const telefono = normalizeWhatsAppNumber(to)
+
+  if (!telefono) {
+    throw new Error('El negocio no tiene un numero de WhatsApp valido')
+  }
+
+  return sendWhatsAppTemplate({
+    to: telefono,
+    templateName: getBusinessReminderTemplateName(),
+    languageCode: getReminderTemplateLanguage(),
+    parameters: [
+      { type: 'text', text: negocio || 'tu negocio' },
+      { type: 'text', text: cliente || 'cliente' },
+      { type: 'text', text: fecha },
+      { type: 'text', text: hora },
+      { type: 'text', text: servicio || 'servicio' },
+      { type: 'text', text: empleado || 'equipo' },
     ],
   })
 }
