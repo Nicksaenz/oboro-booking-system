@@ -76,6 +76,13 @@ export default function Navbar() {
             Automatizaciones
           </Link>
 
+          <Link
+            href="/finanzas"
+            className="text-white hover:text-orange-500 transition"
+          >
+            Finanzas
+          </Link>
+
           <button
   onClick={cerrarSesion}
   className="text-white hover:text-red-500 transition"
@@ -139,6 +146,14 @@ export default function Navbar() {
       className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
     >
       Automatizaciones
+    </Link>
+
+    <Link
+      href="/finanzas"
+      onClick={() => setMenuAbierto(false)}
+      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
+    >
+      Finanzas
     </Link>
 
     <button
