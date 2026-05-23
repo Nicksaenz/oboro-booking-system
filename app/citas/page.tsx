@@ -267,13 +267,14 @@ function abrirWhatsAppConMensaje(telefonoDestino: unknown, texto: string, error:
   const url = `https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`
 
   window.open(url, '_blank', 'noopener,noreferrer')
+  setMensaje('WhatsApp preparado. Revisa el mensaje y presiona enviar.')
 }
 
 function abrirWhatsAppCliente(cita: any) {
   abrirWhatsAppConMensaje(
     cita.Clientes?.Numero,
     aplicarPlantillaWhatsApp(cita, plantillaWhatsApp),
-    'Este cliente no tiene un numero de WhatsApp guardado.'
+    'Agrega el WhatsApp del cliente en Clientes para preparar el mensaje.'
   )
 }
 
@@ -281,7 +282,7 @@ function abrirWhatsAppNegocio(cita: any) {
   abrirWhatsAppConMensaje(
     telefonoNegocio,
     aplicarPlantillaWhatsApp(cita, plantillaNegocioWhatsApp),
-    'Tu negocio no tiene un WhatsApp guardado en la suscripcion.'
+    'Agrega el WhatsApp del negocio en la cuenta para preparar este aviso.'
   )
 }
 
@@ -360,6 +361,28 @@ async function guardarEdicionCita() {
         <p className="mt-3 mb-8 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
           Agenda reservas conectando clientes, servicios y empleados.
         </p>
+
+        <div className="mb-8 grid gap-3 md:grid-cols-2">
+          <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-4 shadow-xl shadow-orange-950/10">
+            <p className="text-sm font-bold text-orange-500">
+              Aviso al cliente
+            </p>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">
+              El boton abre WhatsApp con el mensaje listo. El negocio solo
+              revisa y presiona enviar desde su propio WhatsApp.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-green-600/40 bg-green-950/10 p-4 shadow-xl shadow-green-950/10">
+            <p className="text-sm font-bold text-green-300">
+              Aviso al negocio
+            </p>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">
+              Oboro Lab enviara automaticamente un resumen de las citas del dia
+              siguiente al numero registrado del negocio.
+            </p>
+          </div>
+        </div>
 
         <form
           onSubmit={guardarCita}
@@ -601,14 +624,14 @@ async function guardarEdicionCita() {
           onClick={() => abrirWhatsAppCliente(cita)}
           className="col-span-2 min-h-11 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
         >
-          WhatsApp cliente
+          Avisar cliente
         </button>
 
         <button
           onClick={() => abrirWhatsAppNegocio(cita)}
           className="col-span-2 min-h-11 rounded-xl border border-green-600/60 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
         >
-          WhatsApp negocio
+          Avisar negocio
         </button>
       </div>
     </div>
@@ -624,7 +647,7 @@ async function guardarEdicionCita() {
           <th className="py-3 px-3">Servicio</th>
           <th className="py-3 px-3">Empleado</th>
           <th className="py-3 px-3">Estado</th>
-          <th className="py-3 px-3">WhatsApp</th>
+          <th className="py-3 px-3">Recordatorios</th>
         </tr>
       </thead>
 
@@ -661,13 +684,13 @@ async function guardarEdicionCita() {
                 onClick={() => abrirWhatsAppCliente(cita)}
                 className="rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
               >
-                Cliente
+                Avisar cliente
               </button>
               <button
                 onClick={() => abrirWhatsAppNegocio(cita)}
                 className="ml-2 rounded-xl border border-green-600/60 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
               >
-                Negocio
+                Avisar negocio
               </button>
             </td>
           </tr>
@@ -881,14 +904,14 @@ async function guardarEdicionCita() {
     onClick={() => abrirWhatsAppCliente(cita)}
     className="rounded-xl border border-orange-600/60 px-4 py-2 font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
   >
-    WhatsApp cliente
+    Avisar cliente
   </button>
 
   <button
     onClick={() => abrirWhatsAppNegocio(cita)}
     className="rounded-xl border border-green-600/60 px-4 py-2 font-bold text-green-200 transition hover:bg-green-600/10"
   >
-    WhatsApp negocio
+    Avisar negocio
   </button>
 
 </div>

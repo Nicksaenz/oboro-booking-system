@@ -63,7 +63,7 @@ export default function AutomatizacionesPage() {
 
           <div className="rounded-2xl border border-green-500/50 bg-green-950/20 px-5 py-4 text-green-300">
             <p className="text-sm text-zinc-400">Modo</p>
-            <p className="text-xl font-bold">Manual y simple</p>
+            <p className="text-xl font-bold">Cliente manual / negocio automatico</p>
           </div>
         </div>
 
@@ -110,6 +110,11 @@ export default function AutomatizacionesPage() {
             Todos los dias, Oboro revisa las citas del dia siguiente y le envia
             un WhatsApp al numero que el negocio registro al crear su cuenta.
             Esto no requiere que el negocio conecte Meta.
+          </p>
+          <p className="mt-3 text-sm leading-6 text-zinc-400">
+            El cliente final no recibe mensajes automaticos: el negocio los
+            envia desde el boton de cada cita para que salgan desde su propio
+            WhatsApp.
           </p>
         </div>
 
