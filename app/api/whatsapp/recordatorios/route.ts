@@ -1,28 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import {
-  getReminderTemplateLanguage,
-  getReminderTemplateName,
-  normalizeWhatsAppNumber,
-  sendWhatsAppTemplate,
+  CitaRecordatorio,
+  sendAppointmentReminder,
 } from '@/lib/whatsapp'
-
-type CitaRecordatorio = {
-  ID: string
-  Fecha: string
-  Hora: string
-  Estado: string
-  Clientes?: {
-    Nombre?: string
-    Numero?: string
-  } | null
-  SERVICIOS?: {
-    'Nombre del servicio'?: string
-  } | null
-  Empleados?: {
-    Nombre?: string
-  } | null
-}
 
 function formatDateForSupabase(date: Date) {
   return date.toISOString().slice(0, 10)
@@ -86,33 +67,8 @@ export async function GET(request: Request) {
   const resultados = []
 
   for (const cita of citas) {
-    const telefono = normalizeWhatsAppNumber(cita.Clientes?.Numero)
-
-    if (!telefono) {
-      resultados.push({
-        citaId: cita.ID,
-        enviado: false,
-        error: 'Cliente sin numero de WhatsApp',
-      })
-      continue
-    }
-
     try {
-      const respuesta = await sendWhatsAppTemplate({
-        to: telefono,
-        templateName: getReminderTemplateName(),
-        languageCode: getReminderTemplateLanguage(),
-        parameters: [
-          { type: 'text', text: cita.Clientes?.Nombre || 'cliente' },
-          { type: 'text', text: cita.Fecha },
-          { type: 'text', text: cita.Hora },
-          {
-            type: 'text',
-            text: cita.SERVICIOS?.['Nombre del servicio'] || 'servicio',
-          },
-          { type: 'text', text: cita.Empleados?.Nombre || 'equipo' },
-        ],
-      })
+      const respuesta = await sendAppointmentReminder(cita)
 
       resultados.push({
         citaId: cita.ID,

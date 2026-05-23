@@ -10,6 +10,23 @@ type SendTemplateInput = {
   parameters: TemplateParameter[]
 }
 
+export type CitaRecordatorio = {
+  ID: string
+  Fecha: string
+  Hora: string
+  Estado: string
+  Clientes?: {
+    Nombre?: string
+    Numero?: string
+  } | null
+  SERVICIOS?: {
+    'Nombre del servicio'?: string
+  } | null
+  Empleados?: {
+    Nombre?: string
+  } | null
+}
+
 function getRequiredEnv(name: string) {
   const value = process.env[name]
 
@@ -86,4 +103,28 @@ export async function sendWhatsAppTemplate({
   }
 
   return data
+}
+
+export async function sendAppointmentReminder(cita: CitaRecordatorio) {
+  const telefono = normalizeWhatsAppNumber(cita.Clientes?.Numero)
+
+  if (!telefono) {
+    throw new Error('El cliente no tiene un numero de WhatsApp valido')
+  }
+
+  return sendWhatsAppTemplate({
+    to: telefono,
+    templateName: getReminderTemplateName(),
+    languageCode: getReminderTemplateLanguage(),
+    parameters: [
+      { type: 'text', text: cita.Clientes?.Nombre || 'cliente' },
+      { type: 'text', text: cita.Fecha },
+      { type: 'text', text: cita.Hora },
+      {
+        type: 'text',
+        text: cita.SERVICIOS?.['Nombre del servicio'] || 'servicio',
+      },
+      { type: 'text', text: cita.Empleados?.Nombre || 'equipo' },
+    ],
+  })
 }

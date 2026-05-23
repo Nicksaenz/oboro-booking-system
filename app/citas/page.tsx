@@ -33,6 +33,7 @@ export default function CitasPage() {
   }
 }, [mensaje])
   const [guardandoCita, setGuardandoCita] = useState(false)
+  const [enviandoRecordatorioId, setEnviandoRecordatorioId] = useState<string | null>(null)
   const [citaEditando, setCitaEditando] = useState<any>(null)
   const [citaDetalle, setCitaDetalle] = useState<any>(null)
   const [editFecha, setEditFecha] = useState('')
@@ -205,6 +206,39 @@ async function eliminarCita(id: string) {
 
   setMensaje('Cita eliminada correctamente.')
   cargarDatos()
+}
+
+async function enviarRecordatorio(citaId: string) {
+  setEnviandoRecordatorioId(citaId)
+  setMensaje('')
+
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData.session?.access_token
+
+  if (!token) {
+    router.push('/login')
+    return
+  }
+
+  const response = await fetch('/api/whatsapp/enviar-recordatorio', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ citaId }),
+  })
+
+  const resultado = await response.json()
+
+  if (!response.ok) {
+    setMensaje(resultado.error ?? 'No se pudo enviar el recordatorio.')
+    setEnviandoRecordatorioId(null)
+    return
+  }
+
+  setMensaje('Recordatorio enviado por WhatsApp.')
+  setEnviandoRecordatorioId(null)
 }
 
 function abrirModalEditar(cita: any) {
@@ -504,6 +538,16 @@ async function guardarEdicionCita() {
         >
           Cancelar
         </button>
+
+        <button
+          onClick={() => enviarRecordatorio(cita.ID)}
+          disabled={enviandoRecordatorioId === cita.ID}
+          className="col-span-2 min-h-11 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
+        >
+          {enviandoRecordatorioId === cita.ID
+            ? 'Enviando...'
+            : 'Enviar WhatsApp'}
+        </button>
       </div>
     </div>
   ))}
@@ -518,6 +562,7 @@ async function guardarEdicionCita() {
           <th className="py-3 px-3">Servicio</th>
           <th className="py-3 px-3">Empleado</th>
           <th className="py-3 px-3">Estado</th>
+          <th className="py-3 px-3">WhatsApp</th>
         </tr>
       </thead>
 
@@ -548,6 +593,15 @@ async function guardarEdicionCita() {
               >
                 {cita.Estado}
               </span>
+            </td>
+            <td className="py-3 px-3">
+              <button
+                onClick={() => enviarRecordatorio(cita.ID)}
+                disabled={enviandoRecordatorioId === cita.ID}
+                className="rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
+              >
+                {enviandoRecordatorioId === cita.ID ? 'Enviando...' : 'Enviar'}
+              </button>
             </td>
           </tr>
         ))}
@@ -754,6 +808,14 @@ async function guardarEdicionCita() {
     className="rounded-xl bg-red-600 px-4 py-2 font-bold"
   >
     Cancelar
+  </button>
+
+  <button
+    onClick={() => enviarRecordatorio(cita.ID)}
+    disabled={enviandoRecordatorioId === cita.ID}
+    className="rounded-xl border border-orange-600/60 px-4 py-2 font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
+  >
+    {enviandoRecordatorioId === cita.ID ? 'Enviando...' : 'Enviar WhatsApp'}
   </button>
 
 </div>
