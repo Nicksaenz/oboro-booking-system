@@ -22,6 +22,9 @@ export default function CitasPage() {
   const [filtroEmpleado, setFiltroEmpleado] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('')
   const [busqueda, setBusqueda] = useState('')
+  const [plantillaWhatsApp, setPlantillaWhatsApp] = useState(
+    'Hola {{cliente}}, te recordamos tu cita para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}. Si necesitas cambiar tu reserva, responde este mensaje.'
+  )
 
   useEffect(() => {
   if (mensaje) {
@@ -33,7 +36,6 @@ export default function CitasPage() {
   }
 }, [mensaje])
   const [guardandoCita, setGuardandoCita] = useState(false)
-  const [enviandoRecordatorioId, setEnviandoRecordatorioId] = useState<string | null>(null)
   const [citaEditando, setCitaEditando] = useState<any>(null)
   const [citaDetalle, setCitaDetalle] = useState<any>(null)
   const [editFecha, setEditFecha] = useState('')
@@ -100,7 +102,8 @@ const citasFiltradas = citas.filter((cita) => {
   .select(`
   *,
   Clientes:ID_Cliente (
-    Nombre
+    Nombre,
+    Numero
   ),
   SERVICIOS:ID_Servicio (
     "Nombre del servicio"
@@ -208,37 +211,40 @@ async function eliminarCita(id: string) {
   cargarDatos()
 }
 
-async function enviarRecordatorio(citaId: string) {
-  setEnviandoRecordatorioId(citaId)
-  setMensaje('')
+function normalizarTelefonoWhatsApp(valor: unknown) {
+  const digitos = String(valor ?? '').replace(/\D/g, '')
 
-  const { data: sessionData } = await supabase.auth.getSession()
-  const token = sessionData.session?.access_token
+  if (!digitos) return ''
+  if (digitos.startsWith('57')) return digitos
+  if (digitos.length === 10) return `57${digitos}`
 
-  if (!token) {
-    router.push('/login')
+  return digitos
+}
+
+function crearMensajeWhatsApp(cita: any) {
+  return plantillaWhatsApp
+    .replaceAll('{{cliente}}', cita.Clientes?.Nombre ?? 'cliente')
+    .replaceAll('{{fecha}}', cita.Fecha ?? '')
+    .replaceAll('{{hora}}', cita.Hora ?? '')
+    .replaceAll(
+      '{{servicio}}',
+      cita.SERVICIOS?.['Nombre del servicio'] ?? 'servicio'
+    )
+    .replaceAll('{{empleado}}', cita.Empleados?.Nombre ?? 'equipo')
+}
+
+function abrirWhatsApp(cita: any) {
+  const telefono = normalizarTelefonoWhatsApp(cita.Clientes?.Numero)
+
+  if (!telefono) {
+    setMensaje('Este cliente no tiene un numero de WhatsApp guardado.')
     return
   }
 
-  const response = await fetch('/api/whatsapp/enviar-recordatorio', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ citaId }),
-  })
+  const texto = crearMensajeWhatsApp(cita)
+  const url = `https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`
 
-  const resultado = await response.json()
-
-  if (!response.ok) {
-    setMensaje(resultado.error ?? 'No se pudo enviar el recordatorio.')
-    setEnviandoRecordatorioId(null)
-    return
-  }
-
-  setMensaje('Recordatorio enviado por WhatsApp.')
-  setEnviandoRecordatorioId(null)
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 function abrirModalEditar(cita: any) {
@@ -274,6 +280,14 @@ async function guardarEdicionCita() {
 }
   useEffect(() => {
     cargarDatos()
+  }, [])
+
+  useEffect(() => {
+    const plantillaGuardada = window.localStorage.getItem('oboro_whatsapp_template')
+
+    if (plantillaGuardada) {
+      setPlantillaWhatsApp(plantillaGuardada)
+    }
   }, [])
 
   useEffect(() => {
@@ -540,13 +554,10 @@ async function guardarEdicionCita() {
         </button>
 
         <button
-          onClick={() => enviarRecordatorio(cita.ID)}
-          disabled={enviandoRecordatorioId === cita.ID}
+          onClick={() => abrirWhatsApp(cita)}
           className="col-span-2 min-h-11 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
         >
-          {enviandoRecordatorioId === cita.ID
-            ? 'Enviando...'
-            : 'Enviar WhatsApp'}
+          Abrir WhatsApp
         </button>
       </div>
     </div>
@@ -596,11 +607,10 @@ async function guardarEdicionCita() {
             </td>
             <td className="py-3 px-3">
               <button
-                onClick={() => enviarRecordatorio(cita.ID)}
-                disabled={enviandoRecordatorioId === cita.ID}
+                onClick={() => abrirWhatsApp(cita)}
                 className="rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
               >
-                {enviandoRecordatorioId === cita.ID ? 'Enviando...' : 'Enviar'}
+                Abrir
               </button>
             </td>
           </tr>
@@ -811,11 +821,10 @@ async function guardarEdicionCita() {
   </button>
 
   <button
-    onClick={() => enviarRecordatorio(cita.ID)}
-    disabled={enviandoRecordatorioId === cita.ID}
+    onClick={() => abrirWhatsApp(cita)}
     className="rounded-xl border border-orange-600/60 px-4 py-2 font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
   >
-    {enviandoRecordatorioId === cita.ID ? 'Enviando...' : 'Enviar WhatsApp'}
+    Abrir WhatsApp
   </button>
 
 </div>
