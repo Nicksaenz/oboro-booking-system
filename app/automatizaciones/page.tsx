@@ -3,30 +3,42 @@
 import { useEffect, useState } from 'react'
 
 const TEMPLATE_KEY = 'oboro_whatsapp_template'
+const TEMPLATE_NEGOCIO_KEY = 'oboro_whatsapp_template_negocio'
 const MENSAJE_DEFAULT =
   'Hola {{cliente}}, te recordamos tu cita para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}. Si necesitas cambiar tu reserva, responde este mensaje.'
+const MENSAJE_NEGOCIO_DEFAULT =
+  'Recordatorio: tienes una cita con {{cliente}} el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Atiende: {{empleado}}.'
 
 export default function AutomatizacionesPage() {
   const [mensaje, setMensaje] = useState(MENSAJE_DEFAULT)
+  const [mensajeNegocio, setMensajeNegocio] = useState(MENSAJE_NEGOCIO_DEFAULT)
   const [guardado, setGuardado] = useState(false)
 
   useEffect(() => {
     const guardadoLocal = window.localStorage.getItem(TEMPLATE_KEY)
+    const guardadoNegocioLocal = window.localStorage.getItem(TEMPLATE_NEGOCIO_KEY)
 
     if (guardadoLocal) {
       setMensaje(guardadoLocal)
+    }
+
+    if (guardadoNegocioLocal) {
+      setMensajeNegocio(guardadoNegocioLocal)
     }
   }, [])
 
   function guardarMensaje() {
     window.localStorage.setItem(TEMPLATE_KEY, mensaje)
+    window.localStorage.setItem(TEMPLATE_NEGOCIO_KEY, mensajeNegocio)
     setGuardado(true)
     setTimeout(() => setGuardado(false), 2500)
   }
 
   function restaurarMensaje() {
     setMensaje(MENSAJE_DEFAULT)
+    setMensajeNegocio(MENSAJE_NEGOCIO_DEFAULT)
     window.localStorage.setItem(TEMPLATE_KEY, MENSAJE_DEFAULT)
+    window.localStorage.setItem(TEMPLATE_NEGOCIO_KEY, MENSAJE_NEGOCIO_DEFAULT)
     setGuardado(true)
     setTimeout(() => setGuardado(false), 2500)
   }
@@ -71,10 +83,10 @@ export default function AutomatizacionesPage() {
 
             <div className="rounded-xl border border-zinc-800 bg-black p-4">
               <h3 className="font-bold text-orange-500">
-                2. Da clic en WhatsApp
+                2. Elige a quien avisar
               </h3>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Oboro abre WhatsApp con el mensaje listo para ese cliente.
+                Puedes abrir WhatsApp para el cliente final o para el negocio.
               </p>
             </div>
 
@@ -83,7 +95,7 @@ export default function AutomatizacionesPage() {
                 3. Presiona enviar
               </h3>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                El mensaje sale desde el WhatsApp que el negocio tenga abierto.
+            El mensaje sale desde el WhatsApp que el negocio tenga abierto.
               </p>
             </div>
           </div>
@@ -91,7 +103,7 @@ export default function AutomatizacionesPage() {
 
         <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
           <h2 className="text-2xl font-bold">
-            Mensaje de recordatorio
+            Mensaje para el cliente final
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
             Puedes cambiar el texto. Oboro reemplaza automaticamente las
@@ -102,6 +114,22 @@ export default function AutomatizacionesPage() {
             className="mt-5 min-h-44 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm leading-6 outline-none"
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
+          />
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
+          <h2 className="text-2xl font-bold">
+            Mensaje para el negocio
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
+            Este mensaje se abre para recordarle al dueño o encargado que tiene
+            una cita con su cliente.
+          </p>
+
+          <textarea
+            className="mt-5 min-h-36 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm leading-6 outline-none"
+            value={mensajeNegocio}
+            onChange={(e) => setMensajeNegocio(e.target.value)}
           />
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">

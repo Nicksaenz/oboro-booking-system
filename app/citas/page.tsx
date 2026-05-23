@@ -25,6 +25,11 @@ export default function CitasPage() {
   const [plantillaWhatsApp, setPlantillaWhatsApp] = useState(
     'Hola {{cliente}}, te recordamos tu cita para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}. Si necesitas cambiar tu reserva, responde este mensaje.'
   )
+  const [plantillaNegocioWhatsApp, setPlantillaNegocioWhatsApp] = useState(
+    'Recordatorio: tienes una cita con {{cliente}} el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Atiende: {{empleado}}.'
+  )
+  const [telefonoNegocio, setTelefonoNegocio] = useState('')
+  const [nombreNegocio, setNombreNegocio] = useState('')
 
   useEffect(() => {
   if (mensaje) {
@@ -94,9 +99,24 @@ const citasFiltradas = citas.filter((cita) => {
   router.push('/login')
   return
 }
+    const accessToken = sessionData.session?.access_token
+
+    if (!accessToken) {
+      router.push('/login')
+      return
+    }
+
     const clientesRes = await supabase.from('Clientes').select('*').eq('usuario_id', user.id)
     const serviciosRes = await supabase.from('SERVICIOS').select('*').eq('ID DE USUARIO', user.id)
     const empleadosRes = await supabase.from('Empleados').select('*').eq('ID de Usuario', user.id)
+    const suscripcionRes = await fetch('/api/suscripcion', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+    const suscripcionJson = suscripcionRes.ok
+      ? await suscripcionRes.json()
+      : { suscripcion: null }
     const citasRes = await supabase
   .from('Citas')
   .select(`
@@ -120,6 +140,8 @@ const citasFiltradas = citas.filter((cita) => {
     setServicios(serviciosRes.data || [])
     setEmpleados(empleadosRes.data || [])
     setCitas(citasRes.data || [])
+    setTelefonoNegocio(suscripcionJson.suscripcion?.telefono ?? '')
+    setNombreNegocio(suscripcionJson.suscripcion?.nombre_negocio ?? '')
   }
 
   async function guardarCita(e: React.FormEvent) {
@@ -221,8 +243,8 @@ function normalizarTelefonoWhatsApp(valor: unknown) {
   return digitos
 }
 
-function crearMensajeWhatsApp(cita: any) {
-  return plantillaWhatsApp
+function aplicarPlantillaWhatsApp(cita: any, plantilla: string) {
+  return plantilla
     .replaceAll('{{cliente}}', cita.Clientes?.Nombre ?? 'cliente')
     .replaceAll('{{fecha}}', cita.Fecha ?? '')
     .replaceAll('{{hora}}', cita.Hora ?? '')
@@ -231,20 +253,36 @@ function crearMensajeWhatsApp(cita: any) {
       cita.SERVICIOS?.['Nombre del servicio'] ?? 'servicio'
     )
     .replaceAll('{{empleado}}', cita.Empleados?.Nombre ?? 'equipo')
+    .replaceAll('{{negocio}}', nombreNegocio || 'tu negocio')
 }
 
-function abrirWhatsApp(cita: any) {
-  const telefono = normalizarTelefonoWhatsApp(cita.Clientes?.Numero)
+function abrirWhatsAppConMensaje(telefonoDestino: unknown, texto: string, error: string) {
+  const telefono = normalizarTelefonoWhatsApp(telefonoDestino)
 
   if (!telefono) {
-    setMensaje('Este cliente no tiene un numero de WhatsApp guardado.')
+    setMensaje(error)
     return
   }
 
-  const texto = crearMensajeWhatsApp(cita)
   const url = `https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`
 
   window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+function abrirWhatsAppCliente(cita: any) {
+  abrirWhatsAppConMensaje(
+    cita.Clientes?.Numero,
+    aplicarPlantillaWhatsApp(cita, plantillaWhatsApp),
+    'Este cliente no tiene un numero de WhatsApp guardado.'
+  )
+}
+
+function abrirWhatsAppNegocio(cita: any) {
+  abrirWhatsAppConMensaje(
+    telefonoNegocio,
+    aplicarPlantillaWhatsApp(cita, plantillaNegocioWhatsApp),
+    'Tu negocio no tiene un WhatsApp guardado en la suscripcion.'
+  )
 }
 
 function abrirModalEditar(cita: any) {
@@ -287,6 +325,12 @@ async function guardarEdicionCita() {
 
     if (plantillaGuardada) {
       setPlantillaWhatsApp(plantillaGuardada)
+    }
+
+    const plantillaNegocioGuardada = window.localStorage.getItem('oboro_whatsapp_template_negocio')
+
+    if (plantillaNegocioGuardada) {
+      setPlantillaNegocioWhatsApp(plantillaNegocioGuardada)
     }
   }, [])
 
@@ -554,10 +598,17 @@ async function guardarEdicionCita() {
         </button>
 
         <button
-          onClick={() => abrirWhatsApp(cita)}
+          onClick={() => abrirWhatsAppCliente(cita)}
           className="col-span-2 min-h-11 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
         >
-          Abrir WhatsApp
+          WhatsApp cliente
+        </button>
+
+        <button
+          onClick={() => abrirWhatsAppNegocio(cita)}
+          className="col-span-2 min-h-11 rounded-xl border border-green-600/60 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
+        >
+          WhatsApp negocio
         </button>
       </div>
     </div>
@@ -607,10 +658,16 @@ async function guardarEdicionCita() {
             </td>
             <td className="py-3 px-3">
               <button
-                onClick={() => abrirWhatsApp(cita)}
+                onClick={() => abrirWhatsAppCliente(cita)}
                 className="rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
               >
-                Abrir
+                Cliente
+              </button>
+              <button
+                onClick={() => abrirWhatsAppNegocio(cita)}
+                className="ml-2 rounded-xl border border-green-600/60 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
+              >
+                Negocio
               </button>
             </td>
           </tr>
@@ -821,10 +878,17 @@ async function guardarEdicionCita() {
   </button>
 
   <button
-    onClick={() => abrirWhatsApp(cita)}
+    onClick={() => abrirWhatsAppCliente(cita)}
     className="rounded-xl border border-orange-600/60 px-4 py-2 font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
   >
-    Abrir WhatsApp
+    WhatsApp cliente
+  </button>
+
+  <button
+    onClick={() => abrirWhatsAppNegocio(cita)}
+    className="rounded-xl border border-green-600/60 px-4 py-2 font-bold text-green-200 transition hover:bg-green-600/10"
+  >
+    WhatsApp negocio
   </button>
 
 </div>

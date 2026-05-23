@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabaseAdmin
       .from('suscripciones')
-      .select('estado, fecha_vencimiento, plan')
+      .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono')
       .eq('usuario_id', userData.user.id)
       .maybeSingle()
 
