@@ -20,6 +20,8 @@ const PLANES = [
     recomendado: false,
     detalle: 'Para negocios que quieren ordenar su agenda y dejar de manejar citas en papel.',
     funciones: [
+      '1 administrador principal incluido',
+      'Accesos de lectura para equipo con configuracion asistida',
       'Clientes, servicios, empleados y citas',
       'Dashboard de reservas',
       'WhatsApp manual al cliente',
@@ -34,6 +36,8 @@ const PLANES = [
     detalle: 'El plan mas equilibrado para negocios que quieren vender mas y ahorrar tiempo.',
     funciones: [
       'Todo lo del plan Basico',
+      '1 administrador principal incluido',
+      'Accesos de lectura para recepcion o equipo operativo',
       'QR publico para que el cliente agende solo',
       'Links de confirmar y cancelar cita',
       'Recordatorio automatico al negocio',
@@ -47,6 +51,8 @@ const PLANES = [
     detalle: 'Para negocios con equipo, comisiones, gastos y mas control administrativo.',
     funciones: [
       'Todo lo del plan Pro',
+      '1 administrador financiero incluido',
+      'Paneles de lectura para equipo sin permiso de editar finanzas',
       'Modulo de finanzas',
       'Registro de gastos',
       'Liquidacion de colaboradores',
@@ -261,6 +267,17 @@ export default function SuscripcionPage() {
             Al pagar con Wompi, el sistema actualizara automaticamente tu
             suscripcion cuando Wompi confirme el pago aprobado.
           </p>
+          <div className="mt-4 rounded-xl border border-green-600/40 bg-green-950/10 p-4">
+            <p className="text-sm font-bold text-green-300">
+              Importante sobre accesos
+            </p>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">
+              Cada suscripcion incluye un administrador principal. Ese usuario
+              controla configuracion, pagos, servicios, empleados, citas y, en
+              Business, finanzas. Los demas accesos del equipo se manejan como
+              paneles de lectura u operacion limitada para proteger la cuenta.
+            </p>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mt-5">
