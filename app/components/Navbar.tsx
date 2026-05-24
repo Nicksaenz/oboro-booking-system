@@ -35,6 +35,13 @@ export default function Navbar() {
 
         <div className="hidden md:flex gap-4">
           <Link
+            href="/bienvenida"
+            className="text-white hover:text-orange-500 transition"
+          >
+            Inicio
+          </Link>
+
+          <Link
             href="/"
             className="text-white hover:text-orange-500 transition"
           >
@@ -100,6 +107,14 @@ export default function Navbar() {
       </div>
     {menuAbierto && (
   <div className="md:hidden mx-4 mb-4 rounded-2xl border border-orange-600/30 bg-zinc-950/95 p-4 shadow-2xl shadow-orange-950/30 backdrop-blur-xl flex flex-col gap-3">
+    <Link
+      href="/bienvenida"
+      onClick={() => setMenuAbierto(false)}
+      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
+    >
+      Inicio
+    </Link>
+
     <Link
       href="/"
       onClick={() => setMenuAbierto(false)}

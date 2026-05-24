@@ -95,7 +95,7 @@ export default function LoginPage() {
     try {
       await crearSuscripcionTrial(data.session, correo)
       mostrarMensaje('Inicio de sesion correcto.', 'success')
-      router.replace('/')
+      router.replace('/bienvenida')
     } catch (suscripcionError) {
       const texto =
         suscripcionError instanceof Error
@@ -152,7 +152,7 @@ export default function LoginPage() {
     try {
       await crearSuscripcionTrial(data.session, correo)
       mostrarMensaje('Cuenta creada con trial activo.', 'success')
-      router.replace('/')
+      router.replace('/bienvenida')
     } catch (suscripcionError) {
       const texto =
         suscripcionError instanceof Error
