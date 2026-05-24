@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { obtenerContextoEquipo } from '@/lib/equipo'
 
 type Cita = {
   ID: string
@@ -166,6 +167,15 @@ export default function DashboardPage() {
       return
     }
 
+    const contexto = await obtenerContextoEquipo()
+
+    if (!contexto) {
+      router.push('/login')
+      return
+    }
+
+    const negocioId = contexto.negocioId
+
     const hoy = fechaIsoLocal()
     const inicioMes = fechaIsoLocal(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
     const finMes = fechaIsoLocal(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0))
@@ -186,38 +196,38 @@ export default function DashboardPage() {
       supabase
         .from('Clientes')
         .select('*', { count: 'exact', head: true })
-        .eq('usuario_id', user.id),
+        .eq('usuario_id', negocioId),
       supabase
         .from('Empleados')
         .select('*', { count: 'exact', head: true })
-        .eq('ID de Usuario', user.id),
+        .eq('ID de Usuario', negocioId),
       supabase
         .from('SERVICIOS')
         .select('*', { count: 'exact', head: true })
-        .eq('ID DE USUARIO', user.id),
+        .eq('ID DE USUARIO', negocioId),
       supabase
         .from('SERVICIOS')
         .select('*', { count: 'exact', head: true })
-        .eq('ID DE USUARIO', user.id)
+        .eq('ID DE USUARIO', negocioId)
         .eq('ACTIVO', true),
       supabase
         .from('Citas')
         .select('*', { count: 'exact', head: true })
-        .eq('ID_Usuario', user.id),
+        .eq('ID_Usuario', negocioId),
       supabase
         .from('Citas')
         .select('*', { count: 'exact', head: true })
-        .eq('ID_Usuario', user.id)
+        .eq('ID_Usuario', negocioId)
         .eq('Fecha', hoy),
       supabase
         .from('Citas')
         .select('*', { count: 'exact', head: true })
-        .eq('ID_Usuario', user.id)
+        .eq('ID_Usuario', negocioId)
         .eq('Estado', 'pendiente'),
       supabase
         .from('Citas')
         .select('*', { count: 'exact', head: true })
-        .eq('ID_Usuario', user.id)
+        .eq('ID_Usuario', negocioId)
         .gte('Fecha', inicioMes)
         .lte('Fecha', finMes),
       supabase
@@ -228,7 +238,7 @@ export default function DashboardPage() {
             "Precio del servicio"
           )
         `)
-        .eq('ID_Usuario', user.id)
+        .eq('ID_Usuario', negocioId)
         .gte('Fecha', inicioMes)
         .lte('Fecha', finMes),
       supabase
@@ -249,7 +259,7 @@ export default function DashboardPage() {
             Nombre
           )
         `)
-        .eq('ID_Usuario', user.id)
+        .eq('ID_Usuario', negocioId)
         .gte('Fecha', hoy)
         .neq('Estado', 'cancelada')
         .order('Fecha', { ascending: true })

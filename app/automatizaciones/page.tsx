@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { obtenerContextoEquipo } from '@/lib/equipo'
 
 const TEMPLATE_KEY = 'oboro_whatsapp_template'
 const TEMPLATE_NEGOCIO_KEY = 'oboro_whatsapp_template_negocio'
@@ -45,8 +46,11 @@ export default function AutomatizacionesPage() {
       const userId = data.session?.user?.id
       const token = data.session?.access_token
 
-      if (userId) {
-        setReservaUrl(`${window.location.origin}/reservar/${userId}`)
+      const contexto = await obtenerContextoEquipo()
+      const negocioId = contexto?.negocioId ?? userId
+
+      if (negocioId) {
+        setReservaUrl(`${window.location.origin}/reservar/${negocioId}`)
       }
 
       if (token) {

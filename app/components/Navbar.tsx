@@ -68,6 +68,13 @@ export default function Navbar() {
           >
             Empleados
           </Link>
+
+          <Link
+            href="/equipo"
+            className="text-white hover:text-orange-500 transition"
+          >
+            Equipo
+          </Link>
           
           <Link
             href="/servicios"
@@ -145,6 +152,14 @@ export default function Navbar() {
       className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
     >
       Empleados
+    </Link>
+
+    <Link
+      href="/equipo"
+      onClick={() => setMenuAbierto(false)}
+      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
+    >
+      Equipo
     </Link>
 
     <Link

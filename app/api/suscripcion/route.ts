@@ -9,6 +9,27 @@ function limpiarTexto(valor: unknown, respaldo = '') {
   return typeof valor === 'string' ? valor.trim() : respaldo
 }
 
+async function obtenerContextoSuscripcion(
+  supabaseAdmin: ReturnType<typeof getSupabaseAdmin>,
+  usuarioId: string,
+  email?: string
+) {
+  const correo = email?.toLowerCase() ?? ''
+  const { data } = await supabaseAdmin
+    .from('equipo_accesos')
+    .select('negocio_id, rol, activo')
+    .eq('activo', true)
+    .or(`usuario_id.eq.${usuarioId},email.eq.${correo}`)
+    .limit(1)
+
+  const acceso = data?.[0]
+
+  return {
+    negocioId: acceso?.negocio_id ?? usuarioId,
+    rol: acceso?.rol ?? 'admin',
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
@@ -38,10 +59,16 @@ export async function GET(request: Request) {
       )
     }
 
+    const contexto = await obtenerContextoSuscripcion(
+      supabaseAdmin,
+      userData.user.id,
+      userData.user.email
+    )
+
     const { data, error } = await supabaseAdmin
       .from('suscripciones')
       .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono')
-      .eq('usuario_id', userData.user.id)
+      .eq('usuario_id', contexto.negocioId)
       .maybeSingle()
 
     if (error) {
@@ -51,7 +78,14 @@ export async function GET(request: Request) {
       )
     }
 
-    return NextResponse.json({ suscripcion: data })
+    return NextResponse.json({
+      suscripcion: data,
+      acceso: {
+        negocio_id: contexto.negocioId,
+        rol: contexto.rol,
+        es_admin_principal: contexto.negocioId === userData.user.id,
+      },
+    })
   } catch {
     return NextResponse.json(
       { error: 'Error interno del servidor' },

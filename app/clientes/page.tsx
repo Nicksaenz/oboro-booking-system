@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { mensajePermiso, obtenerContextoEquipo, type ContextoEquipo } from '@/lib/equipo'
 
 type Cliente = {
   id: string
@@ -45,6 +46,7 @@ export default function ClientesPage() {
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null)
+  const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
 
   const clientesFiltrados = useMemo(() => {
     const termino = busqueda.trim().toLowerCase()
@@ -80,10 +82,19 @@ export default function ClientesPage() {
       return
     }
 
+    const acceso = await obtenerContextoEquipo()
+
+    if (!acceso) {
+      router.push('/login')
+      return
+    }
+
+    setContexto(acceso)
+
     const { data, error } = await supabase
       .from('Clientes')
       .select('*')
-      .eq('usuario_id', user.id)
+      .eq('usuario_id', acceso.negocioId)
       .order('Nombre', { ascending: true })
 
     if (error) {
@@ -100,6 +111,14 @@ export default function ClientesPage() {
     setGuardando(true)
     setMensaje('')
 
+    const acceso = contexto ?? (await obtenerContextoEquipo())
+
+    if (!acceso?.puedeOperar) {
+      setMensaje(mensajePermiso('crear o editar clientes'))
+      setGuardando(false)
+      return
+    }
+
     const { data: sessionData } = await supabase.auth.getSession()
     const user = sessionData.session?.user
 
@@ -113,7 +132,7 @@ export default function ClientesPage() {
       Numero: formulario.numero.trim(),
       Email: formulario.email.trim(),
       Notas: formulario.notas.trim(),
-      usuario_id: user.id,
+      usuario_id: acceso.negocioId,
     }
 
     const operacion = clienteEditando
@@ -136,6 +155,11 @@ export default function ClientesPage() {
   }
 
   function editarCliente(cliente: Cliente) {
+    if (!contexto?.puedeOperar) {
+      setMensaje(mensajePermiso('editar clientes'))
+      return
+    }
+
     setClienteEditando(cliente)
     setFormulario({
       nombre: cliente.Nombre ?? '',
@@ -152,6 +176,11 @@ export default function ClientesPage() {
   }
 
   async function eliminarCliente(cliente: Cliente) {
+    if (!contexto?.esAdmin) {
+      setMensaje('Solo el administrador puede eliminar clientes.')
+      return
+    }
+
     const confirmar = window.confirm(
       `Seguro que deseas eliminar a ${cliente.Nombre ?? 'este cliente'}?`
     )
@@ -248,11 +277,13 @@ export default function ClientesPage() {
 
             <button
               type="submit"
-              disabled={guardando}
+              disabled={guardando || !contexto?.puedeOperar}
               className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700 disabled:opacity-60"
             >
               {guardando
                 ? 'Guardando...'
+                : !contexto?.puedeOperar
+                  ? 'Solo lectura'
                 : clienteEditando
                   ? 'Guardar cambios'
                   : 'Guardar cliente'}

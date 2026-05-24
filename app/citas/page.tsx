@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
+import { mensajePermiso, obtenerContextoEquipo, type ContextoEquipo } from '@/lib/equipo'
 
 
 export default function CitasPage() {
@@ -30,6 +31,7 @@ export default function CitasPage() {
   )
   const [telefonoNegocio, setTelefonoNegocio] = useState('')
   const [nombreNegocio, setNombreNegocio] = useState('')
+  const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
 
   useEffect(() => {
   if (mensaje) {
@@ -106,9 +108,18 @@ const citasFiltradas = citas.filter((cita) => {
       return
     }
 
-    const clientesRes = await supabase.from('Clientes').select('*').eq('usuario_id', user.id)
-    const serviciosRes = await supabase.from('SERVICIOS').select('*').eq('ID DE USUARIO', user.id)
-    const empleadosRes = await supabase.from('Empleados').select('*').eq('ID de Usuario', user.id)
+    const acceso = await obtenerContextoEquipo()
+
+    if (!acceso) {
+      router.push('/login')
+      return
+    }
+
+    setContexto(acceso)
+
+    const clientesRes = await supabase.from('Clientes').select('*').eq('usuario_id', acceso.negocioId)
+    const serviciosRes = await supabase.from('SERVICIOS').select('*').eq('ID DE USUARIO', acceso.negocioId)
+    const empleadosRes = await supabase.from('Empleados').select('*').eq('ID de Usuario', acceso.negocioId)
     const suscripcionRes = await fetch('/api/suscripcion', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -132,7 +143,7 @@ const citasFiltradas = citas.filter((cita) => {
     Nombre
   )
 `)
-   .eq('ID_Usuario', user.id)
+   .eq('ID_Usuario', acceso.negocioId)
    .order('Fecha', { ascending: true })
    .order('Hora', { ascending: true })
 
@@ -147,6 +158,14 @@ const citasFiltradas = citas.filter((cita) => {
   async function guardarCita(e: React.FormEvent) {
     e.preventDefault()
     setGuardandoCita(true)
+
+    const acceso = contexto ?? (await obtenerContextoEquipo())
+
+    if (!acceso?.puedeOperar) {
+      setMensaje(mensajePermiso('crear citas'))
+      setGuardandoCita(false)
+      return
+    }
 
     const { data: sessionData } = await supabase.auth.getSession()
     const user = sessionData.session?.user
@@ -184,7 +203,7 @@ if (citaExistente && citaExistente.length > 0) {
         Fecha: fecha,
         Hora: hora,
         Estado: 'pendiente',
-        ID_Usuario: user.id,
+        ID_Usuario: acceso.negocioId,
       },
     ])
 
@@ -204,6 +223,11 @@ if (citaExistente && citaExistente.length > 0) {
     setGuardandoCita(false)
   }
     async function actualizarEstado(id: string, nuevoEstado: string) {
+  if (!contexto?.puedeOperar) {
+    setMensaje(mensajePermiso('actualizar citas'))
+    return
+  }
+
   const { error } = await supabase
     .from('Citas')
     .update({ Estado: nuevoEstado })
@@ -219,6 +243,11 @@ if (citaExistente && citaExistente.length > 0) {
 }
 
 async function eliminarCita(id: string) {
+  if (!contexto?.esAdmin) {
+    setMensaje('Solo el administrador puede eliminar citas.')
+    return
+  }
+
   const { error } = await supabase
     .from('Citas')
     .delete()
@@ -317,6 +346,11 @@ function abrirWhatsAppNegocio(cita: any) {
 }
 
 function abrirModalEditar(cita: any) {
+  if (!contexto?.puedeOperar) {
+    setMensaje(mensajePermiso('editar citas'))
+    return
+  }
+
   setCitaEditando(cita)
   setEditFecha(cita.Fecha)
   setEditHora(cita.Hora)
@@ -326,6 +360,11 @@ function abrirModalEditar(cita: any) {
 async function guardarEdicionCita() {
 
   if (!citaEditando) return
+
+  if (!contexto?.puedeOperar) {
+    setMensaje(mensajePermiso('editar citas'))
+    return
+  }
 
   const { error } = await supabase
     .from('Citas')
@@ -478,10 +517,10 @@ async function guardarEdicionCita() {
 
           <button
             type="submit"
-            disabled={guardandoCita}
+            disabled={guardandoCita || !contexto?.puedeOperar}
             className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {guardandoCita ? 'Guardando...' : 'Guardar cita'} 
+            {guardandoCita ? 'Guardando...' : !contexto?.puedeOperar ? 'Solo lectura' : 'Guardar cita'} 
           </button>
         </form>
 

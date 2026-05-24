@@ -19,6 +19,29 @@ function obtenerRangoMes(mes: string | null) {
   return { mes: mesSeguro, inicio, fin }
 }
 
+type UsuarioAutenticado = {
+  id: string
+  email?: string
+}
+
+async function obtenerContextoServidor(user: UsuarioAutenticado) {
+  const supabase = getSupabaseAdmin()
+  const email = user.email?.toLowerCase() ?? ''
+  const { data } = await supabase
+    .from('equipo_accesos')
+    .select('negocio_id, rol, activo')
+    .eq('activo', true)
+    .or(`usuario_id.eq.${user.id},email.eq.${email}`)
+    .limit(1)
+
+  const acceso = data?.[0]
+
+  return {
+    negocioId: acceso?.negocio_id ?? user.id,
+    rol: (acceso?.rol ?? 'admin') as 'admin' | 'operativo' | 'lectura',
+  }
+}
+
 async function tienePlanBusiness(usuarioId: string) {
   const supabase = getSupabaseAdmin()
   const { data, error } = await supabase
@@ -77,7 +100,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Sesion invalida.' }, { status: 401 })
     }
 
-    if (!(await tienePlanBusiness(user.id))) {
+    const contexto = await obtenerContextoServidor(user)
+
+    if (contexto.rol !== 'admin') {
+      return NextResponse.json(
+        { error: 'Finanzas solo esta disponible para el administrador.' },
+        { status: 403 }
+      )
+    }
+
+    if (!(await tienePlanBusiness(contexto.negocioId))) {
       return NextResponse.json(
         { error: 'Finanzas esta disponible en el plan Business.' },
         { status: 403 }
@@ -109,7 +141,7 @@ export async function GET(request: Request) {
               Nombre
             )
           `)
-          .eq('ID_Usuario', user.id)
+          .eq('ID_Usuario', contexto.negocioId)
           .gte('Fecha', rango.inicio)
           .lt('Fecha', rango.fin)
           .neq('Estado', 'cancelada')
@@ -117,7 +149,7 @@ export async function GET(request: Request) {
         supabase
           .from('gastos')
           .select('id, fecha, categoria, descripcion, monto, created_at')
-          .eq('usuario_id', user.id)
+          .eq('usuario_id', contexto.negocioId)
           .gte('fecha', rango.inicio)
           .lt('fecha', rango.fin)
           .order('fecha', { ascending: false }),
@@ -157,7 +189,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Sesion invalida.' }, { status: 401 })
     }
 
-    if (!(await tienePlanBusiness(user.id))) {
+    const contexto = await obtenerContextoServidor(user)
+
+    if (contexto.rol !== 'admin') {
+      return NextResponse.json(
+        { error: 'Solo el administrador puede editar finanzas.' },
+        { status: 403 }
+      )
+    }
+
+    if (!(await tienePlanBusiness(contexto.negocioId))) {
       return NextResponse.json(
         { error: 'Finanzas esta disponible en el plan Business.' },
         { status: 403 }
@@ -190,7 +231,7 @@ export async function POST(request: Request) {
       .from('gastos')
       .insert([
         {
-          usuario_id: user.id,
+          usuario_id: contexto.negocioId,
           fecha,
           categoria,
           descripcion,
@@ -221,7 +262,16 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Sesion invalida.' }, { status: 401 })
     }
 
-    if (!(await tienePlanBusiness(user.id))) {
+    const contexto = await obtenerContextoServidor(user)
+
+    if (contexto.rol !== 'admin') {
+      return NextResponse.json(
+        { error: 'Solo el administrador puede editar finanzas.' },
+        { status: 403 }
+      )
+    }
+
+    if (!(await tienePlanBusiness(contexto.negocioId))) {
       return NextResponse.json(
         { error: 'Finanzas esta disponible en el plan Business.' },
         { status: 403 }
@@ -248,7 +298,7 @@ export async function DELETE(request: Request) {
       .from('gastos')
       .delete()
       .eq('id', id)
-      .eq('usuario_id', user.id)
+      .eq('usuario_id', contexto.negocioId)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })

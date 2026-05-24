@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
+import { mensajePermiso, obtenerContextoEquipo, type ContextoEquipo } from '@/lib/equipo'
 
 type Empleado = {
   ID: string
@@ -25,6 +26,7 @@ export default function EmpleadosPage() {
   const [editCargo, setEditCargo] = useState('')
   const [editTelefono, setEditTelefono] = useState('')
   const [editActivo, setEditActivo] = useState(true)
+  const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
 
   async function cargarEmpleados() {
     const { data: sessionData } = await supabase.auth.getSession()
@@ -35,10 +37,19 @@ export default function EmpleadosPage() {
       return
     }
 
+    const acceso = await obtenerContextoEquipo()
+
+    if (!acceso) {
+      router.push('/login')
+      return
+    }
+
+    setContexto(acceso)
+
     const { data, error } = await supabase
       .from('Empleados')
       .select('*')
-      .eq('ID de Usuario', user.id)
+      .eq('ID de Usuario', acceso.negocioId)
       .order('Nombre', { ascending: true })
 
     if (error) {
@@ -52,6 +63,15 @@ export default function EmpleadosPage() {
   async function guardarEmpleado(e: React.FormEvent) {
     e.preventDefault()
     setGuardando(true)
+
+    const acceso = contexto ?? (await obtenerContextoEquipo())
+
+    if (!acceso?.esAdmin) {
+      setMensaje(mensajePermiso('crear empleados'))
+      setGuardando(false)
+      return
+    }
+
     const { data: sessionData } = await supabase.auth.getSession()
     const user = sessionData.session?.user
 
@@ -66,7 +86,7 @@ export default function EmpleadosPage() {
         Cargo: cargo.trim(),
         Telefono: telefono.trim(),
         Activo: true,
-        'ID de Usuario': user.id,
+        'ID de Usuario': acceso.negocioId,
       },
     ])
 
@@ -85,6 +105,11 @@ export default function EmpleadosPage() {
   }
 
   function abrirEditor(empleado: Empleado) {
+    if (!contexto?.esAdmin) {
+      setMensaje(mensajePermiso('editar empleados'))
+      return
+    }
+
     setEmpleadoEditando(empleado)
     setEditNombre(empleado.Nombre ?? '')
     setEditCargo(empleado.Cargo ?? '')
@@ -96,6 +121,11 @@ export default function EmpleadosPage() {
     e.preventDefault()
 
     if (!empleadoEditando) return
+
+    if (!contexto?.esAdmin) {
+      setMensaje(mensajePermiso('editar empleados'))
+      return
+    }
 
     const { error } = await supabase
       .from('Empleados')
@@ -118,6 +148,11 @@ export default function EmpleadosPage() {
   }
 
   async function eliminarEmpleado(empleado: Empleado) {
+    if (!contexto?.esAdmin) {
+      setMensaje('Solo el administrador puede eliminar empleados.')
+      return
+    }
+
     const confirmar = confirm(
       `Seguro que deseas eliminar a ${empleado.Nombre}? Si tiene citas historicas, es mejor desactivarlo.`
     )
@@ -139,6 +174,11 @@ export default function EmpleadosPage() {
   }
 
   async function cambiarEstado(empleado: Empleado) {
+    if (!contexto?.esAdmin) {
+      setMensaje(mensajePermiso('cambiar empleados'))
+      return
+    }
+
     const { error } = await supabase
       .from('Empleados')
       .update({ Activo: !empleado.Activo })
@@ -211,10 +251,10 @@ export default function EmpleadosPage() {
 
           <button
             type="submit"
-            disabled={guardando}
+            disabled={guardando || !contexto?.esAdmin}
             className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {guardando ? 'Guardando...' : 'Guardar empleado'}
+            {guardando ? 'Guardando...' : !contexto?.esAdmin ? 'Solo admin' : 'Guardar empleado'}
           </button>
         </form>
 

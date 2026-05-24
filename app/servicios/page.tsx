@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { mensajePermiso, obtenerContextoEquipo, type ContextoEquipo } from '@/lib/equipo'
 
 type Servicio = {
   ID: string
@@ -63,6 +64,7 @@ export default function ServiciosPage() {
   const [servicioEditando, setServicioEditando] = useState<Servicio | null>(
     null
   )
+  const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
 
   const serviciosActivos = servicios.filter(
     (servicio) => servicio.ACTIVO !== false
@@ -112,10 +114,19 @@ export default function ServiciosPage() {
       return
     }
 
+    const acceso = await obtenerContextoEquipo()
+
+    if (!acceso) {
+      router.push('/login')
+      return
+    }
+
+    setContexto(acceso)
+
     const { data, error } = await supabase
       .from('SERVICIOS')
       .select('*')
-      .eq('ID DE USUARIO', user.id)
+      .eq('ID DE USUARIO', acceso.negocioId)
       .order('Nombre del servicio', { ascending: true })
 
     if (error) {
@@ -132,6 +143,14 @@ export default function ServiciosPage() {
     setGuardando(true)
     setMensaje('')
 
+    const acceso = contexto ?? (await obtenerContextoEquipo())
+
+    if (!acceso?.esAdmin) {
+      setMensaje(mensajePermiso('crear o editar servicios'))
+      setGuardando(false)
+      return
+    }
+
     const { data: sessionData } = await supabase.auth.getSession()
     const user = sessionData.session?.user
 
@@ -145,7 +164,7 @@ export default function ServiciosPage() {
       [DURACION_COLUMN]: Number(formulario.duracion),
       'Precio del servicio': Number(formulario.precio),
       ACTIVO: true,
-      'ID DE USUARIO': user.id,
+      'ID DE USUARIO': acceso.negocioId,
     }
 
     const operacion = servicioEditando
@@ -172,6 +191,11 @@ export default function ServiciosPage() {
   }
 
   async function cambiarEstadoServicio(servicio: Servicio) {
+    if (!contexto?.esAdmin) {
+      setMensaje(mensajePermiso('cambiar servicios'))
+      return
+    }
+
     const { error } = await supabase
       .from('SERVICIOS')
       .update({ ACTIVO: servicio.ACTIVO === false })
@@ -187,6 +211,11 @@ export default function ServiciosPage() {
   }
 
   function editarServicio(servicio: Servicio) {
+    if (!contexto?.esAdmin) {
+      setMensaje(mensajePermiso('editar servicios'))
+      return
+    }
+
     setServicioEditando(servicio)
     setFormulario({
       nombre: servicio['Nombre del servicio'] ?? '',
@@ -202,6 +231,11 @@ export default function ServiciosPage() {
   }
 
   async function eliminarServicio(servicio: Servicio) {
+    if (!contexto?.esAdmin) {
+      setMensaje('Solo el administrador puede eliminar servicios.')
+      return
+    }
+
     const confirmar = window.confirm(
       `Seguro que deseas eliminar ${
         servicio['Nombre del servicio'] ?? 'este servicio'
@@ -304,11 +338,13 @@ export default function ServiciosPage() {
 
             <button
               type="submit"
-              disabled={guardando}
+              disabled={guardando || !contexto?.esAdmin}
               className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700 disabled:opacity-60"
             >
               {guardando
                 ? 'Guardando...'
+                : !contexto?.esAdmin
+                  ? 'Solo admin'
                 : servicioEditando
                   ? 'Guardar cambios'
                   : 'Guardar servicio'}
