@@ -264,6 +264,28 @@ function construirLinkReserva(cita: any, accion: 'confirmar' | 'cancelar') {
   return `${window.location.origin}/reserva/${cita.ID}?accion=${accion}`
 }
 
+function claseEstadoCita(estado: string) {
+  if (estado === 'confirmada') {
+    return 'border-green-600/40 bg-green-950/20 text-green-300'
+  }
+
+  if (estado === 'completada') {
+    return 'border-blue-600/40 bg-blue-950/20 text-blue-300'
+  }
+
+  if (estado === 'cancelada') {
+    return 'border-red-600/40 bg-red-950/20 text-red-300'
+  }
+
+  return 'border-yellow-600/40 bg-yellow-950/20 text-yellow-300'
+}
+
+function confirmarEliminacionCita(cita: any) {
+  return confirm(
+    `Seguro que deseas eliminar la cita de ${cita.Clientes?.Nombre ?? 'este cliente'}?`
+  )
+}
+
 function abrirWhatsAppConMensaje(telefonoDestino: unknown, texto: string, error: string) {
   const telefono = normalizarTelefonoWhatsApp(telefonoDestino)
 
@@ -578,9 +600,9 @@ async function guardarEdicionCita() {
   {citasFiltradas.map((cita) => (
     <div
       key={cita.ID}
-      className="rounded-2xl border border-orange-600/40 bg-black p-4 shadow-lg shadow-orange-950/20"
+      className="rounded-2xl border border-orange-600/35 bg-black p-5 shadow-lg shadow-orange-950/20"
     >
-      <h3 className="mb-3 text-lg font-bold text-orange-500">
+      <h3 className="mb-3 text-xl font-black text-orange-500">
         Cita programada
       </h3>
 
@@ -590,56 +612,62 @@ async function guardarEdicionCita() {
       <p className="text-sm leading-6 text-zinc-300">Servicio: {cita.SERVICIOS?.['Nombre del servicio']}</p>
       <p className="text-sm leading-6 text-zinc-300">Empleado: {cita.Empleados?.Nombre}</p>
 
-      <p className="mt-3 text-sm font-bold text-yellow-400">
+      <p className={`mt-4 inline-flex rounded-full border px-3 py-1 text-xs font-bold ${claseEstadoCita(cita.Estado)}`}>
         Estado: {cita.Estado}
       </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <p className="mt-5 text-xs font-bold uppercase tracking-[2px] text-zinc-600">
+        Gestion
+      </p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
         <button
           onClick={() => actualizarEstado(cita.ID, 'confirmada')}
-          className="min-h-11 rounded-xl bg-green-600 px-3 py-2 text-sm font-bold"
+          className="min-h-11 rounded-xl border border-green-600/50 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
         >
           Confirmar
         </button>
 
         <button
           onClick={() => actualizarEstado(cita.ID, 'completada')}
-          className="min-h-11 rounded-xl bg-blue-600 px-3 py-2 text-sm font-bold"
+          className="min-h-11 rounded-xl border border-blue-600/50 px-3 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-600/10"
         >
           Completar
         </button>
 
         <button
           onClick={() => abrirModalEditar(cita)}
-          className="min-h-11 rounded-xl bg-yellow-500 px-3 py-2 text-sm font-bold text-black"
+          className="min-h-11 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
         >
           Editar
         </button>
 
         <button
           onClick={() => {
-            const confirmar = confirm('¿Seguro que deseas eliminar esta cita?')
-            if (confirmar) {
+            if (confirmarEliminacionCita(cita)) {
               eliminarCita(cita.ID)
             }
           }}
-          className="min-h-11 rounded-xl bg-red-600 px-3 py-2 text-sm font-bold"
+          className="min-h-11 rounded-xl border border-red-600/50 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
         >
-          Cancelar
+          Eliminar
         </button>
+
+        <p className="col-span-2 mt-3 text-xs font-bold uppercase tracking-[2px] text-zinc-600">
+          Recordatorios
+        </p>
 
         <button
           onClick={() => abrirWhatsAppCliente(cita)}
-          className="col-span-2 min-h-11 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
+          className="min-h-11 rounded-xl bg-orange-600 px-3 py-2 text-sm font-bold transition hover:bg-orange-700 disabled:opacity-60"
         >
-          Avisar cliente
+          Cliente
         </button>
 
         <button
           onClick={() => abrirWhatsAppNegocio(cita)}
-          className="col-span-2 min-h-11 rounded-xl border border-green-600/60 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
+          className="min-h-11 rounded-xl border border-green-600/60 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
         >
-          Avisar negocio
+          Negocio
         </button>
       </div>
     </div>
@@ -827,13 +855,13 @@ async function guardarEdicionCita() {
 </div>
   </div>
 </div>
-        <div className="hidden md:grid md:grid-cols-2 gap-6">
+        <div className="hidden">
           {citasFiltradas.map((cita) => (
             <div
               key={cita.ID}
-              className="border border-orange-600/50 bg-zinc-950 rounded-3xl p-4 md:p-6"
+              className="rounded-2xl border border-orange-600/35 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20"
             >
-              <h2 className="text-2xl font-bold text-orange-500">
+              <h2 className="text-2xl font-black text-orange-500">
                 Cita programada
               </h2>
 
@@ -872,54 +900,59 @@ async function guardarEdicionCita() {
   Estado: {cita.Estado}
 </span>
 
-              <div className="flex flex-wrap gap-3">
+              <p className="mt-5 text-xs font-bold uppercase tracking-[2px] text-zinc-600">
+                Gestion
+              </p>
+              <div className="mt-2 grid grid-cols-4 gap-2">
 
   <button
     onClick={() => actualizarEstado(cita['ID'], 'confirmada')}
-    className="rounded-xl bg-green-600 px-4 py-2 font-bold"
+    className="min-h-11 rounded-xl border border-green-600/50 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
   >
     Confirmar
   </button>
 
   <button
     onClick={() => actualizarEstado(cita['ID'], 'completada')}
-    className="rounded-xl bg-blue-600 px-4 py-2 font-bold"
+    className="min-h-11 rounded-xl border border-blue-600/50 px-3 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-600/10"
   >
     Completar
   </button>
    
   <button
   onClick={() => abrirModalEditar(cita)}
-  className="rounded-xl bg-yellow-500 text-black px-4 py-2 font-bold"
+  className="min-h-11 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
 >
   Editar
 </button>
 
   <button
     onClick={() => {
-  const confirmar = confirm('¿Seguro que deseas eliminar esta cita?')
-
-  if (confirmar) {
+  if (confirmarEliminacionCita(cita)) {
     eliminarCita(cita.ID)
   }
 }}
-    className="rounded-xl bg-red-600 px-4 py-2 font-bold"
+    className="min-h-11 rounded-xl border border-red-600/50 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
   >
-    Cancelar
+    Eliminar
   </button>
+
+  <p className="col-span-4 mt-3 text-xs font-bold uppercase tracking-[2px] text-zinc-600">
+    Recordatorios
+  </p>
 
   <button
     onClick={() => abrirWhatsAppCliente(cita)}
-    className="rounded-xl border border-orange-600/60 px-4 py-2 font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
+    className="col-span-2 min-h-11 rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold transition hover:bg-orange-700 disabled:opacity-60"
   >
-    Avisar cliente
+    WhatsApp cliente
   </button>
 
   <button
     onClick={() => abrirWhatsAppNegocio(cita)}
-    className="rounded-xl border border-green-600/60 px-4 py-2 font-bold text-green-200 transition hover:bg-green-600/10"
+    className="col-span-2 min-h-11 rounded-xl border border-green-600/60 px-4 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
   >
-    Avisar negocio
+    WhatsApp negocio
   </button>
 
 </div>
