@@ -57,11 +57,12 @@ Pensado para contador, socio o supervisor:
 - Ver finanzas si el administrador lo permite.
 - No puede crear, editar ni eliminar.
 
-## Implementacion tecnica pendiente
+## Implementacion tecnica implementada
 
-Para que esto quede 100% automatico se debe crear una tabla de accesos de equipo.
+El sistema usa una tabla de accesos de equipo para conectar usuarios invitados
+al negocio del administrador principal.
 
-Tabla sugerida: `equipo_accesos`
+Tabla: `equipo_accesos`
 
 Campos:
 
@@ -73,12 +74,12 @@ Campos:
 - `activo`
 - `created_at`
 
-Luego cada modulo debe leer el `negocio_id` real:
+Cada modulo lee el `negocio_id` real:
 
 - Si el usuario es administrador, usa su propio `usuario_id`.
 - Si el usuario es invitado, usa el `negocio_id` del administrador.
 
-Y cada accion debe validar permisos:
+Cada accion valida permisos:
 
 - Crear/editar/eliminar: solo `admin` u `operativo` donde aplique.
 - Finanzas: solo `admin` Business.
@@ -86,8 +87,13 @@ Y cada accion debe validar permisos:
 
 ## Estado actual
 
-Hoy Oboro Booking ya maneja correctamente un administrador principal por cuenta.
-El sistema ya puede venderse asi para el primer lanzamiento.
+Oboro Booking ya maneja un administrador principal por negocio y accesos
+adicionales por rol.
 
-La invitacion automatica de usuarios por rol es la siguiente mejora recomendada
-antes de vender a negocios grandes con varios empleados administrativos.
+Para invitar a alguien, el administrador entra a `Equipo`, registra el correo
+exacto de la persona y selecciona su rol. La persona invitada debe crear su
+cuenta con ese mismo correo; al entrar, el sistema la conecta automaticamente
+con el negocio correspondiente.
+
+Antes de vender a negocios grandes, conviene probar un correo invitado real en
+cada rol para validar el flujo completo en produccion.
