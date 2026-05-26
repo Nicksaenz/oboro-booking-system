@@ -42,6 +42,29 @@ const PASOS = [
   },
 ]
 
+const INSTALACION = [
+  {
+    titulo: 'Android',
+    pasos: [
+      'Abre booking.oborolab.com/login en Google Chrome.',
+      'Inicia sesion con el correo del negocio.',
+      'Toca el menu de tres puntos del navegador.',
+      'Elige Instalar app o Agregar a pantalla principal.',
+      'Confirma la instalacion y abre Oboro Booking desde el icono.',
+    ],
+  },
+  {
+    titulo: 'iPhone',
+    pasos: [
+      'Abre booking.oborolab.com/login en Safari.',
+      'Inicia sesion con el correo del negocio.',
+      'Toca el boton Compartir.',
+      'Elige Agregar a pantalla de inicio.',
+      'Confirma Agregar y abre Oboro Booking desde el icono.',
+    ],
+  },
+]
+
 export default function ManualAdminPage() {
   const router = useRouter()
   const [manual, setManual] = useState<ManualAdmin | null>(null)
@@ -154,6 +177,29 @@ export default function ManualAdminPage() {
               <div key={paso.titulo} className="rounded-2xl border border-zinc-800 bg-black p-5">
                 <h3 className="text-xl font-black text-orange-500">{paso.titulo}</h3>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">{paso.texto}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-2xl border border-orange-600/30 bg-zinc-950 p-5">
+          <h2 className="text-2xl font-black">Como instalarla en el celular</h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-400">
+            Oboro Booking funciona como app instalable desde el navegador. No
+            necesita App Store ni Play Store para empezar.
+          </p>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {INSTALACION.map((item) => (
+              <div key={item.titulo} className="rounded-2xl border border-zinc-800 bg-black p-5">
+                <h3 className="text-xl font-black text-orange-500">{item.titulo}</h3>
+                <ol className="mt-3 space-y-2 text-sm leading-6 text-zinc-300">
+                  {item.pasos.map((paso, index) => (
+                    <li key={paso}>
+                      {index + 1}. {paso}
+                    </li>
+                  ))}
+                </ol>
               </div>
             ))}
           </div>
