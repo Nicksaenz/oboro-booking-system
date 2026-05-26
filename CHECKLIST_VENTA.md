@@ -42,6 +42,8 @@ Usa esta lista antes de vender o activar una cuenta nueva.
 - [ ] Crear una cita manual
 - [ ] Probar boton `Avisar cliente`
 - [ ] Probar boton `Avisar negocio`
+- [ ] Abrir `Manual admin` y verificar que solo el administrador lo puede ver
+- [ ] Crear un acceso de prueba desde `Equipo`
 - [ ] En Pro o Business, abrir el QR publico y crear una reserva
 - [ ] Confirmar y cancelar una reserva desde los links publicos
 - [ ] En Business, probar finanzas con el PIN admin
@@ -53,3 +55,4 @@ Usa esta lista antes de vender o activar una cuenta nueva.
 - [ ] Cargar sus primeros servicios o acompanarlo en una videollamada
 - [ ] Confirmar que entiende como crear citas y avisar por WhatsApp
 - [ ] Confirmar fecha de renovacion mensual
+- [ ] Enviar volante comercial o QR de acceso si el cliente necesita compartir la app

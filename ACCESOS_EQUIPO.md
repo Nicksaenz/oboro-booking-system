@@ -10,6 +10,15 @@ Cada suscripcion pertenece a un negocio y tiene un administrador principal.
 
 Los usuarios adicionales deben entrar con permisos limitados, no como administradores.
 
+## Limites por plan
+
+- Basico: 1 administrador, hasta 2 empleados y 1 acceso adicional.
+- Pro: 1 administrador, hasta 5 empleados y 3 accesos adicionales.
+- Business: 1 administrador financiero, hasta 10 empleados y 6 accesos adicionales.
+
+Business no es ilimitado. Si un negocio necesita mas cupos, se vende como
+ampliacion personalizada.
+
 ## Como debe funcionar
 
 1. El cliente compra un plan con Wompi.

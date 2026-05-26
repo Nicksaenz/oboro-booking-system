@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Volante Oboro Booking</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #111;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .page {
+        width: 1080px;
+        min-height: 1350px;
+        margin: 0 auto;
+        background:
+          radial-gradient(circle at 20% 10%, rgba(255, 92, 0, 0.25), transparent 26%),
+          linear-gradient(135deg, #050505 0%, #0c0c0f 55%, #180800 100%);
+        padding: 64px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 36px;
+      }
+
+      .brand {
+        color: #ff5a00;
+        font-size: 34px;
+        font-weight: 900;
+        letter-spacing: 4px;
+      }
+
+      .powered {
+        margin-top: 8px;
+        color: #9ca3af;
+        font-size: 18px;
+      }
+
+      .badge {
+        border: 1px solid rgba(255, 90, 0, 0.55);
+        border-radius: 999px;
+        padding: 14px 22px;
+        color: #ffb17f;
+        font-weight: 800;
+      }
+
+      h1 {
+        max-width: 850px;
+        margin: 70px 0 0;
+        font-size: 82px;
+        line-height: 0.95;
+        letter-spacing: -1px;
+      }
+
+      .highlight {
+        color: #ff5a00;
+      }
+
+      .subtitle {
+        max-width: 820px;
+        margin: 30px 0 0;
+        color: #d4d4d8;
+        font-size: 31px;
+        line-height: 1.35;
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-top: 48px;
+      }
+
+      .feature,
+      .plan,
+      .qr-card {
+        border: 1px solid rgba(255, 90, 0, 0.38);
+        background: rgba(9, 9, 11, 0.86);
+        border-radius: 24px;
+        box-shadow: 0 22px 70px rgba(0, 0, 0, 0.35);
+      }
+
+      .feature {
+        min-height: 130px;
+        padding: 24px;
+      }
+
+      .feature strong {
+        color: #ff5a00;
+        display: block;
+        font-size: 23px;
+        margin-bottom: 10px;
+      }
+
+      .feature span {
+        color: #d4d4d8;
+        font-size: 18px;
+        line-height: 1.35;
+      }
+
+      .plans {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-top: 44px;
+      }
+
+      .plan {
+        padding: 26px;
+        min-height: 350px;
+      }
+
+      .plan.recommended {
+        border-color: rgba(34, 197, 94, 0.75);
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18), 0 22px 70px rgba(0, 0, 0, 0.35);
+      }
+
+      .plan h2 {
+        margin: 0;
+        color: #ff5a00;
+        font-size: 34px;
+      }
+
+      .price {
+        margin-top: 8px;
+        font-size: 29px;
+        font-weight: 900;
+      }
+
+      .plan ul {
+        padding-left: 18px;
+        margin: 22px 0 0;
+        color: #e5e7eb;
+        font-size: 17px;
+        line-height: 1.55;
+      }
+
+      .recommended-label {
+        display: inline-block;
+        margin-bottom: 14px;
+        border-radius: 999px;
+        background: #16a34a;
+        padding: 7px 12px;
+        color: white;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .bottom {
+        display: grid;
+        grid-template-columns: 1fr 260px;
+        gap: 28px;
+        align-items: stretch;
+        margin-top: 48px;
+      }
+
+      .cta {
+        border: 1px solid rgba(255, 90, 0, 0.45);
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(255, 90, 0, 0.24), rgba(0, 0, 0, 0.72));
+        padding: 34px;
+      }
+
+      .cta h2 {
+        margin: 0;
+        font-size: 42px;
+      }
+
+      .cta p {
+        margin: 18px 0 0;
+        color: #f4f4f5;
+        font-size: 24px;
+        line-height: 1.35;
+      }
+
+      .domain {
+        margin-top: 26px;
+        color: #ff5a00;
+        font-size: 27px;
+        font-weight: 900;
+      }
+
+      .instagram {
+        margin-top: 10px;
+        color: #d4d4d8;
+        font-size: 22px;
+        font-weight: 800;
+      }
+
+      .qr-card {
+        padding: 18px;
+        text-align: center;
+        background: #fff;
+        color: #111;
+      }
+
+      .qr-card img {
+        width: 210px;
+        height: 210px;
+        display: block;
+        margin: 0 auto;
+      }
+
+      .qr-card strong {
+        display: block;
+        margin-top: 10px;
+        font-size: 18px;
+      }
+
+      .note {
+        margin-top: 28px;
+        color: #a1a1aa;
+        font-size: 16px;
+        line-height: 1.4;
+      }
+
+      @media print {
+        body {
+          background: white;
+        }
+
+        .page {
+          margin: 0;
+          width: 100%;
+          min-height: 100vh;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="top">
+        <div>
+          <div class="brand">OBORO BOOKING</div>
+          <div class="powered">Powered by Oboro Lab</div>
+        </div>
+        <div class="badge">Software SaaS para reservas</div>
+      </section>
+
+      <h1>Tu agenda, tus clientes y tus pagos <span class="highlight">en orden.</span></h1>
+      <p class="subtitle">
+        Oboro Booking ayuda a negocios de belleza, bienestar, mascotas, salud y servicios
+        a gestionar citas, clientes, empleados, recordatorios y finanzas desde una sola app.
+      </p>
+
+      <section class="features">
+        <div class="feature">
+          <strong>Agenda digital</strong>
+          <span>Crea citas, cambia estados y consulta tu calendario desde el celular.</span>
+        </div>
+        <div class="feature">
+          <strong>QR de reservas</strong>
+          <span>Tus clientes pueden agendar solos desde un enlace publico.</span>
+        </div>
+        <div class="feature">
+          <strong>WhatsApp listo</strong>
+          <span>Avisa al cliente y al negocio con mensajes preparados.</span>
+        </div>
+      </section>
+
+      <section class="plans">
+        <article class="plan">
+          <h2>Basico</h2>
+          <div class="price">$70.000 / mes</div>
+          <ul>
+            <li>1 administrador</li>
+            <li>Hasta 2 empleados</li>
+            <li>1 acceso adicional</li>
+            <li>Clientes, servicios y citas</li>
+            <li>WhatsApp manual</li>
+          </ul>
+        </article>
+
+        <article class="plan recommended">
+          <span class="recommended-label">RECOMENDADO</span>
+          <h2>Pro</h2>
+          <div class="price">$90.000 / mes</div>
+          <ul>
+            <li>1 administrador</li>
+            <li>Hasta 5 empleados</li>
+            <li>Hasta 3 accesos adicionales</li>
+            <li>QR publico de reservas</li>
+            <li>Confirmar y cancelar cita</li>
+          </ul>
+        </article>
+
+        <article class="plan">
+          <h2>Business</h2>
+          <div class="price">$120.000 / mes</div>
+          <ul>
+            <li>1 administrador financiero</li>
+            <li>Hasta 10 empleados</li>
+            <li>Hasta 6 accesos adicionales</li>
+            <li>Finanzas, gastos e ingresos</li>
+            <li>Liquidacion de colaboradores</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="bottom">
+        <div class="cta">
+          <h2>Escanea y conoce Oboro Booking</h2>
+          <p>
+            Empieza a vender una experiencia mas organizada, profesional y facil
+            para tus clientes.
+          </p>
+          <div class="domain">booking.oborolab.com/login</div>
+          <div class="instagram">Instagram: @oborolab</div>
+          <div class="note">
+            No incluye numero de WhatsApp en el volante. Puedes imprimirlo, enviarlo por redes
+            o convertir esta pieza a imagen desde el navegador.
+          </div>
+        </div>
+
+        <div class="qr-card">
+          <img
+            alt="QR Oboro Booking"
+            src="https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=https%3A%2F%2Fbooking.oborolab.com%2Flogin"
+          />
+          <strong>Ver app</strong>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

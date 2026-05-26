@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { PLANES_OBORO } from '@/lib/planes'
 
 type Suscripcion = {
   estado: string | null
@@ -11,54 +12,6 @@ type Suscripcion = {
 }
 
 const ESTADOS_VALIDOS = ['trial', 'activa', 'activo', 'pagada', 'paid']
-
-const PLANES = [
-  {
-    id: 'basico',
-    nombre: 'Basico',
-    precio: '$70.000 COP / mes',
-    recomendado: false,
-    detalle: 'Para negocios que quieren ordenar su agenda y dejar de manejar citas en papel.',
-    funciones: [
-      '1 administrador principal incluido',
-      'Accesos de lectura para equipo con configuracion asistida',
-      'Clientes, servicios, empleados y citas',
-      'Dashboard de reservas',
-      'WhatsApp manual al cliente',
-      'Soporte inicial de Oboro Lab',
-    ],
-  },
-  {
-    id: 'pro',
-    nombre: 'Pro',
-    precio: '$90.000 COP / mes',
-    recomendado: true,
-    detalle: 'El plan mas equilibrado para negocios que quieren vender mas y ahorrar tiempo.',
-    funciones: [
-      'Todo lo del plan Basico',
-      '1 administrador principal incluido',
-      'Accesos de lectura para recepcion o equipo operativo',
-      'QR publico para que el cliente agende solo',
-      'Links de confirmar y cancelar cita',
-      'Recordatorio automatico al negocio',
-    ],
-  },
-  {
-    id: 'business',
-    nombre: 'Business',
-    precio: '$120.000 COP / mes',
-    recomendado: false,
-    detalle: 'Para negocios con equipo, comisiones, gastos y mas control administrativo.',
-    funciones: [
-      'Todo lo del plan Pro',
-      '1 administrador financiero incluido',
-      'Paneles de lectura para equipo sin permiso de editar finanzas',
-      'Modulo de finanzas',
-      'Registro de gastos',
-      'Liquidacion de colaboradores',
-    ],
-  },
-]
 
 export default function SuscripcionPage() {
   const router = useRouter()
@@ -281,7 +234,7 @@ export default function SuscripcionPage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mt-5">
-          {PLANES.map((plan) => (
+          {PLANES_OBORO.map((plan) => (
             <div
               key={plan.id}
               className={`relative rounded-xl border bg-black p-5 ${

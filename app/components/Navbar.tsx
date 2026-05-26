@@ -33,7 +33,7 @@ export default function Navbar() {
           </p>
         </div>
 
-        <div className="hidden md:flex gap-4">
+        <div className="hidden lg:flex flex-wrap justify-end gap-3 text-sm xl:gap-4 xl:text-base">
           <Link
             href="/bienvenida"
             className="text-white hover:text-orange-500 transition"
@@ -97,6 +97,13 @@ export default function Navbar() {
             Finanzas
           </Link>
 
+          <Link
+            href="/manual-admin"
+            className="text-white hover:text-orange-500 transition"
+          >
+            Manual admin
+          </Link>
+
           <button
   onClick={cerrarSesion}
   className="text-white hover:text-red-500 transition"
@@ -107,13 +114,13 @@ export default function Navbar() {
           
         <button
   onClick={() => setMenuAbierto(!menuAbierto)}
-  className="md:hidden rounded-xl border border-orange-600/40 px-3 py-2 text-sm font-bold text-white"
+  className="lg:hidden rounded-xl border border-orange-600/40 px-3 py-2 text-sm font-bold text-white"
 >
   Menu
 </button>
       </div>
     {menuAbierto && (
-  <div className="md:hidden mx-4 mb-4 rounded-2xl border border-orange-600/30 bg-zinc-950/95 p-4 shadow-2xl shadow-orange-950/30 backdrop-blur-xl flex flex-col gap-3">
+  <div className="lg:hidden mx-4 mb-4 rounded-2xl border border-orange-600/30 bg-zinc-950/95 p-4 shadow-2xl shadow-orange-950/30 backdrop-blur-xl flex flex-col gap-3">
     <Link
       href="/bienvenida"
       onClick={() => setMenuAbierto(false)}
@@ -184,6 +191,14 @@ export default function Navbar() {
       className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
     >
       Finanzas
+    </Link>
+
+    <Link
+      href="/manual-admin"
+      onClick={() => setMenuAbierto(false)}
+      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
+    >
+      Manual admin
     </Link>
 
     <button

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { mensajePermiso, obtenerContextoEquipo, type ContextoEquipo } from '@/lib/equipo'
+import { obtenerPlanOboro } from '@/lib/planes'
 
 type Empleado = {
   ID: string
@@ -27,6 +28,7 @@ export default function EmpleadosPage() {
   const [editTelefono, setEditTelefono] = useState('')
   const [editActivo, setEditActivo] = useState(true)
   const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
+  const [planActual, setPlanActual] = useState('basico')
 
   async function cargarEmpleados() {
     const { data: sessionData } = await supabase.auth.getSession()
@@ -46,18 +48,33 @@ export default function EmpleadosPage() {
 
     setContexto(acceso)
 
-    const { data, error } = await supabase
+    const token = sessionData.session?.access_token
+    const [empleadosRes, suscripcionRes] = await Promise.all([
+      supabase
       .from('Empleados')
       .select('*')
       .eq('ID de Usuario', acceso.negocioId)
-      .order('Nombre', { ascending: true })
+        .order('Nombre', { ascending: true }),
+      token
+        ? fetch('/api/suscripcion', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        : null,
+    ])
 
-    if (error) {
-      setMensaje(`Error: ${error.message}`)
+    if (empleadosRes.error) {
+      setMensaje(`Error: ${empleadosRes.error.message}`)
       return
     }
 
-    setEmpleados(data || [])
+    if (suscripcionRes?.ok) {
+      const resultado = await suscripcionRes.json()
+      setPlanActual(resultado?.suscripcion?.plan ?? 'basico')
+    }
+
+    setEmpleados(empleadosRes.data || [])
   }
 
   async function guardarEmpleado(e: React.FormEvent) {
@@ -68,6 +85,16 @@ export default function EmpleadosPage() {
 
     if (!acceso?.esAdmin) {
       setMensaje(mensajePermiso('crear empleados'))
+      setGuardando(false)
+      return
+    }
+
+    const plan = obtenerPlanOboro(planActual)
+
+    if (empleados.length >= plan.limites.empleados) {
+      setMensaje(
+        `Tu plan ${plan.nombre} permite hasta ${plan.limites.empleados} empleados. Actualiza el plan para agregar mas.`
+      )
       setGuardando(false)
       return
     }
@@ -197,6 +224,9 @@ export default function EmpleadosPage() {
     cargarEmpleados()
   }, [])
 
+  const plan = obtenerPlanOboro(planActual)
+  const cuposDisponibles = Math.max(plan.limites.empleados - empleados.length, 0)
+
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
       <section className="mx-auto w-full max-w-7xl">
@@ -220,6 +250,17 @@ export default function EmpleadosPage() {
               {empleados.filter((empleado) => empleado.Activo).length}
             </p>
           </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-orange-600/30 bg-zinc-950 p-5">
+          <p className="text-sm text-zinc-500">Limite del plan {plan.nombre}</p>
+          <p className="mt-1 text-2xl font-black text-orange-500">
+            {empleados.length}/{plan.limites.empleados} empleados registrados
+          </p>
+          <p className="mt-2 text-sm leading-6 text-zinc-400">
+            Te quedan {cuposDisponibles} cupos para empleados o colaboradores.
+            Cada plan incluye 1 administrador principal separado de estos cupos.
+          </p>
         </div>
 
         <form
@@ -251,10 +292,16 @@ export default function EmpleadosPage() {
 
           <button
             type="submit"
-            disabled={guardando || !contexto?.esAdmin}
+            disabled={guardando || !contexto?.esAdmin || empleados.length >= plan.limites.empleados}
             className="min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {guardando ? 'Guardando...' : !contexto?.esAdmin ? 'Solo admin' : 'Guardar empleado'}
+            {guardando
+              ? 'Guardando...'
+              : !contexto?.esAdmin
+                ? 'Solo admin'
+                : empleados.length >= plan.limites.empleados
+                  ? 'Limite del plan'
+                  : 'Guardar empleado'}
           </button>
         </form>
 

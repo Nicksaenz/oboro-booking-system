@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { obtenerContextoEquipo, type ContextoEquipo, type RolEquipo } from '@/lib/equipo'
+import { obtenerPlanOboro } from '@/lib/planes'
 
 type Acceso = {
   id: string
@@ -41,6 +42,7 @@ export default function EquipoPage() {
   const [mensaje, setMensaje] = useState('')
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
+  const [planActual, setPlanActual] = useState('basico')
 
   async function cargarEquipo() {
     setCargando(true)
@@ -53,16 +55,33 @@ export default function EquipoPage() {
 
     setContexto(acceso)
 
-    const { data, error } = await supabase
-      .from('equipo_accesos')
-      .select('*')
-      .eq('negocio_id', acceso.negocioId)
-      .order('created_at', { ascending: false })
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
 
-    if (error) {
-      setMensaje(error.message)
+    const [equipoRes, suscripcionRes] = await Promise.all([
+      supabase
+        .from('equipo_accesos')
+        .select('*')
+        .eq('negocio_id', acceso.negocioId)
+        .order('created_at', { ascending: false }),
+      token
+        ? fetch('/api/suscripcion', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        : null,
+    ])
+
+    if (equipoRes.error) {
+      setMensaje(equipoRes.error.message)
     } else {
-      setAccesos((data ?? []) as Acceso[])
+      setAccesos((equipoRes.data ?? []) as Acceso[])
+    }
+
+    if (suscripcionRes?.ok) {
+      const resultado = await suscripcionRes.json()
+      setPlanActual(resultado?.suscripcion?.plan ?? 'basico')
     }
 
     setCargando(false)
@@ -82,6 +101,15 @@ export default function EquipoPage() {
     }
 
     const correo = email.trim().toLowerCase()
+    const plan = obtenerPlanOboro(planActual)
+
+    if (accesos.length >= plan.limites.accesosEquipo) {
+      setMensaje(
+        `Tu plan ${plan.nombre} permite hasta ${plan.limites.accesosEquipo} accesos adicionales.`
+      )
+      setGuardando(false)
+      return
+    }
 
     const { error } = await supabase.from('equipo_accesos').upsert(
       [
@@ -145,6 +173,8 @@ export default function EquipoPage() {
   }, [])
 
   const puedeGestionar = contexto?.esAdmin && contexto.usuarioId === contexto.negocioId
+  const plan = obtenerPlanOboro(planActual)
+  const cuposDisponibles = Math.max(plan.limites.accesosEquipo - accesos.length, 0)
 
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
@@ -169,6 +199,17 @@ export default function EquipoPage() {
               {contexto?.rol ?? 'cargando'}
             </p>
           </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-orange-600/30 bg-zinc-950 p-5">
+          <p className="text-sm text-zinc-500">Limite del plan {plan.nombre}</p>
+          <p className="mt-1 text-2xl font-black text-orange-500">
+            1 administrador + {accesos.length}/{plan.limites.accesosEquipo} accesos adicionales
+          </p>
+          <p className="mt-2 text-sm leading-6 text-zinc-400">
+            Te quedan {cuposDisponibles} cupos para usuarios de equipo. Usa
+            Operativo para recepcion y Solo lectura para supervisores.
+          </p>
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -212,10 +253,16 @@ export default function EquipoPage() {
           </select>
           <button
             type="submit"
-            disabled={!puedeGestionar || guardando}
+            disabled={!puedeGestionar || guardando || accesos.length >= plan.limites.accesosEquipo}
             className="min-h-12 rounded-xl bg-orange-600 px-5 py-3 font-bold transition hover:bg-orange-700 disabled:opacity-60"
           >
-            {guardando ? 'Guardando...' : puedeGestionar ? 'Guardar acceso' : 'Solo admin principal'}
+            {guardando
+              ? 'Guardando...'
+              : !puedeGestionar
+                ? 'Solo admin principal'
+                : accesos.length >= plan.limites.accesosEquipo
+                  ? 'Limite del plan'
+                  : 'Guardar acceso'}
           </button>
         </form>
 
