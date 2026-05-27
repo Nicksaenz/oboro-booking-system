@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
+import { isValidFinancePin } from '@/lib/finanzasPin'
 
 function limpiarTexto(valor: unknown, respaldo = '') {
   return typeof valor === 'string' ? valor.trim() : respaldo
@@ -66,11 +67,12 @@ async function tienePlanBusiness(usuarioId: string) {
 }
 
 function puedeEditarFinanzas(request: Request) {
-  const pin = process.env.FINANZAS_ADMIN_PIN
+  const pinConfigured =
+    process.env.FINANZAS_ADMIN_SECRET || process.env.FINANZAS_ADMIN_PIN
 
-  if (!pin) return true
+  if (!pinConfigured) return true
 
-  return request.headers.get('x-finanzas-admin-pin') === pin
+  return isValidFinancePin(request.headers.get('x-finanzas-admin-pin'))
 }
 
 async function obtenerUsuario(request: Request) {

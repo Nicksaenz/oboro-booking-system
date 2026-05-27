@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
 import { obtenerPlanOboro } from '@/lib/planes'
+import { getCurrentFinancePin } from '@/lib/finanzasPin'
 
 async function obtenerUsuario(request: Request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
@@ -65,14 +66,16 @@ export async function GET(request: Request) {
       .maybeSingle()
 
     const plan = obtenerPlanOboro(suscripcion?.plan)
+    const financePin = getCurrentFinancePin()
 
     return NextResponse.json({
       negocio: suscripcion?.nombre_negocio ?? 'Tu negocio',
       telefono: suscripcion?.telefono ?? '',
       plan,
       fecha_vencimiento: suscripcion?.fecha_vencimiento ?? null,
-      clave_finanzas:
-        process.env.FINANZAS_ADMIN_PIN ?? 'No configurada en Vercel',
+      clave_finanzas: financePin.pin,
+      clave_finanzas_vence: financePin.expiresAt,
+      clave_finanzas_horas: financePin.rotationHours,
       app_url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://booking.oborolab.com',
     })
   } catch {

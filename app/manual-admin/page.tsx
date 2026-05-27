@@ -11,6 +11,8 @@ type ManualAdmin = {
   plan: PlanOboro
   fecha_vencimiento: string | null
   clave_finanzas: string
+  clave_finanzas_vence?: string
+  clave_finanzas_horas?: number
   app_url: string
 }
 
@@ -160,6 +162,15 @@ export default function ManualAdminPage() {
             <p className="text-sm text-zinc-500">Clave admin finanzas</p>
             <p className="mt-2 break-all text-xl font-black text-green-300">
               {manual.clave_finanzas}
+            </p>
+            <p className="mt-2 text-xs leading-5 text-zinc-500">
+              Se actualiza automaticamente cada{' '}
+              {manual.clave_finanzas_horas ?? 6} horas.
+              {manual.clave_finanzas_vence
+                ? ` Vigente hasta ${new Date(
+                    manual.clave_finanzas_vence
+                  ).toLocaleString('es-CO')}.`
+                : ''}
             </p>
           </div>
           <div className="rounded-2xl border border-orange-600/30 bg-zinc-950 p-5">

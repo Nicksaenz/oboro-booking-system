@@ -18,6 +18,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [nombreNegocio, setNombreNegocio] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [recuperando, setRecuperando] = useState(false)
+  const [codigoRecuperacion, setCodigoRecuperacion] = useState('')
+  const [nuevaPassword, setNuevaPassword] = useState('')
+  const [confirmarNuevaPassword, setConfirmarNuevaPassword] = useState('')
+  const [codigoEnviado, setCodigoEnviado] = useState(false)
+  const [destinoCodigo, setDestinoCodigo] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [tipoMensaje, setTipoMensaje] = useState<TipoMensaje>('info')
   const [loading, setLoading] = useState(false)
@@ -164,7 +170,7 @@ export default function LoginPage() {
     }
   }
 
-  async function recuperarPassword() {
+  async function solicitarCodigoRecuperacion() {
     const correo = email.trim().toLowerCase()
 
     if (!EMAIL_REGEX.test(correo)) {
@@ -173,17 +179,88 @@ export default function LoginPage() {
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.resetPasswordForEmail(correo, {
-      redirectTo: `${window.location.origin}/login`,
-    })
+    mostrarMensaje('Enviando codigo de seguridad...', 'info')
 
-    if (error) {
-      mostrarMensaje(error.message, 'error')
+    const response = await fetch('/api/auth/recuperar-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: correo }),
+    })
+    const resultado = await response.json()
+
+    if (!response.ok) {
+      mostrarMensaje(resultado.error ?? 'No se pudo enviar el codigo.', 'error')
       setLoading(false)
       return
     }
 
-    mostrarMensaje('Te enviamos un correo para recuperar tu contrasena.', 'success')
+    setCodigoEnviado(true)
+    setDestinoCodigo(resultado.destino ?? '')
+    mostrarMensaje(
+      resultado.mensaje ?? 'Enviamos un codigo al WhatsApp registrado.',
+      'success'
+    )
+    setLoading(false)
+  }
+
+  async function cambiarPasswordConCodigo(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const correo = email.trim().toLowerCase()
+
+    if (!EMAIL_REGEX.test(correo)) {
+      mostrarMensaje('Escribe tu correo.', 'error')
+      return
+    }
+
+    if (!codigoRecuperacion.trim()) {
+      mostrarMensaje('Escribe el codigo que llego al WhatsApp.', 'error')
+      return
+    }
+
+    if (nuevaPassword.length < MIN_PASSWORD_LENGTH) {
+      mostrarMensaje(
+        `La nueva contrasena debe tener minimo ${MIN_PASSWORD_LENGTH} caracteres.`,
+        'error'
+      )
+      return
+    }
+
+    if (nuevaPassword !== confirmarNuevaPassword) {
+      mostrarMensaje('Las contrasenas no coinciden.', 'error')
+      return
+    }
+
+    setLoading(true)
+    mostrarMensaje('Actualizando contrasena...', 'info')
+
+    const response = await fetch('/api/auth/confirmar-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: correo,
+        code: codigoRecuperacion,
+        password: nuevaPassword,
+      }),
+    })
+    const resultado = await response.json()
+
+    if (!response.ok) {
+      mostrarMensaje(resultado.error ?? 'No se pudo cambiar la contrasena.', 'error')
+      setLoading(false)
+      return
+    }
+
+    setRecuperando(false)
+    setCodigoEnviado(false)
+    setCodigoRecuperacion('')
+    setNuevaPassword('')
+    setConfirmarNuevaPassword('')
+    setPassword('')
+    mostrarMensaje('Contrasena actualizada. Ya puedes iniciar sesion.', 'success')
     setLoading(false)
   }
 
@@ -213,32 +290,35 @@ export default function LoginPage() {
             : 'Accede a tu software de agendamiento.'}
         </p>
 
-        <div className="grid grid-cols-2 rounded-xl border border-orange-600/40 p-1 mb-6">
-          <button
-            type="button"
-            onClick={() => setModo('login')}
-            className={`rounded-lg py-2 text-sm font-bold transition ${
-              !esRegistro ? 'bg-orange-600 text-white' : 'text-zinc-400'
-            }`}
-          >
-            Ingresar
-          </button>
+        {!recuperando && (
+          <div className="grid grid-cols-2 rounded-xl border border-orange-600/40 p-1 mb-6">
+            <button
+              type="button"
+              onClick={() => setModo('login')}
+              className={`rounded-lg py-2 text-sm font-bold transition ${
+                !esRegistro ? 'bg-orange-600 text-white' : 'text-zinc-400'
+              }`}
+            >
+              Ingresar
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setModo('registro')}
-            className={`rounded-lg py-2 text-sm font-bold transition ${
-              esRegistro ? 'bg-orange-600 text-white' : 'text-zinc-400'
-            }`}
-          >
-            Registro
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setModo('registro')}
+              className={`rounded-lg py-2 text-sm font-bold transition ${
+                esRegistro ? 'bg-orange-600 text-white' : 'text-zinc-400'
+              }`}
+            >
+              Registro
+            </button>
+          </div>
+        )}
 
-        <form
-          onSubmit={esRegistro ? registrarse : iniciarSesion}
-          className="flex flex-col gap-4"
-        >
+        {!recuperando ? (
+          <form
+            onSubmit={esRegistro ? registrarse : iniciarSesion}
+            className="flex flex-col gap-4"
+          >
           {esRegistro && (
             <>
               <input
@@ -287,13 +367,93 @@ export default function LoginPage() {
             <button
               disabled={loading}
               type="button"
-              onClick={recuperarPassword}
+              onClick={() => {
+                setRecuperando(true)
+                setMensaje('')
+                setCodigoEnviado(false)
+              }}
               className="w-full text-zinc-400 hover:text-orange-500 transition mt-2 text-sm disabled:opacity-60"
             >
               Olvidaste tu contrasena?
             </button>
           )}
-        </form>
+          </form>
+        ) : (
+          <form onSubmit={cambiarPasswordConCodigo} className="flex flex-col gap-4">
+            <input
+              type="email"
+              placeholder="Correo de la cuenta"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="bg-black border border-orange-600/70 rounded-xl px-4 py-3 outline-none focus:border-orange-400"
+            />
+
+            <button
+              disabled={loading}
+              type="button"
+              onClick={solicitarCodigoRecuperacion}
+              className="rounded-xl border border-orange-600/60 px-4 py-3 font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
+            >
+              {codigoEnviado ? 'Reenviar codigo al WhatsApp' : 'Enviar codigo al WhatsApp'}
+            </button>
+
+            {codigoEnviado && (
+              <>
+                {destinoCodigo && (
+                  <p className="rounded-xl border border-green-500/30 bg-green-950/20 px-4 py-3 text-sm text-green-200">
+                    Codigo enviado al WhatsApp terminado en {destinoCodigo}.
+                  </p>
+                )}
+
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Codigo de 6 digitos"
+                  value={codigoRecuperacion}
+                  onChange={(e) => setCodigoRecuperacion(e.target.value)}
+                  className="bg-black border border-orange-600/70 rounded-xl px-4 py-3 outline-none focus:border-orange-400"
+                />
+
+                <input
+                  type="password"
+                  placeholder="Nueva contrasena"
+                  value={nuevaPassword}
+                  onChange={(e) => setNuevaPassword(e.target.value)}
+                  className="bg-black border border-orange-600/70 rounded-xl px-4 py-3 outline-none focus:border-orange-400"
+                />
+
+                <input
+                  type="password"
+                  placeholder="Confirmar nueva contrasena"
+                  value={confirmarNuevaPassword}
+                  onChange={(e) => setConfirmarNuevaPassword(e.target.value)}
+                  className="bg-black border border-orange-600/70 rounded-xl px-4 py-3 outline-none focus:border-orange-400"
+                />
+
+                <button
+                  disabled={loading}
+                  type="submit"
+                  className="bg-orange-600 hover:bg-orange-700 disabled:opacity-60 disabled:hover:bg-orange-600 rounded-xl py-3 font-bold mt-2 transition"
+                >
+                  Cambiar contrasena
+                </button>
+              </>
+            )}
+
+            <button
+              disabled={loading}
+              type="button"
+              onClick={() => {
+                setRecuperando(false)
+                setCodigoEnviado(false)
+                setMensaje('')
+              }}
+              className="w-full text-zinc-400 hover:text-orange-500 transition mt-2 text-sm disabled:opacity-60"
+            >
+              Volver al login
+            </button>
+          </form>
+        )}
 
         {mensaje && (
           <p
