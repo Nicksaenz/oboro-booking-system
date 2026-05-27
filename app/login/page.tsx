@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 
 type ModoFormulario = 'login' | 'registro'
 type TipoMensaje = 'info' | 'error' | 'success'
+type PlanRegistro = 'basico' | 'pro' | 'business'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
@@ -63,6 +64,7 @@ const PASOS_LANDING = [
 ]
 const PLANES_LANDING = [
   {
+    id: 'basico' as const,
     nombre: 'Basic',
     precio: '$39.900',
     detalle: 'Ideal para independientes y negocios pequenos que quieren ordenar sus reservas.',
@@ -78,6 +80,7 @@ const PLANES_LANDING = [
     ],
   },
   {
+    id: 'pro' as const,
     nombre: 'Pro',
     precio: '$59.900',
     detalle: 'Para equipos que necesitan mas capacidad, seguimiento y operacion diaria.',
@@ -92,6 +95,7 @@ const PLANES_LANDING = [
     ],
   },
   {
+    id: 'business' as const,
     nombre: 'Business',
     precio: '$79.900',
     detalle: 'Para negocios con equipo, gastos, ingresos y liquidacion de colaboradores.',
@@ -128,6 +132,10 @@ export default function LoginPage() {
   const [codigoRecuperacion, setCodigoRecuperacion] = useState('')
   const [nuevaPassword, setNuevaPassword] = useState('')
   const [confirmarNuevaPassword, setConfirmarNuevaPassword] = useState('')
+  const [planSeleccionado, setPlanSeleccionado] = useState<PlanRegistro>('basico')
+  const [mostrarPassword, setMostrarPassword] = useState(false)
+  const [mostrarNuevaPassword, setMostrarNuevaPassword] = useState(false)
+  const [mostrarConfirmarPassword, setMostrarConfirmarPassword] = useState(false)
   const [codigoEnviado, setCodigoEnviado] = useState(false)
   const [destinoCodigo, setDestinoCodigo] = useState('')
   const [mensaje, setMensaje] = useState('')
@@ -139,8 +147,9 @@ export default function LoginPage() {
     setTipoMensaje(tipo)
   }
 
-  function enfocarAcceso(modoFormulario: ModoFormulario) {
+  function enfocarAcceso(modoFormulario: ModoFormulario, plan: PlanRegistro = planSeleccionado) {
     setModo(modoFormulario)
+    setPlanSeleccionado(plan)
     setRecuperando(false)
     setMensaje('')
     window.requestAnimationFrame(() => {
@@ -170,7 +179,7 @@ export default function LoginPage() {
     return correo
   }
 
-  async function crearSuscripcionTrial(session: Session, correo: string) {
+  async function crearSuscripcionPrueba(session: Session, correo: string) {
     const response = await fetch('/api/suscripcion', {
       method: 'POST',
       headers: {
@@ -181,7 +190,8 @@ export default function LoginPage() {
         email: correo,
         nombre_negocio: nombreNegocio.trim() || 'Nuevo negocio',
         telefono: telefono.trim() || 'Pendiente',
-        plan: 'trial',
+        plan: planSeleccionado,
+        prueba_gratis: true,
       }),
     })
 
@@ -217,7 +227,7 @@ export default function LoginPage() {
     }
 
     try {
-      const resultado = await crearSuscripcionTrial(data.session, correo)
+      const resultado = await crearSuscripcionPrueba(data.session, correo)
       mostrarMensaje('Inicio de sesion correcto.', 'success')
       router.replace(
         tieneSuscripcionActiva(resultado.suscripcion)
@@ -278,7 +288,7 @@ export default function LoginPage() {
     }
 
     try {
-      await crearSuscripcionTrial(data.session, correo)
+      await crearSuscripcionPrueba(data.session, correo)
       mostrarMensaje('Cuenta creada. Tienes 7 dias gratis para probar Oboro.', 'success')
       router.replace('/bienvenida')
     } catch (suscripcionError) {
@@ -558,7 +568,7 @@ export default function LoginPage() {
             {recuperando
               ? 'Recibe un codigo por WhatsApp y actualiza tu contrasena.'
               : esRegistro
-                ? 'Prueba agenda, clientes, servicios, empleados y QR antes de pagar.'
+                ? `Prueba ${PLANES_LANDING.find((plan) => plan.id === planSeleccionado)?.nombre ?? 'Oboro'} durante 7 dias antes de pagar.`
                 : 'Continua administrando tus citas y tu equipo.'}
           </p>
 
@@ -593,6 +603,28 @@ export default function LoginPage() {
           >
           {esRegistro && (
             <>
+              <div className="rounded-xl border border-orange-600/40 bg-black p-3">
+                <p className="mb-3 text-sm font-bold text-orange-200">
+                  Plan para iniciar la prueba gratis
+                </p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {PLANES_LANDING.map((plan) => (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      onClick={() => setPlanSeleccionado(plan.id)}
+                      className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${
+                        planSeleccionado === plan.id
+                          ? 'border-orange-500 bg-orange-600 text-white'
+                          : 'border-zinc-800 text-zinc-300 hover:border-orange-500/60'
+                      }`}
+                    >
+                      {plan.nombre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <input
                 type="text"
                 placeholder="Nombre del negocio"
@@ -619,13 +651,22 @@ export default function LoginPage() {
             className="bg-black border border-orange-600/70 rounded-xl px-4 py-3 outline-none focus:border-orange-400"
           />
 
-          <input
-            type="password"
-            placeholder="Contrasena"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="bg-black border border-orange-600/70 rounded-xl px-4 py-3 outline-none focus:border-orange-400"
-          />
+              <div className="grid grid-cols-[1fr_auto] overflow-hidden rounded-xl border border-orange-600/70 bg-black focus-within:border-orange-400">
+                <input
+                  type={mostrarPassword ? 'text' : 'password'}
+                  placeholder="Contrasena"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-black px-4 py-3 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarPassword((valor) => !valor)}
+                  className="px-4 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
+                >
+                  {mostrarPassword ? 'Ocultar' : 'Ver'}
+                </button>
+              </div>
 
           <button
             disabled={loading}
@@ -686,21 +727,39 @@ export default function LoginPage() {
                   className="bg-black border border-orange-600/70 rounded-xl px-4 py-3 outline-none focus:border-orange-400"
                 />
 
-                <input
-                  type="password"
-                  placeholder="Nueva contrasena"
-                  value={nuevaPassword}
-                  onChange={(e) => setNuevaPassword(e.target.value)}
-                  className="bg-black border border-orange-600/70 rounded-xl px-4 py-3 outline-none focus:border-orange-400"
-                />
+                <div className="grid grid-cols-[1fr_auto] overflow-hidden rounded-xl border border-orange-600/70 bg-black focus-within:border-orange-400">
+                  <input
+                    type={mostrarNuevaPassword ? 'text' : 'password'}
+                    placeholder="Nueva contrasena"
+                    value={nuevaPassword}
+                    onChange={(e) => setNuevaPassword(e.target.value)}
+                    className="bg-black px-4 py-3 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarNuevaPassword((valor) => !valor)}
+                    className="px-4 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
+                  >
+                    {mostrarNuevaPassword ? 'Ocultar' : 'Ver'}
+                  </button>
+                </div>
 
-                <input
-                  type="password"
-                  placeholder="Confirmar nueva contrasena"
-                  value={confirmarNuevaPassword}
-                  onChange={(e) => setConfirmarNuevaPassword(e.target.value)}
-                  className="bg-black border border-orange-600/70 rounded-xl px-4 py-3 outline-none focus:border-orange-400"
-                />
+                <div className="grid grid-cols-[1fr_auto] overflow-hidden rounded-xl border border-orange-600/70 bg-black focus-within:border-orange-400">
+                  <input
+                    type={mostrarConfirmarPassword ? 'text' : 'password'}
+                    placeholder="Confirmar nueva contrasena"
+                    value={confirmarNuevaPassword}
+                    onChange={(e) => setConfirmarNuevaPassword(e.target.value)}
+                    className="bg-black px-4 py-3 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarConfirmarPassword((valor) => !valor)}
+                    className="px-4 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
+                  >
+                    {mostrarConfirmarPassword ? 'Ocultar' : 'Ver'}
+                  </button>
+                </div>
 
                 <button
                   disabled={loading}
@@ -880,10 +939,10 @@ export default function LoginPage() {
                 </ul>
                 <button
                   type="button"
-                  onClick={() => enfocarAcceso('registro')}
+                  onClick={() => enfocarAcceso('registro', plan.id)}
                   className="mt-5 min-h-12 w-full rounded-xl bg-white px-4 text-sm font-black text-black transition hover:bg-orange-100"
                 >
-                  Probar este plan
+                  Probar {plan.nombre} 7 dias
                 </button>
               </article>
             ))}

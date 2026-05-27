@@ -167,6 +167,7 @@ export async function POST(request: Request) {
     const nombreNegocio = limpiarTexto(body.nombre_negocio, 'Nuevo negocio')
     const telefono = limpiarTexto(body.telefono, 'Pendiente')
     const planSolicitado = limpiarTexto(body.plan, 'trial') as Plan
+    const esPruebaGratis = body.prueba_gratis === true
 
     if (!email || !PLANES_PERMITIDOS.includes(planSolicitado)) {
       return NextResponse.json(
@@ -189,15 +190,18 @@ export async function POST(request: Request) {
     }
 
     if (suscripcionExistente) {
-      const planExistente = String(suscripcionExistente.plan ?? '').toLowerCase()
+      const planExistente = limpiarTexto(suscripcionExistente.plan).toLowerCase() as Plan
       const estadoExistente = String(suscripcionExistente.estado ?? '').toLowerCase()
-      const puedeActivarTrialPendiente =
-        planSolicitado === 'trial' &&
-        planExistente === 'trial' &&
+      const planParaPrueba =
+        PLANES_PERMITIDOS.includes(planExistente) && planExistente !== 'trial'
+          ? planExistente
+          : planSolicitado
+      const puedeActivarPruebaPendiente =
+        esPruebaGratis &&
         estadoExistente === 'pendiente' &&
         !suscripcionActiva(suscripcionExistente)
 
-      if (puedeActivarTrialPendiente) {
+      if (puedeActivarPruebaPendiente) {
         const fechaInicioTrial = new Date()
         const fechaVencimientoTrial = new Date(fechaInicioTrial)
         fechaVencimientoTrial.setDate(fechaInicioTrial.getDate() + 7)
@@ -205,6 +209,7 @@ export async function POST(request: Request) {
         const { data: trialActivado, error: activacionError } = await supabaseAdmin
           .from('suscripciones')
           .update({
+            plan: planParaPrueba,
             estado: 'activa',
             fecha_inicio: fechaInicioTrial.toISOString(),
             fecha_vencimiento: fechaVencimientoTrial.toISOString(),
@@ -221,7 +226,7 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({
-          mensaje: 'Prueba gratis activada correctamente',
+          mensaje: 'Prueba gratis del plan activada correctamente',
           suscripcion: trialActivado,
         })
       }
@@ -233,9 +238,8 @@ export async function POST(request: Request) {
     }
 
     const fechaInicio = new Date()
-    const esTrial = planSolicitado === 'trial'
     const fechaVencimiento = new Date(fechaInicio)
-    fechaVencimiento.setDate(fechaInicio.getDate() + (esTrial ? 7 : 30))
+    fechaVencimiento.setDate(fechaInicio.getDate() + (esPruebaGratis ? 7 : 30))
 
     const { data, error } = await supabaseAdmin
       .from('suscripciones')
@@ -246,7 +250,7 @@ export async function POST(request: Request) {
           email,
           telefono,
           plan: planSolicitado,
-          estado: esTrial ? 'activa' : 'pendiente',
+          estado: esPruebaGratis ? 'activa' : 'pendiente',
           fecha_inicio: fechaInicio.toISOString(),
           fecha_vencimiento: fechaVencimiento.toISOString(),
           whatsapp_enviado: false,

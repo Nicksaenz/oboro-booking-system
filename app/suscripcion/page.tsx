@@ -13,6 +13,16 @@ type Suscripcion = {
 
 const ESTADOS_VALIDOS = ['activa', 'activo', 'pagada', 'paid']
 
+function normalizarPlan(plan?: string | null) {
+  const valor = String(plan ?? '').toLowerCase()
+
+  if (valor === 'business' || valor === 'premium') return 'business'
+  if (valor === 'pro') return 'pro'
+  if (valor === 'basico') return 'basico'
+
+  return ''
+}
+
 export default function SuscripcionPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -25,19 +35,21 @@ export default function SuscripcionPage() {
     async function cargarSuscripcion() {
       const { data: sessionData } = await supabase.auth.getSession()
       const user = sessionData.session?.user
+      const token = sessionData.session?.access_token
 
-      if (!user) {
+      if (!user || !token) {
         router.replace('/login')
         return
       }
 
-      const { data } = await supabase
-        .from('suscripciones')
-        .select('estado, fecha_vencimiento, plan')
-        .eq('usuario_id', user.id)
-        .maybeSingle()
+      const response = await fetch('/api/suscripcion', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const resultado = response.ok ? await response.json() : { suscripcion: null }
 
-      setSuscripcion(data)
+      setSuscripcion(resultado.suscripcion)
       setCargando(false)
     }
 
@@ -151,6 +163,8 @@ export default function SuscripcionPage() {
         : ''
   const mensajeVisible = mensaje || mensajeCheckout
   const estadoActual = String(suscripcion?.estado ?? '').toLowerCase()
+  const planActual = normalizarPlan(suscripcion?.plan)
+  const planActualInfo = PLANES_OBORO.find((plan) => plan.id === planActual)
   const tieneAcceso =
     ESTADOS_VALIDOS.includes(estadoActual) &&
     (!suscripcion?.fecha_vencimiento ||
@@ -217,8 +231,9 @@ export default function SuscripcionPage() {
             Elige tu plan
           </h2>
           <p className="text-zinc-400 mt-3">
-            Al pagar con Wompi, el sistema actualizara automaticamente tu
-            suscripcion cuando Wompi confirme el pago aprobado.
+            {planActualInfo
+              ? `Tu prueba o cuenta esta asociada al plan ${planActualInfo.nombre}. Cuando termine la prueba, paga ese mismo plan para continuar sin cambiar configuracion.`
+              : 'Al pagar con Wompi, el sistema actualizara automaticamente tu suscripcion cuando Wompi confirme el pago aprobado.'}
           </p>
           <div className="mt-4 rounded-xl border border-green-600/40 bg-green-950/10 p-4">
             <p className="text-sm font-bold text-green-300">
@@ -248,6 +263,11 @@ export default function SuscripcionPage() {
                   Recomendado
                 </span>
               )}
+              {planActual === plan.id && (
+                <span className="absolute left-4 top-4 rounded-full border border-orange-500/60 bg-orange-950/40 px-3 py-1 text-xs font-black text-orange-200">
+                  Tu plan
+                </span>
+              )}
               <h3 className="text-2xl font-bold text-orange-500">
                 {plan.nombre}
               </h3>
@@ -268,7 +288,11 @@ export default function SuscripcionPage() {
                 onClick={() => pagarPlan(plan.id)}
                 className="mt-5 w-full rounded-xl bg-orange-600 px-4 py-3 font-bold hover:bg-orange-700 disabled:opacity-60 transition"
               >
-                {planCargando === plan.id ? 'Abriendo Wompi...' : 'Pagar'}
+                {planCargando === plan.id
+                  ? 'Abriendo Wompi...'
+                  : planActual === plan.id
+                    ? 'Pagar este plan'
+                    : 'Cambiar y pagar'}
               </button>
             </div>
           ))}
