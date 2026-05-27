@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
 
 const PLANES_PERMITIDOS = ['trial', 'basico', 'pro', 'business', 'premium'] as const
+const ESTADOS_ACTIVOS = ['activa', 'activo', 'pagada', 'paid']
 type Plan = (typeof PLANES_PERMITIDOS)[number]
 
 function limpiarTexto(valor: unknown, respaldo = '') {
@@ -24,6 +25,15 @@ function columnaFotoNoExiste(error?: { message?: string } | null) {
   return String(error?.message ?? '')
     .toLowerCase()
     .includes('foto_negocio_url')
+}
+
+function suscripcionActiva(suscripcion?: { estado?: string | null; fecha_vencimiento?: string | null } | null) {
+  const estado = String(suscripcion?.estado ?? '').toLowerCase()
+  const vence = suscripcion?.fecha_vencimiento
+    ? new Date(suscripcion.fecha_vencimiento).getTime()
+    : 0
+
+  return ESTADOS_ACTIVOS.includes(estado) && vence >= Date.now()
 }
 
 async function obtenerContextoSuscripcion(
@@ -179,6 +189,43 @@ export async function POST(request: Request) {
     }
 
     if (suscripcionExistente) {
+      const planExistente = String(suscripcionExistente.plan ?? '').toLowerCase()
+      const estadoExistente = String(suscripcionExistente.estado ?? '').toLowerCase()
+      const puedeActivarTrialPendiente =
+        planSolicitado === 'trial' &&
+        planExistente === 'trial' &&
+        estadoExistente === 'pendiente' &&
+        !suscripcionActiva(suscripcionExistente)
+
+      if (puedeActivarTrialPendiente) {
+        const fechaInicioTrial = new Date()
+        const fechaVencimientoTrial = new Date(fechaInicioTrial)
+        fechaVencimientoTrial.setDate(fechaInicioTrial.getDate() + 7)
+
+        const { data: trialActivado, error: activacionError } = await supabaseAdmin
+          .from('suscripciones')
+          .update({
+            estado: 'activa',
+            fecha_inicio: fechaInicioTrial.toISOString(),
+            fecha_vencimiento: fechaVencimientoTrial.toISOString(),
+          })
+          .eq('usuario_id', usuarioId)
+          .select()
+          .single()
+
+        if (activacionError) {
+          return NextResponse.json(
+            { error: activacionError.message },
+            { status: 500 }
+          )
+        }
+
+        return NextResponse.json({
+          mensaje: 'Prueba gratis activada correctamente',
+          suscripcion: trialActivado,
+        })
+      }
+
       return NextResponse.json({
         mensaje: 'La suscripcion ya existia',
         suscripcion: suscripcionExistente,
