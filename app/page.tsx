@@ -25,6 +25,13 @@ type Suscripcion = {
   plan?: string | null
   nombre_negocio?: string | null
   telefono?: string | null
+  foto_negocio_url?: string | null
+}
+
+type AccesoSuscripcion = {
+  negocio_id?: string
+  rol?: string
+  es_admin_principal?: boolean
 }
 
 type CitaIngreso = {
@@ -109,11 +116,60 @@ function estadoColor(estado?: string | null) {
   return 'text-yellow-300 border-yellow-600/40 bg-yellow-950/20'
 }
 
+function leerArchivoComoImagen(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function optimizarImagenNegocio(file: File) {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('El archivo debe ser una imagen.')
+  }
+
+  if (file.size > 6 * 1024 * 1024) {
+    throw new Error('La imagen debe pesar menos de 6 MB.')
+  }
+
+  const dataUrl = await leerArchivoComoImagen(file)
+  const imagen = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image()
+
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('No se pudo procesar la imagen'))
+    img.src = dataUrl
+  })
+  const maxSize = 900
+  const escala = Math.min(1, maxSize / Math.max(imagen.width, imagen.height))
+  const width = Math.max(1, Math.round(imagen.width * escala))
+  const height = Math.max(1, Math.round(imagen.height * escala))
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new Error('No se pudo preparar la imagen.')
+  }
+
+  canvas.width = width
+  canvas.height = height
+  context.drawImage(imagen, 0, 0, width, height)
+
+  return canvas.toDataURL('image/jpeg', 0.78)
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [metricas, setMetricas] = useState<Metricas>(METRICAS_INICIALES)
   const [proximasCitas, setProximasCitas] = useState<Cita[]>([])
   const [suscripcion, setSuscripcion] = useState<Suscripcion | null>(null)
+  const [acceso, setAcceso] = useState<AccesoSuscripcion | null>(null)
+  const [nombreEditable, setNombreEditable] = useState('')
+  const [fotoPreview, setFotoPreview] = useState('')
+  const [guardandoPerfil, setGuardandoPerfil] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState('')
 
@@ -150,6 +206,8 @@ export default function DashboardPage() {
   const progreso = Math.round((pasosListos / pasosConfiguracion.length) * 100)
   const plan = normalizarPlan(suscripcion?.plan)
   const negocio = suscripcion?.nombre_negocio || 'Tu negocio'
+  const fotoNegocio = fotoPreview || suscripcion?.foto_negocio_url || ''
+  const puedeEditarPerfil = acceso?.rol === 'admin'
   const fechaVencimiento = suscripcion?.fecha_vencimiento
     ? new Date(suscripcion.fecha_vencimiento).toLocaleDateString('es-CO')
     : 'Sin fecha'
@@ -299,7 +357,64 @@ export default function DashboardPage() {
     })
     setProximasCitas((proximasRes.data as Cita[]) ?? [])
     setSuscripcion(suscripcionJson.suscripcion)
+    setAcceso(suscripcionJson.acceso ?? null)
+    setNombreEditable(suscripcionJson.suscripcion?.nombre_negocio ?? '')
+    setFotoPreview('')
     setCargando(false)
+  }
+
+  async function seleccionarFotoNegocio(file?: File) {
+    if (!file) return
+
+    try {
+      setMensaje('')
+      const foto = await optimizarImagenNegocio(file)
+      setFotoPreview(foto)
+    } catch (error) {
+      setMensaje(error instanceof Error ? error.message : 'No se pudo cargar la imagen.')
+    }
+  }
+
+  async function guardarPerfilNegocio(quitarFoto = false) {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+
+    if (!token) {
+      router.push('/login')
+      return
+    }
+
+    try {
+      setGuardandoPerfil(true)
+      setMensaje('')
+
+      const response = await fetch('/api/suscripcion', {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nombre_negocio: nombreEditable.trim(),
+          foto_negocio_url: quitarFoto ? undefined : fotoPreview,
+          quitar_foto: quitarFoto,
+        }),
+      })
+      const resultado = await response.json()
+
+      if (!response.ok) {
+        throw new Error(resultado.error ?? 'No se pudo guardar el perfil.')
+      }
+
+      setSuscripcion(resultado.suscripcion)
+      setNombreEditable(resultado.suscripcion?.nombre_negocio ?? '')
+      setFotoPreview('')
+      setMensaje('Perfil del negocio actualizado.')
+    } catch (error) {
+      setMensaje(error instanceof Error ? error.message : 'No se pudo guardar el perfil.')
+    } finally {
+      setGuardandoPerfil(false)
+    }
   }
 
   useEffect(() => {
@@ -323,7 +438,29 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-orange-600/35 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
+          <div className="overflow-hidden rounded-2xl border border-orange-600/35 bg-zinc-950 shadow-2xl shadow-orange-950/20">
+            <div className="relative h-40 bg-zinc-900">
+              {fotoNegocio ? (
+                <img
+                  src={fotoNegocio}
+                  alt={`Imagen de ${negocio}`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_20%_20%,rgba(249,115,22,0.22),transparent_34%),linear-gradient(135deg,#111,#050505)]">
+                  <div className="text-center">
+                    <p className="text-xs font-bold tracking-[4px] text-orange-500">
+                      TU NEGOCIO
+                    </p>
+                    <p className="mt-2 text-2xl font-black text-white">
+                      Personaliza tu panel
+                    </p>
+                  </div>
+                </div>
+              )}
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-950 to-transparent" />
+            </div>
+            <div className="p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-zinc-500">Cuenta activa</p>
@@ -343,6 +480,55 @@ export default function DashboardPage() {
               <p className="rounded-xl border border-zinc-800 bg-black px-4 py-3 text-sm text-zinc-400">
                 WhatsApp: <span className="font-bold text-zinc-100">{suscripcion?.telefono || 'Pendiente'}</span>
               </p>
+            </div>
+            {puedeEditarPerfil && (
+              <div className="mt-4 rounded-xl border border-zinc-800 bg-black p-4">
+                <p className="text-sm font-bold text-zinc-200">
+                  Identidad del negocio
+                </p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+                  <input
+                    value={nombreEditable}
+                    onChange={(event) => setNombreEditable(event.target.value)}
+                    placeholder="Nombre visible del negocio"
+                    maxLength={80}
+                    className="min-h-12 rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-white outline-none transition focus:border-orange-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => guardarPerfilNegocio(false)}
+                    disabled={guardandoPerfil}
+                    className="min-h-12 rounded-xl bg-orange-600 px-5 text-sm font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {guardandoPerfil ? 'Guardando...' : 'Guardar'}
+                  </button>
+                </div>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                  <label className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-xl border border-orange-600/60 px-4 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10">
+                    Subir foto del negocio
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => seleccionarFotoNegocio(event.target.files?.[0])}
+                    />
+                  </label>
+                  {(suscripcion?.foto_negocio_url || fotoPreview) && (
+                    <button
+                      type="button"
+                      onClick={() => guardarPerfilNegocio(true)}
+                      disabled={guardandoPerfil}
+                      className="min-h-12 rounded-xl border border-zinc-700 px-4 text-sm font-bold text-zinc-300 transition hover:border-red-500 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Quitar foto
+                    </button>
+                  )}
+                </div>
+                <p className="mt-3 text-xs leading-5 text-zinc-500">
+                  Esta imagen aparece solo dentro del panel para que el negocio se sienta identificado.
+                </p>
+              </div>
+            )}
             </div>
           </div>
         </div>

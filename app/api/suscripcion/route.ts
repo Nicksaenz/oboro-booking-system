@@ -9,6 +9,23 @@ function limpiarTexto(valor: unknown, respaldo = '') {
   return typeof valor === 'string' ? valor.trim() : respaldo
 }
 
+function limpiarFotoNegocio(valor: unknown) {
+  if (typeof valor !== 'string') return ''
+
+  const foto = valor.trim()
+  if (!foto) return ''
+  if (!foto.startsWith('data:image/')) return ''
+  if (foto.length > 750_000) return ''
+
+  return foto
+}
+
+function columnaFotoNoExiste(error?: { message?: string } | null) {
+  return String(error?.message ?? '')
+    .toLowerCase()
+    .includes('foto_negocio_url')
+}
+
 async function obtenerContextoSuscripcion(
   supabaseAdmin: ReturnType<typeof getSupabaseAdmin>,
   usuarioId: string,
@@ -65,11 +82,22 @@ export async function GET(request: Request) {
       userData.user.email
     )
 
-    const { data, error } = await supabaseAdmin
+    let { data, error } = await supabaseAdmin
       .from('suscripciones')
-      .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono')
+      .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono, foto_negocio_url')
       .eq('usuario_id', contexto.negocioId)
       .maybeSingle()
+
+    if (error && columnaFotoNoExiste(error)) {
+      const fallback = await supabaseAdmin
+        .from('suscripciones')
+        .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono')
+        .eq('usuario_id', contexto.negocioId)
+        .maybeSingle()
+
+      data = fallback.data ? { ...fallback.data, foto_negocio_url: null } : null
+      error = fallback.error
+    }
 
     if (error) {
       return NextResponse.json(
@@ -188,6 +216,109 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       mensaje: 'Suscripcion creada correctamente',
+      suscripcion: data,
+    })
+  } catch {
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json()
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'No hay una sesion activa para actualizar el negocio' },
+        { status: 401 }
+      )
+    }
+
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    })
+    const supabaseAdmin = getSupabaseAdmin()
+
+    const { data: userData, error: userError } = await supabaseAuth.auth.getUser()
+
+    if (userError || !userData.user) {
+      return NextResponse.json(
+        { error: 'Sesion invalida o expirada' },
+        { status: 401 }
+      )
+    }
+
+    const contexto = await obtenerContextoSuscripcion(
+      supabaseAdmin,
+      userData.user.id,
+      userData.user.email
+    )
+
+    if (contexto.rol !== 'admin') {
+      return NextResponse.json(
+        { error: 'Solo el administrador puede editar la identidad del negocio' },
+        { status: 403 }
+      )
+    }
+
+    const nombreNegocio = limpiarTexto(body.nombre_negocio)
+    const fotoNegocio = limpiarFotoNegocio(body.foto_negocio_url)
+    const quitarFoto = body.quitar_foto === true
+    const cambios: Record<string, string | null> = {}
+
+    if (nombreNegocio) {
+      cambios.nombre_negocio = nombreNegocio.slice(0, 80)
+    }
+
+    if (quitarFoto) {
+      cambios.foto_negocio_url = null
+    } else if (fotoNegocio) {
+      cambios.foto_negocio_url = fotoNegocio
+    }
+
+    if (Object.keys(cambios).length === 0) {
+      return NextResponse.json(
+        { error: 'No hay cambios validos para guardar' },
+        { status: 400 }
+      )
+    }
+
+    let { data, error } = await supabaseAdmin
+      .from('suscripciones')
+      .update(cambios)
+      .eq('usuario_id', contexto.negocioId)
+      .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono, foto_negocio_url')
+      .single()
+
+    if (error && columnaFotoNoExiste(error) && !('foto_negocio_url' in cambios)) {
+      const fallback = await supabaseAdmin
+        .from('suscripciones')
+        .update(cambios)
+        .eq('usuario_id', contexto.negocioId)
+        .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono')
+        .single()
+
+      data = fallback.data ? { ...fallback.data, foto_negocio_url: null } : null
+      error = fallback.error
+    }
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      mensaje: 'Perfil del negocio actualizado',
       suscripcion: data,
     })
   } catch {
