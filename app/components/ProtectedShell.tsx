@@ -9,9 +9,9 @@ type EstadoAcceso = 'cargando' | 'permitido' | 'bloqueado'
 
 const RUTAS_PUBLICAS = ['/login']
 const RUTAS_SUSCRIPCION = ['/suscripcion']
-const ESTADOS_VALIDOS = ['trial', 'activa', 'activo', 'pagada', 'paid']
+const ESTADOS_VALIDOS = ['activa', 'activo', 'pagada', 'paid']
 
-function trialVigente(fechaVencimiento: string | null) {
+function suscripcionVigente(fechaVencimiento: string | null) {
   if (!fechaVencimiento) {
     return true
   }
@@ -76,7 +76,7 @@ export default function ProtectedShell({
       const estado = String(suscripcion.estado ?? '').toLowerCase()
       const accesoPermitido =
         ESTADOS_VALIDOS.includes(estado) &&
-        trialVigente(suscripcion.fecha_vencimiento)
+        suscripcionVigente(suscripcion.fecha_vencimiento)
 
       if (!accesoPermitido && !esRutaSuscripcion) {
         router.replace('/suscripcion')

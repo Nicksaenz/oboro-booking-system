@@ -11,7 +11,7 @@ type Suscripcion = {
   plan: string | null
 }
 
-const ESTADOS_VALIDOS = ['trial', 'activa', 'activo', 'pagada', 'paid']
+const ESTADOS_VALIDOS = ['activa', 'activo', 'pagada', 'paid']
 
 export default function SuscripcionPage() {
   const router = useRouter()

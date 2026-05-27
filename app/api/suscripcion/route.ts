@@ -170,7 +170,7 @@ export async function POST(request: Request) {
           email,
           telefono,
           plan: planSolicitado,
-          estado: 'trial',
+          estado: 'pendiente',
           fecha_inicio: fechaInicio.toISOString(),
           fecha_vencimiento: fechaVencimiento.toISOString(),
           whatsapp_enviado: false,

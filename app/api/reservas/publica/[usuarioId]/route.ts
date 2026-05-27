@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
 
-const ESTADOS_VALIDOS = ['trial', 'activa', 'activo', 'pagada', 'paid']
+const ESTADOS_VALIDOS = ['activa', 'activo', 'pagada', 'paid']
 const PLANES_CON_AGENDA_PUBLICA = ['pro', 'business', 'premium']
 
 function limpiarTexto(valor: unknown, respaldo = '') {

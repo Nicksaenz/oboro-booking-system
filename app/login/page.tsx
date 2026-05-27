@@ -10,6 +10,16 @@ type TipoMensaje = 'info' | 'error' | 'success'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
+const ESTADOS_PAGOS = ['activa', 'activo', 'pagada', 'paid']
+
+function tieneSuscripcionActiva(suscripcion: any) {
+  const estado = String(suscripcion?.estado ?? '').toLowerCase()
+  const vence = suscripcion?.fecha_vencimiento
+    ? new Date(suscripcion.fecha_vencimiento).getTime()
+    : 0
+
+  return ESTADOS_PAGOS.includes(estado) && vence >= Date.now()
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -99,9 +109,13 @@ export default function LoginPage() {
     }
 
     try {
-      await crearSuscripcionTrial(data.session, correo)
+      const resultado = await crearSuscripcionTrial(data.session, correo)
       mostrarMensaje('Inicio de sesion correcto.', 'success')
-      router.replace('/bienvenida')
+      router.replace(
+        tieneSuscripcionActiva(resultado.suscripcion)
+          ? '/bienvenida'
+          : '/suscripcion'
+      )
     } catch (suscripcionError) {
       const texto =
         suscripcionError instanceof Error
@@ -127,7 +141,7 @@ export default function LoginPage() {
     }
 
     setLoading(true)
-    mostrarMensaje('Creando cuenta y trial...', 'info')
+    mostrarMensaje('Creando cuenta...', 'info')
 
     const { data, error } = await supabase.auth.signUp({
       email: correo,
@@ -157,8 +171,8 @@ export default function LoginPage() {
 
     try {
       await crearSuscripcionTrial(data.session, correo)
-      mostrarMensaje('Cuenta creada con trial activo.', 'success')
-      router.replace('/bienvenida')
+      mostrarMensaje('Cuenta creada. Elige un plan para activar el panel.', 'success')
+      router.replace('/suscripcion')
     } catch (suscripcionError) {
       const texto =
         suscripcionError instanceof Error
@@ -270,7 +284,7 @@ export default function LoginPage() {
       ? 'Creando cuenta...'
       : 'Ingresando...'
     : esRegistro
-      ? 'Crear cuenta trial'
+      ? 'Crear cuenta'
       : 'Iniciar sesion'
 
   return (
@@ -286,7 +300,7 @@ export default function LoginPage() {
 
         <p className="text-zinc-400 mt-3 mb-7">
           {esRegistro
-            ? 'Activa tu trial y empieza a gestionar reservas.'
+            ? 'Crea tu cuenta y elige un plan para activar el panel.'
             : 'Accede a tu software de agendamiento.'}
         </p>
 

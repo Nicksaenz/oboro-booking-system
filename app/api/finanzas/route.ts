@@ -61,7 +61,7 @@ async function tienePlanBusiness(usuarioId: string) {
 
   return (
     ['business', 'premium'].includes(plan) &&
-    ['trial', 'activa', 'activo', 'pagada', 'paid'].includes(estado) &&
+    ['activa', 'activo', 'pagada', 'paid'].includes(estado) &&
     vence >= Date.now()
   )
 }
