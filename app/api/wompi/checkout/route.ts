@@ -60,7 +60,6 @@ export async function POST(request: Request) {
     await supabaseAdmin
       .from('suscripciones')
       .update({
-        plan: planSolicitado,
         estado: 'pendiente_pago',
       })
       .eq('usuario_id', userData.user.id)

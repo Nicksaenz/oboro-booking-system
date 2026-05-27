@@ -13,6 +13,7 @@ type WompiEvento = {
     transaction?: {
       id?: string
       amount_in_cents?: number
+      currency?: string
       reference?: string
       status?: string
     }
@@ -86,7 +87,10 @@ export async function POST(request: Request) {
   const plan = WOMPI_PLANES[referencia.plan]
   const montoEsperado = plan.precioCop * 100
 
-  if (transaction.amount_in_cents !== montoEsperado) {
+  if (
+    transaction.amount_in_cents !== montoEsperado ||
+    transaction.currency !== 'COP'
+  ) {
     return NextResponse.json(
       { error: 'Monto de transaccion no coincide con el plan' },
       { status: 400 }
