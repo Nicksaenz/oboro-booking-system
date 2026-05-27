@@ -19,7 +19,7 @@ const BENEFICIOS_LANDING = [
 ]
 const DIFERENCIALES_LANDING = [
   ['Sin instalar app', 'Tus clientes reservan desde el navegador con un link o QR.'],
-  ['Hecho para belleza', 'Barberias, unas, spa, esteticas y profesionales independientes.'],
+  ['Hecho para citas', 'Barberias, unas, spa, veterinarias, consultorios, asesores e independientes.'],
   ['Menos chats perdidos', 'Cada reserva llega con servicio, fecha, hora y profesional.'],
   ['Listo para crecer', 'Empieza solo y suma empleados, accesos y finanzas cuando lo necesites.'],
 ]
@@ -62,9 +62,50 @@ const PASOS_LANDING = [
   ['04', 'Controla el dia', 'Confirma citas, revisa pendientes y mide ingresos desde el panel.'],
 ]
 const PLANES_LANDING = [
-  ['Basic', '$39.900', 'Ideal para independientes que quieren agenda, QR y clientes ordenados.'],
-  ['Pro', '$59.900', 'Para equipos pequenos que necesitan mas empleados, accesos y seguimiento.'],
-  ['Business', '$79.900', 'Para negocios con finanzas, gastos y liquidacion de colaboradores.'],
+  {
+    nombre: 'Basic',
+    precio: '$39.900',
+    detalle: 'Ideal para independientes y negocios pequenos que quieren ordenar sus reservas.',
+    funciones: [
+      '7 dias gratis al crear la cuenta',
+      'QR de agendamiento incluido',
+      'Link publico para redes y WhatsApp',
+      '1 administrador principal',
+      'Hasta 2 empleados o profesionales',
+      'Clientes, servicios, empleados y citas',
+      'Dashboard de reservas',
+      'WhatsApp manual al cliente',
+    ],
+  },
+  {
+    nombre: 'Pro',
+    precio: '$59.900',
+    detalle: 'Para equipos que necesitan mas capacidad, seguimiento y operacion diaria.',
+    funciones: [
+      'Todo lo del plan Basic',
+      'QR de agendamiento incluido',
+      'Hasta 5 empleados o profesionales',
+      'Hasta 3 accesos adicionales para equipo',
+      'Links para confirmar y cancelar cita',
+      'Recordatorio automatico al negocio',
+      'Mayor control de agenda y operacion',
+    ],
+  },
+  {
+    nombre: 'Business',
+    precio: '$79.900',
+    detalle: 'Para negocios con equipo, gastos, ingresos y liquidacion de colaboradores.',
+    funciones: [
+      'Todo lo del plan Pro',
+      'QR de agendamiento incluido',
+      'Hasta 10 empleados o profesionales',
+      'Hasta 6 accesos adicionales para equipo',
+      'Modulo de finanzas',
+      'Registro de gastos',
+      'Liquidacion de colaboradores',
+      'Administrador financiero incluido',
+    ],
+  },
 ]
 
 function tieneSuscripcionActiva(suscripcion: any) {
@@ -385,13 +426,13 @@ export default function LoginPage() {
           <p className="inline-flex rounded-full border border-orange-500/35 bg-orange-500/10 px-4 py-2 text-sm font-bold text-orange-200">
             7 dias gratis. QR incluido desde Basic.
           </p>
-          <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[1.01] sm:text-6xl lg:text-7xl">
-            El sistema de reservas para negocios de belleza que quieren verse mas profesionales.
+          <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[1.03] sm:text-6xl lg:text-6xl xl:text-7xl">
+            El sistema de reservas para negocios que trabajan con citas.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
-            Tus clientes agendan por link o QR, tu equipo ve la agenda en tiempo
-            real y tu negocio deja de depender de chats perdidos, pantallazos y
-            cuadernos.
+            Para barberias, spas, salones de unas, veterinarias, consultorios,
+            profesionales independientes y equipos que necesitan agenda, QR,
+            clientes, servicios y control diario en un solo lugar.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -492,21 +533,15 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4">
-                <p className="text-sm font-black text-orange-200">QR publico</p>
-                <div className="mt-4 grid aspect-square grid-cols-5 gap-1 rounded-xl bg-white p-4">
-                  {Array.from({ length: 25 }).map((_, index) => (
-                    <span
-                      key={index}
-                      className={`rounded-sm ${
-                        [0, 1, 3, 4, 5, 8, 10, 12, 14, 16, 18, 20, 21, 23, 24].includes(index)
-                          ? 'bg-black'
-                          : 'bg-zinc-200'
-                      }`}
-                    />
-                  ))}
-                </div>
+                <p className="text-sm font-black text-orange-200">QR de agendamiento</p>
+                <img
+                  src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=https%3A%2F%2Fbooking.oborolab.com%2Flogin"
+                  alt="QR de agendamiento de Oboro Booking"
+                  className="mt-4 aspect-square w-full rounded-xl border border-white/20 bg-white p-4"
+                />
                 <p className="mt-4 text-sm leading-6 text-orange-100">
-                  Pon este codigo en tu mostrador, historias, tarjetas o volantes.
+                  Este QR es de ejemplo para la landing. Dentro de Oboro, cada
+                  negocio tiene su propio QR para que sus clientes agenden.
                 </p>
               </div>
             </div>
@@ -812,9 +847,9 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {PLANES_LANDING.map(([nombre, precio, detalle], index) => (
+            {PLANES_LANDING.map((plan, index) => (
               <article
-                key={nombre}
+                key={plan.nombre}
                 className={`relative rounded-xl border bg-zinc-950 p-5 shadow-lg ${
                   index === 1
                     ? 'border-emerald-500/60 shadow-emerald-950/20'
@@ -826,15 +861,23 @@ export default function LoginPage() {
                     Recomendado
                   </span>
                 )}
-                <h3 className="text-2xl font-black text-orange-500">{nombre}</h3>
-                <p className="mt-3 text-4xl font-black">{precio}</p>
+                <h3 className="text-2xl font-black text-orange-500">{plan.nombre}</h3>
+                <p className="mt-3 text-4xl font-black">{plan.precio}</p>
                 <p className="mt-1 text-sm text-zinc-500">COP / mes</p>
                 <p className="mt-4 min-h-16 text-sm leading-6 text-zinc-300">
-                  {detalle}
+                  {plan.detalle}
                 </p>
                 <p className="mt-4 rounded-xl border border-green-500/30 bg-green-950/10 px-4 py-3 text-sm font-bold text-green-300">
-                  Incluye codigo QR de reservas
+                  QR de agendamiento incluido en este plan
                 </p>
+                <ul className="mt-5 space-y-3 text-sm leading-6 text-zinc-300">
+                  {plan.funciones.map((funcion) => (
+                    <li key={funcion} className="flex gap-3">
+                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-orange-500" />
+                      <span>{funcion}</span>
+                    </li>
+                  ))}
+                </ul>
                 <button
                   type="button"
                   onClick={() => enfocarAcceso('registro')}
