@@ -56,13 +56,27 @@ export async function POST(request: Request) {
       currency: 'COP',
     })
     const supabaseAdmin = getSupabaseAdmin()
-
-    await supabaseAdmin
+    const { data: suscripcionActual } = await supabaseAdmin
       .from('suscripciones')
-      .update({
-        estado: 'pendiente_pago',
-      })
+      .select('estado, fecha_vencimiento')
       .eq('usuario_id', userData.user.id)
+      .maybeSingle()
+    const estadoActual = String(suscripcionActual?.estado ?? '').toLowerCase()
+    const vencimientoActual = suscripcionActual?.fecha_vencimiento
+      ? new Date(suscripcionActual.fecha_vencimiento).getTime()
+      : 0
+    const tienePruebaOPlanVigente =
+      ['activa', 'activo', 'pagada', 'paid'].includes(estadoActual) &&
+      vencimientoActual >= Date.now()
+
+    if (!tienePruebaOPlanVigente) {
+      await supabaseAdmin
+        .from('suscripciones')
+        .update({
+          estado: 'pendiente_pago',
+        })
+        .eq('usuario_id', userData.user.id)
+    }
 
     return NextResponse.json({
       url: construirUrlCheckout({

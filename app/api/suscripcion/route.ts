@@ -4,6 +4,7 @@ import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
 
 const PLANES_PERMITIDOS = ['trial', 'basico', 'pro', 'business', 'premium'] as const
 const ESTADOS_ACTIVOS = ['activa', 'activo', 'pagada', 'paid']
+const ESTADOS_PRUEBA_PENDIENTE = ['pendiente', 'pendiente_pago']
 type Plan = (typeof PLANES_PERMITIDOS)[number]
 
 function limpiarTexto(valor: unknown, respaldo = '') {
@@ -53,11 +54,11 @@ async function activarPruebaPendiente(
 ): Promise<any> {
   const estado = String(suscripcion?.estado ?? '').toLowerCase()
 
-  if (
-    estado !== 'pendiente' ||
-    !planConPrueba(suscripcion?.plan) ||
-    suscripcionActiva(suscripcion)
-  ) {
+  if (!ESTADOS_PRUEBA_PENDIENTE.includes(estado) || !planConPrueba(suscripcion?.plan)) {
+    return suscripcion
+  }
+
+  if (suscripcionActiva(suscripcion)) {
     return suscripcion
   }
 
@@ -278,7 +279,7 @@ export async function POST(request: Request) {
           : planSolicitado
       const puedeActivarPruebaPendiente =
         esPruebaGratis &&
-        estadoExistente === 'pendiente' &&
+        ESTADOS_PRUEBA_PENDIENTE.includes(estadoExistente) &&
         !suscripcionActiva(suscripcionExistente)
 
       if (puedeActivarPruebaPendiente) {
