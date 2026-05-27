@@ -19,8 +19,8 @@ export const PLANES_OBORO: PlanOboro[] = [
   {
     id: 'basico',
     nombre: 'Basico',
-    precio: '$70.000 COP / mes',
-    precioCop: 70000,
+    precio: '$39.900 COP / mes',
+    precioCop: 39900,
     recomendado: false,
     detalle: 'Para negocios que quieren ordenar su agenda y dejar de manejar citas en papel.',
     limites: {
@@ -29,9 +29,11 @@ export const PLANES_OBORO: PlanOboro[] = [
       accesosEquipo: 1,
     },
     funciones: [
+      '7 dias gratis al crear la cuenta',
       '1 administrador principal incluido',
       'Hasta 2 empleados o colaboradores',
       '1 acceso adicional de lectura',
+      'QR publico para que el cliente agende solo',
       'Clientes, servicios, empleados y citas',
       'Dashboard de reservas',
       'WhatsApp manual al cliente',
@@ -41,8 +43,8 @@ export const PLANES_OBORO: PlanOboro[] = [
   {
     id: 'pro',
     nombre: 'Pro',
-    precio: '$90.000 COP / mes',
-    precioCop: 90000,
+    precio: '$59.900 COP / mes',
+    precioCop: 59900,
     recomendado: true,
     detalle: 'El plan mas equilibrado para negocios que quieren vender mas y ahorrar tiempo.',
     limites: {
@@ -55,7 +57,7 @@ export const PLANES_OBORO: PlanOboro[] = [
       '1 administrador principal incluido',
       'Hasta 5 empleados o colaboradores',
       'Hasta 3 accesos adicionales para equipo',
-      'QR publico para que el cliente agende solo',
+      'QR publico incluido',
       'Links de confirmar y cancelar cita',
       'Recordatorio automatico al negocio',
     ],
@@ -63,8 +65,8 @@ export const PLANES_OBORO: PlanOboro[] = [
   {
     id: 'business',
     nombre: 'Business',
-    precio: '$120.000 COP / mes',
-    precioCop: 120000,
+    precio: '$79.900 COP / mes',
+    precioCop: 79900,
     recomendado: false,
     detalle: 'Para negocios con equipo, comisiones, gastos y mas control administrativo.',
     limites: {

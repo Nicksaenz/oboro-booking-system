@@ -186,8 +186,9 @@ export async function POST(request: Request) {
     }
 
     const fechaInicio = new Date()
+    const esTrial = planSolicitado === 'trial'
     const fechaVencimiento = new Date(fechaInicio)
-    fechaVencimiento.setDate(fechaInicio.getDate() + 30)
+    fechaVencimiento.setDate(fechaInicio.getDate() + (esTrial ? 7 : 30))
 
     const { data, error } = await supabaseAdmin
       .from('suscripciones')
@@ -198,7 +199,7 @@ export async function POST(request: Request) {
           email,
           telefono,
           plan: planSolicitado,
-          estado: 'pendiente',
+          estado: esTrial ? 'activa' : 'pendiente',
           fecha_inicio: fechaInicio.toISOString(),
           fecha_vencimiento: fechaVencimiento.toISOString(),
           whatsapp_enviado: false,

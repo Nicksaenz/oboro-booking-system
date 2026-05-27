@@ -11,6 +11,61 @@ type TipoMensaje = 'info' | 'error' | 'success'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
 const ESTADOS_PAGOS = ['activa', 'activo', 'pagada', 'paid']
+const BENEFICIOS_LANDING = [
+  'Reservas por QR y link desde Basic',
+  'Agenda, clientes, servicios y equipo en un solo panel',
+  'WhatsApp listo para confirmar, cancelar y recordar citas',
+  'Finanzas y liquidaciones para negocios que ya tienen equipo',
+]
+const DIFERENCIALES_LANDING = [
+  ['Sin instalar app', 'Tus clientes reservan desde el navegador con un link o QR.'],
+  ['Hecho para belleza', 'Barberias, unas, spa, esteticas y profesionales independientes.'],
+  ['Menos chats perdidos', 'Cada reserva llega con servicio, fecha, hora y profesional.'],
+  ['Listo para crecer', 'Empieza solo y suma empleados, accesos y finanzas cuando lo necesites.'],
+]
+const SECTORES_LANDING = [
+  {
+    titulo: 'Barberias',
+    texto: 'Agenda cortes, barba, tintes y turnos con profesionales disponibles.',
+    imagen:
+      'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=900&q=80',
+  },
+  {
+    titulo: 'Unas y belleza',
+    texto: 'Organiza manicura, pedicura, pestanas, cejas y servicios por duracion.',
+    imagen:
+      'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=900&q=80',
+  },
+  {
+    titulo: 'Spa y estetica',
+    texto: 'Controla cabinas, tratamientos, masajes y reservas recurrentes.',
+    imagen:
+      'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=900&q=80',
+  },
+  {
+    titulo: 'Veterinarias',
+    texto: 'Recibe citas para consultas, vacunas, peluqueria y controles.',
+    imagen:
+      'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=900&q=80',
+  },
+  {
+    titulo: 'Independientes',
+    texto: 'Profesionales que venden tiempo, sesiones, asesorias o atencion personalizada.',
+    imagen:
+      'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=80',
+  },
+]
+const PASOS_LANDING = [
+  ['01', 'Configura tu negocio', 'Servicios, precios, duracion, horarios y profesionales.'],
+  ['02', 'Comparte el QR', 'Ponlo en Instagram, WhatsApp, recepcion o volantes impresos.'],
+  ['03', 'Recibe reservas claras', 'El cliente elige servicio, fecha, hora y profesional disponible.'],
+  ['04', 'Controla el dia', 'Confirma citas, revisa pendientes y mide ingresos desde el panel.'],
+]
+const PLANES_LANDING = [
+  ['Basic', '$39.900', 'Ideal para independientes que quieren agenda, QR y clientes ordenados.'],
+  ['Pro', '$59.900', 'Para equipos pequenos que necesitan mas empleados, accesos y seguimiento.'],
+  ['Business', '$79.900', 'Para negocios con finanzas, gastos y liquidacion de colaboradores.'],
+]
 
 function tieneSuscripcionActiva(suscripcion: any) {
   const estado = String(suscripcion?.estado ?? '').toLowerCase()
@@ -41,6 +96,18 @@ export default function LoginPage() {
   function mostrarMensaje(texto: string, tipo: TipoMensaje = 'info') {
     setMensaje(texto)
     setTipoMensaje(tipo)
+  }
+
+  function enfocarAcceso(modoFormulario: ModoFormulario) {
+    setModo(modoFormulario)
+    setRecuperando(false)
+    setMensaje('')
+    window.requestAnimationFrame(() => {
+      document.getElementById('registro')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    })
   }
 
   function validarCredenciales() {
@@ -171,8 +238,8 @@ export default function LoginPage() {
 
     try {
       await crearSuscripcionTrial(data.session, correo)
-      mostrarMensaje('Cuenta creada. Elige un plan para activar el panel.', 'success')
-      router.replace('/suscripcion')
+      mostrarMensaje('Cuenta creada. Tienes 7 dias gratis para probar Oboro.', 'success')
+      router.replace('/bienvenida')
     } catch (suscripcionError) {
       const texto =
         suscripcionError instanceof Error
@@ -288,50 +355,206 @@ export default function LoginPage() {
       : 'Iniciar sesion'
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center px-5 py-10">
-      <section className="w-full max-w-md border border-orange-600/70 rounded-2xl p-6 sm:p-8 bg-zinc-950 shadow-2xl shadow-orange-950/20">
-        <p className="text-orange-500 font-bold tracking-[4px] text-sm">
-          OBORO BOOKING
-        </p>
+    <main className="min-h-screen bg-[#060606] text-white">
+      <section className="sticky top-0 z-30 border-b border-white/10 bg-black/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
+          <div>
+            <p className="text-2xl font-black text-orange-500">OBORO BOOKING</p>
+            <p className="text-xs font-bold uppercase tracking-[3px] text-zinc-500">
+              Powered by Oboro Lab
+            </p>
+          </div>
+          <div className="hidden items-center gap-6 text-sm font-bold text-zinc-300 md:flex">
+            <a href="#beneficios" className="transition hover:text-orange-400">Beneficios</a>
+            <a href="#sectores" className="transition hover:text-orange-400">Negocios</a>
+            <a href="#precios" className="transition hover:text-orange-400">Precios</a>
+            <a href="#registro" className="transition hover:text-orange-400">Entrar</a>
+          </div>
+          <button
+            type="button"
+            onClick={() => enfocarAcceso('registro')}
+            className="min-h-11 rounded-full bg-white px-5 text-sm font-black text-black transition hover:bg-orange-100"
+          >
+            Probar 7 dias
+          </button>
+        </div>
+      </section>
 
-        <h1 className="text-4xl sm:text-5xl font-bold mt-3">
-          {esRegistro ? 'Crear cuenta' : 'Login'}
-        </h1>
+      <section className="mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl gap-10 px-5 py-10 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:py-16">
+        <div>
+          <p className="inline-flex rounded-full border border-orange-500/35 bg-orange-500/10 px-4 py-2 text-sm font-bold text-orange-200">
+            7 dias gratis. QR incluido desde Basic.
+          </p>
+          <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[1.01] sm:text-6xl lg:text-7xl">
+            El sistema de reservas para negocios de belleza que quieren verse mas profesionales.
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
+            Tus clientes agendan por link o QR, tu equipo ve la agenda en tiempo
+            real y tu negocio deja de depender de chats perdidos, pantallazos y
+            cuadernos.
+          </p>
 
-        <p className="text-zinc-400 mt-3 mb-7">
-          {esRegistro
-            ? 'Crea tu cuenta y elige un plan para activar el panel.'
-            : 'Accede a tu software de agendamiento.'}
-        </p>
-
-        {!recuperando && (
-          <div className="grid grid-cols-2 rounded-xl border border-orange-600/40 p-1 mb-6">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={() => setModo('login')}
-              className={`rounded-lg py-2 text-sm font-bold transition ${
-                !esRegistro ? 'bg-orange-600 text-white' : 'text-zinc-400'
-              }`}
+              onClick={() => enfocarAcceso('registro')}
+              className="min-h-14 rounded-xl bg-orange-600 px-6 text-base font-black transition hover:bg-orange-700"
             >
-              Ingresar
+              Empezar gratis
             </button>
-
             <button
               type="button"
-              onClick={() => setModo('registro')}
-              className={`rounded-lg py-2 text-sm font-bold transition ${
-                esRegistro ? 'bg-orange-600 text-white' : 'text-zinc-400'
-              }`}
+              onClick={() => enfocarAcceso('login')}
+              className="min-h-14 rounded-xl border border-white/20 px-6 text-base font-black text-zinc-100 transition hover:border-orange-500/70 hover:bg-orange-600/10"
             >
-              Registro
+              Ya tengo cuenta
             </button>
           </div>
-        )}
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            {BENEFICIOS_LANDING.map((beneficio) => (
+              <div
+                key={beneficio}
+                className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-zinc-300"
+              >
+                <span className="mr-2 font-black text-orange-500">+</span>
+                {beneficio}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 grid max-w-2xl grid-cols-3 gap-3">
+            <div className="border-l border-orange-500/50 pl-4">
+              <p className="text-2xl font-black text-white">24/7</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">Reservas mientras trabajas</p>
+            </div>
+            <div className="border-l border-emerald-500/50 pl-4">
+              <p className="text-2xl font-black text-white">QR</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">Para redes y volantes</p>
+            </div>
+            <div className="border-l border-sky-500/50 pl-4">
+              <p className="text-2xl font-black text-white">$39.900</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">Plan inicial mensual</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black">
+            <div className="border-b border-white/10 bg-zinc-900 px-5 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[3px] text-orange-400">
+                    Vista del negocio
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black">Agenda de hoy</h2>
+                </div>
+                <div className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
+                  Activo
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-4 p-5 md:grid-cols-[1fr_0.72fr]">
+              <div className="rounded-xl border border-white/10 bg-black p-4">
+                <div className="grid grid-cols-4 gap-2 text-center text-xs text-zinc-500">
+                  {['9:00', '10:30', '12:00', '3:20'].map((hora) => (
+                    <div key={hora} className="rounded-lg bg-zinc-900 py-2">
+                      {hora}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 space-y-3">
+                  {[
+                    ['Juliana G.', 'Manicure semipermanente', 'Confirmada', 'emerald'],
+                    ['Daniel R.', 'Corte + barba', 'Pendiente', 'orange'],
+                    ['Camila P.', 'Pestanas volumen', 'Reservada por QR', 'sky'],
+                  ].map(([cliente, servicio, estado, color]) => (
+                    <div key={cliente} className="rounded-xl border border-white/10 bg-zinc-950 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-black text-white">{cliente}</p>
+                          <p className="mt-1 text-sm text-zinc-400">{servicio}</p>
+                        </div>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold ${
+                            color === 'emerald'
+                              ? 'bg-emerald-500/15 text-emerald-300'
+                              : color === 'sky'
+                                ? 'bg-sky-500/15 text-sky-300'
+                                : 'bg-orange-500/15 text-orange-300'
+                          }`}
+                        >
+                          {estado}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4">
+                <p className="text-sm font-black text-orange-200">QR publico</p>
+                <div className="mt-4 grid aspect-square grid-cols-5 gap-1 rounded-xl bg-white p-4">
+                  {Array.from({ length: 25 }).map((_, index) => (
+                    <span
+                      key={index}
+                      className={`rounded-sm ${
+                        [0, 1, 3, 4, 5, 8, 10, 12, 14, 16, 18, 20, 21, 23, 24].includes(index)
+                          ? 'bg-black'
+                          : 'bg-zinc-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="mt-4 text-sm leading-6 text-orange-100">
+                  Pon este codigo en tu mostrador, historias, tarjetas o volantes.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        <section id="registro" className="rounded-2xl border border-orange-600/50 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/30 sm:p-6">
+          <p className="text-sm font-bold uppercase tracking-[4px] text-orange-500">
+            {esRegistro ? 'Empieza hoy' : recuperando ? 'Recuperacion' : 'Acceso'}
+          </p>
+          <h2 className="mt-2 text-3xl font-black sm:text-4xl">
+            {recuperando ? 'Recuperar cuenta' : esRegistro ? '7 dias gratis' : 'Entrar al panel'}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-zinc-400">
+            {recuperando
+              ? 'Recibe un codigo por WhatsApp y actualiza tu contrasena.'
+              : esRegistro
+                ? 'Prueba agenda, clientes, servicios, empleados y QR antes de pagar.'
+                : 'Continua administrando tus citas y tu equipo.'}
+          </p>
+
+          {!recuperando && (
+            <div className="mt-6 grid grid-cols-2 rounded-xl border border-orange-600/40 p-1">
+              <button
+                type="button"
+                onClick={() => setModo('login')}
+                className={`rounded-lg py-2 text-sm font-bold transition ${
+                  !esRegistro ? 'bg-orange-600 text-white' : 'text-zinc-400'
+                }`}
+              >
+                Ingresar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setModo('registro')}
+                className={`rounded-lg py-2 text-sm font-bold transition ${
+                  esRegistro ? 'bg-orange-600 text-white' : 'text-zinc-400'
+                }`}
+              >
+                Registro
+              </button>
+            </div>
+          )}
 
         {!recuperando ? (
           <form
             onSubmit={esRegistro ? registrarse : iniciarSesion}
-            className="flex flex-col gap-4"
+            className="mt-6 flex flex-col gap-4"
           >
           {esRegistro && (
             <>
@@ -393,7 +616,7 @@ export default function LoginPage() {
           )}
           </form>
         ) : (
-          <form onSubmit={cambiarPasswordConCodigo} className="flex flex-col gap-4">
+          <form onSubmit={cambiarPasswordConCodigo} className="mt-6 flex flex-col gap-4">
             <input
               type="email"
               placeholder="Correo de la cuenta"
@@ -482,6 +705,147 @@ export default function LoginPage() {
             {mensaje}
           </p>
         )}
+      </section>
+        </div>
+      </section>
+
+      <section id="sectores" className="px-5 pb-14 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[4px] text-orange-500">
+                Para quien es
+              </p>
+              <h2 className="mt-3 max-w-3xl text-3xl font-black sm:text-5xl">
+                Una agenda premium para negocios que venden tiempo y confianza.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-6 text-zinc-400">
+              La landing debe hablarle al tipo de cliente que quieres atraer:
+              negocios visuales, con atencion presencial y necesidad diaria de
+              reservar, confirmar y no perder turnos.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {SECTORES_LANDING.map((sector, index) => (
+              <article
+                key={sector.titulo}
+                className={`group overflow-hidden rounded-xl border border-white/10 bg-zinc-950 ${
+                  index === 0 ? 'md:col-span-2 xl:col-span-1' : ''
+                }`}
+              >
+                <div className="relative h-56 overflow-hidden">
+                  <img
+                    src={sector.imagen}
+                    alt={`${sector.titulo} usando agenda de citas`}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-2xl font-black text-white">
+                      {sector.titulo}
+                    </h3>
+                  </div>
+                </div>
+                <p className="min-h-24 p-4 text-sm leading-6 text-zinc-300">
+                  {sector.texto}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="beneficios" className="border-y border-zinc-800 bg-zinc-950/70 px-5 py-14 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[4px] text-orange-500">
+                Por que Oboro
+              </p>
+              <h2 className="mt-3 max-w-3xl text-3xl font-black sm:text-5xl">
+                Menos mensajes repetidos, mas reservas confirmadas.
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-7 text-zinc-400">
+                La experiencia se siente simple para el cliente y ordenada para
+                el negocio. Eso ayuda a vender mas sin sumar trabajo manual.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {DIFERENCIALES_LANDING.map(([titulo, texto]) => (
+                <article key={titulo} className="rounded-xl border border-white/10 bg-black p-5">
+                  <h3 className="text-xl font-black text-white">{titulo}</h3>
+                  <p className="mt-3 text-sm leading-6 text-zinc-400">{texto}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-4">
+            {PASOS_LANDING.map(([numero, titulo, texto]) => (
+              <article key={titulo} className="rounded-xl border border-zinc-800 bg-black p-5">
+                <p className="text-sm font-black text-orange-500">{numero}</p>
+                <h3 className="mt-3 text-xl font-black">{titulo}</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">{texto}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="precios" className="px-5 py-14 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[4px] text-orange-500">
+                Planes
+              </p>
+              <h2 className="mt-2 text-3xl font-black sm:text-5xl">
+                Precios competitivos, con QR incluido en todos.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-6 text-zinc-400">
+              Igualamos el rango de la competencia y mantenemos el QR desde el
+              plan inicial para que puedas vender desde redes y material impreso.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {PLANES_LANDING.map(([nombre, precio, detalle], index) => (
+              <article
+                key={nombre}
+                className={`relative rounded-xl border bg-zinc-950 p-5 shadow-lg ${
+                  index === 1
+                    ? 'border-emerald-500/60 shadow-emerald-950/20'
+                    : 'border-orange-600/35 shadow-orange-950/20'
+                }`}
+              >
+                {index === 1 && (
+                  <span className="absolute right-5 top-5 rounded-full bg-emerald-500 px-3 py-1 text-xs font-black text-black">
+                    Recomendado
+                  </span>
+                )}
+                <h3 className="text-2xl font-black text-orange-500">{nombre}</h3>
+                <p className="mt-3 text-4xl font-black">{precio}</p>
+                <p className="mt-1 text-sm text-zinc-500">COP / mes</p>
+                <p className="mt-4 min-h-16 text-sm leading-6 text-zinc-300">
+                  {detalle}
+                </p>
+                <p className="mt-4 rounded-xl border border-green-500/30 bg-green-950/10 px-4 py-3 text-sm font-bold text-green-300">
+                  Incluye codigo QR de reservas
+                </p>
+                <button
+                  type="button"
+                  onClick={() => enfocarAcceso('registro')}
+                  className="mt-5 min-h-12 w-full rounded-xl bg-white px-4 text-sm font-black text-black transition hover:bg-orange-100"
+                >
+                  Probar este plan
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
     </main>
   )

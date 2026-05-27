@@ -8,17 +8,17 @@ export const WOMPI_PLANES: Record<
 > = {
   basico: {
     nombre: 'Basico',
-    precioCop: 70000,
+    precioCop: 39900,
     descripcion: 'Agenda, clientes, servicios y recordatorios manuales.',
   },
   pro: {
     nombre: 'Pro',
-    precioCop: 90000,
+    precioCop: 59900,
     descripcion: 'Reservas por QR, confirmacion y cancelacion por WhatsApp.',
   },
   business: {
     nombre: 'Business',
-    precioCop: 120000,
+    precioCop: 79900,
     descripcion: 'Finanzas, gastos, liquidaciones y automatizaciones avanzadas.',
   },
 }

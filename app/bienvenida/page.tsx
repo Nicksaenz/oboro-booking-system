@@ -32,7 +32,7 @@ const pasos = [
 const beneficios = [
   'Agenda organizada desde celular o computador.',
   'WhatsApp listo para avisar al cliente sin escribir todo a mano.',
-  'QR publico disponible desde Pro para que el cliente agende solo.',
+  'QR publico incluido desde Basico para que el cliente agende solo.',
   'Recordatorios automaticos al negocio desde Pro cuando Oboro Lab active Meta.',
   'Finanzas y liquidacion de colaboradores en Business.',
 ]

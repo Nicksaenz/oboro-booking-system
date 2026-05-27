@@ -21,7 +21,7 @@ export default function AutomatizacionesPage() {
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [planActual, setPlanActual] = useState('')
   const tieneAutomatizaciones = ['pro', 'business', 'premium'].includes(planActual)
-  const tieneQrPublico = ['pro', 'business', 'premium'].includes(planActual)
+  const tieneQrPublico = ['trial', 'basico', 'pro', 'business', 'premium'].includes(planActual)
 
   useEffect(() => {
     const guardadoLocal = window.localStorage.getItem(TEMPLATE_KEY)
@@ -216,11 +216,11 @@ export default function AutomatizacionesPage() {
             {!tieneQrPublico && (
               <div className="mt-4 rounded-xl border border-zinc-800 bg-black p-4">
                 <p className="font-bold text-orange-400">
-                  Disponible desde Pro
+                  Incluido en todos los planes
                 </p>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  El QR publico para que los clientes agenden solos se activa
-                  en los planes Pro y Business.
+                  El QR publico para que los clientes agenden solos esta
+                  incluido desde Basico y tambien durante la prueba gratis.
                 </p>
                 <button
                   type="button"

@@ -30,7 +30,7 @@ const PASOS = [
   {
     titulo: '3. Comparte el QR publico',
     texto:
-      'En Pro y Business, el QR permite que el cliente seleccione servicio, empleado, fecha y hora sin escribirte primero.',
+      'En todos los planes, el QR permite que el cliente seleccione servicio, empleado, fecha y hora sin escribirte primero.',
   },
   {
     titulo: '4. Controla tu equipo',
