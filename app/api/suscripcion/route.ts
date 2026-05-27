@@ -36,6 +36,82 @@ function suscripcionActiva(suscripcion?: { estado?: string | null; fecha_vencimi
   return ESTADOS_ACTIVOS.includes(estado) && vence >= Date.now()
 }
 
+function planConPrueba(plan?: string | null) {
+  const valor = String(plan ?? '').toLowerCase()
+
+  return ['basico', 'pro', 'business', 'premium'].includes(valor)
+}
+
+async function activarPruebaPendiente(
+  supabaseAdmin: ReturnType<typeof getSupabaseAdmin>,
+  usuarioId: string,
+  suscripcion?: {
+    estado?: string | null
+    fecha_vencimiento?: string | null
+    plan?: string | null
+  } | null
+): Promise<any> {
+  const estado = String(suscripcion?.estado ?? '').toLowerCase()
+
+  if (
+    estado !== 'pendiente' ||
+    !planConPrueba(suscripcion?.plan) ||
+    suscripcionActiva(suscripcion)
+  ) {
+    return suscripcion
+  }
+
+  const fechaInicioTrial = new Date()
+  const fechaVencimientoTrial = new Date(fechaInicioTrial)
+  fechaVencimientoTrial.setDate(fechaInicioTrial.getDate() + 7)
+
+  const { data, error } = await supabaseAdmin
+    .from('suscripciones')
+    .update({
+      estado: 'activa',
+      fecha_inicio: fechaInicioTrial.toISOString(),
+      fecha_vencimiento: fechaVencimientoTrial.toISOString(),
+    })
+    .eq('usuario_id', usuarioId)
+    .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono, foto_negocio_url')
+    .single()
+
+  if (error && columnaFotoNoExiste(error)) {
+    const fallback = await supabaseAdmin
+      .from('suscripciones')
+      .update({
+        estado: 'activa',
+        fecha_inicio: fechaInicioTrial.toISOString(),
+        fecha_vencimiento: fechaVencimientoTrial.toISOString(),
+      })
+      .eq('usuario_id', usuarioId)
+      .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono')
+      .single()
+
+    if (fallback.error) {
+      throw fallback.error
+    }
+
+    const fallbackData = fallback.data as
+      | {
+          estado?: string | null
+          fecha_vencimiento?: string | null
+          plan?: string | null
+          nombre_negocio?: string | null
+          telefono?: string | null
+        }
+      | null
+
+    return fallbackData ? { ...fallbackData, foto_negocio_url: null } : fallbackData
+  }
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
+
 async function obtenerContextoSuscripcion(
   supabaseAdmin: ReturnType<typeof getSupabaseAdmin>,
   usuarioId: string,
@@ -114,6 +190,10 @@ export async function GET(request: Request) {
         { error: error.message },
         { status: 500 }
       )
+    }
+
+    if (data) {
+      data = await activarPruebaPendiente(supabaseAdmin, contexto.negocioId, data)
     }
 
     return NextResponse.json({
