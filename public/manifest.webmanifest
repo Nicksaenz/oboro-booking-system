@@ -1,6 +1,6 @@
 {
   "name": "Oboro Booking",
-  "short_name": "Oboro",
+  "short_name": "Oboro Booking",
   "description": "Agenda, clientes, servicios, empleados, pagos y recordatorios para negocios de servicios.",
   "start_url": "/login",
   "scope": "/",
@@ -21,6 +21,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "shortcuts": [
