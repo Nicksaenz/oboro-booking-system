@@ -51,7 +51,8 @@ export async function GET(request: Request) {
         "Nombre del servicio"
       ),
       Empleados:ID_Empleado (
-        Nombre
+        Nombre,
+        foto_url
       )
     `)
     .eq('Fecha', fecha)

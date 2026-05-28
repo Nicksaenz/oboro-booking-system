@@ -13,12 +13,14 @@ type Empleado = {
   ID: string
   Nombre: string
   Cargo?: string
+  foto_url?: string | null
 }
 
 export default function ReservaPublicaPage() {
   const params = useParams<{ usuarioId: string }>()
   const usuarioId = params.usuarioId
   const [negocio, setNegocio] = useState('Oboro Booking')
+  const [fotoNegocio, setFotoNegocio] = useState('')
   const [servicios, setServicios] = useState<Servicio[]>([])
   const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [cargando, setCargando] = useState(true)
@@ -48,6 +50,7 @@ export default function ReservaPublicaPage() {
       }
 
       setNegocio(data.negocio?.nombre ?? 'Oboro Booking')
+      setFotoNegocio(data.negocio?.foto_url ?? '')
       setServicios(data.servicios ?? [])
       setEmpleados(data.empleados ?? [])
       setAgendaDisponible(true)
@@ -97,6 +100,10 @@ export default function ReservaPublicaPage() {
     setGuardando(false)
   }
 
+  const empleadoSeleccionado = empleados.find(
+    (empleado) => empleado.ID === form.empleadoId
+  )
+
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
       <section className="mx-auto flex min-h-[calc(100vh-48px)] w-full max-w-3xl flex-col justify-center">
@@ -104,9 +111,19 @@ export default function ReservaPublicaPage() {
           OBORO BOOKING
         </p>
 
-        <h1 className="mt-2 text-4xl font-black leading-tight md:text-5xl">
-          Agenda tu cita
-        </h1>
+        <div className="mt-2 flex items-center gap-4">
+          {fotoNegocio && (
+            <img
+              src={fotoNegocio}
+              alt={negocio}
+              className="h-16 w-16 rounded-full border border-orange-500/50 object-cover"
+            />
+          )}
+
+          <h1 className="text-4xl font-black leading-tight md:text-5xl">
+            Agenda tu cita
+          </h1>
+        </div>
 
         <p className="mt-3 text-sm leading-6 text-zinc-400 sm:text-base">
           Reserva directamente con {negocio}. Elige servicio, profesional, fecha
@@ -193,6 +210,34 @@ export default function ReservaPublicaPage() {
                   </option>
                 ))}
               </select>
+
+              {empleadoSeleccionado && (
+                <div className="flex items-center gap-4 rounded-xl border border-orange-600/30 bg-black p-4">
+                  {empleadoSeleccionado.foto_url ? (
+                    <img
+                      src={empleadoSeleccionado.foto_url}
+                      alt={empleadoSeleccionado.Nombre}
+                      className="h-16 w-16 rounded-full border border-orange-500/50 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-orange-500/50 bg-zinc-900 text-xl font-black text-orange-400">
+                      {empleadoSeleccionado.Nombre.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="text-sm text-zinc-500">Te atiende</p>
+                    <p className="font-bold text-orange-300">
+                      {empleadoSeleccionado.Nombre}
+                    </p>
+                    {empleadoSeleccionado.Cargo && (
+                      <p className="text-sm text-zinc-400">
+                        {empleadoSeleccionado.Cargo}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <input

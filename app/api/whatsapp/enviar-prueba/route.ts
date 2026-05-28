@@ -63,6 +63,7 @@ export async function POST(request: Request) {
       },
       Empleados: {
         Nombre: 'Oboro Booking',
+        foto_url: null,
       },
     })
 

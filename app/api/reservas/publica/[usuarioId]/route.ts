@@ -33,7 +33,7 @@ export async function GET(
 
     const { data: suscripcion, error: suscripcionError } = await supabase
       .from('suscripciones')
-      .select('nombre_negocio, estado, fecha_vencimiento, plan')
+      .select('nombre_negocio, foto_negocio_url, estado, fecha_vencimiento, plan')
       .eq('usuario_id', usuarioId)
       .maybeSingle()
 
@@ -57,7 +57,7 @@ export async function GET(
         .order('Nombre del servicio', { ascending: true }),
       supabase
         .from('Empleados')
-        .select('ID, Nombre, Cargo, Activo')
+        .select('ID, Nombre, Cargo, Activo, foto_url')
         .eq('ID de Usuario', usuarioId)
         .eq('Activo', true)
         .order('Nombre', { ascending: true }),
@@ -66,6 +66,7 @@ export async function GET(
     return NextResponse.json({
       negocio: {
         nombre: suscripcion?.nombre_negocio ?? 'Oboro Booking',
+        foto_url: suscripcion?.foto_negocio_url ?? null,
       },
       servicios: servicios ?? [],
       empleados: empleados ?? [],

@@ -58,7 +58,8 @@ export async function POST(request: Request) {
           "Nombre del servicio"
         ),
         Empleados:ID_Empleado (
-          Nombre
+          Nombre,
+          foto_url
         )
       `)
       .eq('ID', citaId)

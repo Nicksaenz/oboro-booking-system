@@ -3,11 +3,17 @@ type TemplateParameter = {
   text: string
 }
 
+type TemplateHeaderImage = {
+  link?: string
+  dataUrl?: string
+}
+
 type SendTemplateInput = {
   to: string
   templateName: string
   languageCode: string
   parameters: TemplateParameter[]
+  headerImage?: TemplateHeaderImage
   credentials?: WhatsAppCredentials
 }
 
@@ -26,6 +32,7 @@ export type CitaRecordatorio = {
   } | null
   Empleados?: {
     Nombre?: string
+    foto_url?: string | null
   } | null
 }
 
@@ -72,11 +79,129 @@ export function getBusinessReminderTemplateName() {
   )
 }
 
+export function getCustomerPhotoReminderTemplateName() {
+  return process.env.META_WHATSAPP_TEMPLATE_RECORDATORIO_CLIENTE_FOTO || ''
+}
+
+function getImageMimeFromDataUrl(dataUrl: string) {
+  const match = dataUrl.match(/^data:(image\/(?:png|jpe?g|webp));base64,/i)
+  return match?.[1] ?? ''
+}
+
+function getBase64FromDataUrl(dataUrl: string) {
+  const parts = dataUrl.split(',')
+  return parts.length > 1 ? parts[1] : ''
+}
+
+function isPublicImageUrl(value: string) {
+  return /^https:\/\//i.test(value)
+}
+
+async function uploadWhatsAppImage({
+  dataUrl,
+  phoneNumberId,
+  accessToken,
+  apiVersion,
+}: {
+  dataUrl: string
+  phoneNumberId: string
+  accessToken: string
+  apiVersion: string
+}) {
+  const mimeType = getImageMimeFromDataUrl(dataUrl)
+  const base64 = getBase64FromDataUrl(dataUrl)
+
+  if (!mimeType || !base64) {
+    throw new Error('La foto del empleado no tiene un formato valido.')
+  }
+
+  const formData = new FormData()
+  const extension = mimeType.includes('png') ? 'png' : 'jpg'
+  const blob = new Blob([Buffer.from(base64, 'base64')], { type: mimeType })
+
+  formData.append('messaging_product', 'whatsapp')
+  formData.append('file', blob, `oboro-empleado.${extension}`)
+
+  const response = await fetch(
+    `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/media`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    }
+  )
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok || !data?.id) {
+    throw new Error(
+      `WhatsApp media error ${response.status}: ${JSON.stringify(data)}`
+    )
+  }
+
+  return String(data.id)
+}
+
+async function buildHeaderImageComponent({
+  headerImage,
+  phoneNumberId,
+  accessToken,
+  apiVersion,
+}: {
+  headerImage?: TemplateHeaderImage
+  phoneNumberId: string
+  accessToken: string
+  apiVersion: string
+}) {
+  const imageValue = headerImage?.link || headerImage?.dataUrl || ''
+
+  if (!imageValue) return null
+
+  if (isPublicImageUrl(imageValue)) {
+    return {
+      type: 'header',
+      parameters: [
+        {
+          type: 'image',
+          image: {
+            link: imageValue,
+          },
+        },
+      ],
+    }
+  }
+
+  if (imageValue.startsWith('data:image/')) {
+    const mediaId = await uploadWhatsAppImage({
+      dataUrl: imageValue,
+      phoneNumberId,
+      accessToken,
+      apiVersion,
+    })
+
+    return {
+      type: 'header',
+      parameters: [
+        {
+          type: 'image',
+          image: {
+            id: mediaId,
+          },
+        },
+      ],
+    }
+  }
+
+  return null
+}
+
 export async function sendWhatsAppTemplate({
   to,
   templateName,
   languageCode,
   parameters,
+  headerImage,
   credentials,
 }: SendTemplateInput) {
   const phoneNumberId =
@@ -85,6 +210,19 @@ export async function sendWhatsAppTemplate({
     credentials?.accessToken ?? getRequiredEnv('META_WHATSAPP_ACCESS_TOKEN')
   const apiVersion =
     credentials?.apiVersion ?? process.env.META_WHATSAPP_API_VERSION ?? 'v24.0'
+  const headerComponent = await buildHeaderImageComponent({
+    headerImage,
+    phoneNumberId,
+    accessToken,
+    apiVersion,
+  })
+  const components = [
+    ...(headerComponent ? [headerComponent] : []),
+    {
+      type: 'body',
+      parameters,
+    },
+  ]
 
   const response = await fetch(
     `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`,
@@ -104,12 +242,7 @@ export async function sendWhatsAppTemplate({
           language: {
             code: languageCode,
           },
-          components: [
-            {
-              type: 'body',
-              parameters,
-            },
-          ],
+          components,
         },
       }),
     }
@@ -131,6 +264,8 @@ export async function sendAppointmentReminder(
   credentials?: WhatsAppCredentials
 ) {
   const telefono = normalizeWhatsAppNumber(cita.Clientes?.Numero)
+  const photoTemplateName = getCustomerPhotoReminderTemplateName()
+  const empleadoFoto = cita.Empleados?.foto_url?.trim()
 
   if (!telefono) {
     throw new Error('El cliente no tiene un numero de WhatsApp valido')
@@ -138,8 +273,17 @@ export async function sendAppointmentReminder(
 
   return sendWhatsAppTemplate({
     to: telefono,
-    templateName: credentials?.templateName ?? getReminderTemplateName(),
+    templateName:
+      empleadoFoto && photoTemplateName
+        ? photoTemplateName
+        : credentials?.templateName ?? getReminderTemplateName(),
     languageCode: credentials?.languageCode ?? getReminderTemplateLanguage(),
+    headerImage:
+      empleadoFoto && photoTemplateName
+        ? empleadoFoto.startsWith('data:image/')
+          ? { dataUrl: empleadoFoto }
+          : { link: empleadoFoto }
+        : undefined,
     credentials,
     parameters: [
       { type: 'text', text: cita.Clientes?.Nombre || 'cliente' },

@@ -11,7 +11,51 @@ type Empleado = {
   Nombre: string
   Cargo: string
   Telefono?: string
+  foto_url?: string | null
   Activo: boolean
+}
+
+function leerArchivoComoDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function optimizarFotoEmpleado(file: File) {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('El archivo debe ser una imagen.')
+  }
+
+  if (file.size > 6 * 1024 * 1024) {
+    throw new Error('La imagen debe pesar menos de 6 MB.')
+  }
+
+  const dataUrl = await leerArchivoComoDataUrl(file)
+  const imagen = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('No se pudo procesar la imagen'))
+    img.src = dataUrl
+  })
+  const maxSize = 520
+  const escala = Math.min(1, maxSize / Math.max(imagen.width, imagen.height))
+  const width = Math.max(1, Math.round(imagen.width * escala))
+  const height = Math.max(1, Math.round(imagen.height * escala))
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new Error('No se pudo preparar la imagen.')
+  }
+
+  canvas.width = width
+  canvas.height = height
+  context.drawImage(imagen, 0, 0, width, height)
+
+  return canvas.toDataURL('image/jpeg', 0.78)
 }
 
 export default function EmpleadosPage() {
@@ -20,12 +64,15 @@ export default function EmpleadosPage() {
   const [nombre, setNombre] = useState('')
   const [cargo, setCargo] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [fotoEmpleado, setFotoEmpleado] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [empleadoEditando, setEmpleadoEditando] = useState<Empleado | null>(null)
   const [editNombre, setEditNombre] = useState('')
   const [editCargo, setEditCargo] = useState('')
   const [editTelefono, setEditTelefono] = useState('')
+  const [editFotoEmpleado, setEditFotoEmpleado] = useState('')
+  const [editQuitarFoto, setEditQuitarFoto] = useState(false)
   const [editActivo, setEditActivo] = useState(true)
   const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
   const [planActual, setPlanActual] = useState('basico')
@@ -112,6 +159,7 @@ export default function EmpleadosPage() {
         Nombre: nombre.trim(),
         Cargo: cargo.trim(),
         Telefono: telefono.trim(),
+        foto_url: fotoEmpleado || null,
         Activo: true,
         'ID de Usuario': acceso.negocioId,
       },
@@ -127,8 +175,21 @@ export default function EmpleadosPage() {
     setNombre('')
     setCargo('')
     setTelefono('')
+    setFotoEmpleado('')
     await cargarEmpleados()
     setGuardando(false)
+  }
+
+  async function cargarFotoNueva(file?: File) {
+    if (!file) return
+
+    try {
+      const foto = await optimizarFotoEmpleado(file)
+      setFotoEmpleado(foto)
+      setMensaje('')
+    } catch (error) {
+      setMensaje(error instanceof Error ? error.message : 'No se pudo cargar la foto.')
+    }
   }
 
   function abrirEditor(empleado: Empleado) {
@@ -141,7 +202,22 @@ export default function EmpleadosPage() {
     setEditNombre(empleado.Nombre ?? '')
     setEditCargo(empleado.Cargo ?? '')
     setEditTelefono(empleado.Telefono ?? '')
+    setEditFotoEmpleado(empleado.foto_url ?? '')
+    setEditQuitarFoto(false)
     setEditActivo(Boolean(empleado.Activo))
+  }
+
+  async function cargarFotoEditor(file?: File) {
+    if (!file) return
+
+    try {
+      const foto = await optimizarFotoEmpleado(file)
+      setEditFotoEmpleado(foto)
+      setEditQuitarFoto(false)
+      setMensaje('')
+    } catch (error) {
+      setMensaje(error instanceof Error ? error.message : 'No se pudo cargar la foto.')
+    }
   }
 
   async function actualizarEmpleado(e: React.FormEvent) {
@@ -160,6 +236,7 @@ export default function EmpleadosPage() {
         Nombre: editNombre.trim(),
         Cargo: editCargo.trim(),
         Telefono: editTelefono.trim(),
+        foto_url: editQuitarFoto ? null : editFotoEmpleado || null,
         Activo: editActivo,
       })
       .eq('ID', empleadoEditando.ID)
@@ -290,6 +367,16 @@ export default function EmpleadosPage() {
             onChange={(e) => setTelefono(e.target.value)}
           />
 
+          <label className="min-h-12 cursor-pointer rounded-xl border border-orange-600/50 bg-black p-4 text-sm text-zinc-300 transition hover:bg-zinc-900">
+            <span>{fotoEmpleado ? 'Cambiar foto' : 'Subir foto'}</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(e) => cargarFotoNueva(e.target.files?.[0])}
+            />
+          </label>
+
           <button
             type="submit"
             disabled={guardando || !contexto?.esAdmin || empleados.length >= plan.limites.empleados}
@@ -303,6 +390,23 @@ export default function EmpleadosPage() {
                   ? 'Limite del plan'
                   : 'Guardar empleado'}
           </button>
+
+          {fotoEmpleado && (
+            <div className="flex items-center gap-3 rounded-xl border border-orange-600/30 bg-black p-3 md:col-span-4">
+              <img
+                src={fotoEmpleado}
+                alt="Foto del empleado"
+                className="h-16 w-16 rounded-full border border-orange-500/50 object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => setFotoEmpleado('')}
+                className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-zinc-900"
+              >
+                Quitar foto
+              </button>
+            </div>
+          )}
         </form>
 
         {mensaje && (
@@ -318,7 +422,20 @@ export default function EmpleadosPage() {
               className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20"
             >
               <div className="flex items-start justify-between gap-4">
-                <div>
+                <div className="flex gap-4">
+                  {empleado.foto_url ? (
+                    <img
+                      src={empleado.foto_url}
+                      alt={empleado.Nombre}
+                      className="h-16 w-16 rounded-full border border-orange-500/50 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-orange-500/50 bg-black text-xl font-black text-orange-400">
+                      {empleado.Nombre.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+
+                  <div>
                   <h2 className="text-2xl font-bold text-orange-500">
                     {empleado.Nombre}
                   </h2>
@@ -326,6 +443,7 @@ export default function EmpleadosPage() {
                   <p className="mt-1 text-sm text-zinc-500">
                     {empleado.Telefono || 'Sin telefono'}
                   </p>
+                  </div>
                 </div>
 
                 <span
@@ -400,6 +518,42 @@ export default function EmpleadosPage() {
                 onChange={(e) => setEditTelefono(e.target.value)}
                 placeholder="WhatsApp o telefono"
               />
+
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
+                <div className="flex items-center gap-4">
+                  {editFotoEmpleado && !editQuitarFoto ? (
+                    <img
+                      src={editFotoEmpleado}
+                      alt="Foto del empleado"
+                      className="h-16 w-16 rounded-full border border-orange-500/50 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-orange-500/50 bg-zinc-900 text-xl font-black text-orange-400">
+                      {editNombre.slice(0, 1).toUpperCase() || '?'}
+                    </div>
+                  )}
+
+                  <label className="cursor-pointer rounded-xl border border-orange-600/60 px-4 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10">
+                    Cambiar foto
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(e) => cargarFotoEditor(e.target.files?.[0])}
+                    />
+                  </label>
+                </div>
+
+                {editFotoEmpleado && !editQuitarFoto && (
+                  <button
+                    type="button"
+                    onClick={() => setEditQuitarFoto(true)}
+                    className="mt-3 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-zinc-900"
+                  >
+                    Quitar foto
+                  </button>
+                )}
+              </div>
 
               <label className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-black p-4 text-sm text-zinc-300">
                 <input

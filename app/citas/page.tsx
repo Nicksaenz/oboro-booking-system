@@ -23,14 +23,6 @@ export default function CitasPage() {
   const [filtroEmpleado, setFiltroEmpleado] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('')
   const [busqueda, setBusqueda] = useState('')
-  const [plantillaWhatsApp, setPlantillaWhatsApp] = useState(
-    'Hola {{cliente}}, te recordamos tu cita en {{negocio}} para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}.\n\nConfirma aqui: {{confirmar}}\nCancela aqui: {{cancelar}}'
-  )
-  const [plantillaNegocioWhatsApp, setPlantillaNegocioWhatsApp] = useState(
-    'Recordatorio: tienes una cita con {{cliente}} el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Atiende: {{empleado}}.'
-  )
-  const [telefonoNegocio, setTelefonoNegocio] = useState('')
-  const [nombreNegocio, setNombreNegocio] = useState('')
   const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
 
   useEffect(() => {
@@ -101,13 +93,6 @@ const citasFiltradas = citas.filter((cita) => {
   router.push('/login')
   return
 }
-    const accessToken = sessionData.session?.access_token
-
-    if (!accessToken) {
-      router.push('/login')
-      return
-    }
-
     const acceso = await obtenerContextoEquipo()
 
     if (!acceso) {
@@ -120,14 +105,6 @@ const citasFiltradas = citas.filter((cita) => {
     const clientesRes = await supabase.from('Clientes').select('*').eq('usuario_id', acceso.negocioId)
     const serviciosRes = await supabase.from('SERVICIOS').select('*').eq('ID DE USUARIO', acceso.negocioId)
     const empleadosRes = await supabase.from('Empleados').select('*').eq('ID de Usuario', acceso.negocioId)
-    const suscripcionRes = await fetch('/api/suscripcion', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    const suscripcionJson = suscripcionRes.ok
-      ? await suscripcionRes.json()
-      : { suscripcion: null }
     const citasRes = await supabase
   .from('Citas')
   .select(`
@@ -151,8 +128,6 @@ const citasFiltradas = citas.filter((cita) => {
     setServicios(serviciosRes.data || [])
     setEmpleados(empleadosRes.data || [])
     setCitas(citasRes.data || [])
-    setTelefonoNegocio(suscripcionJson.suscripcion?.telefono ?? '')
-    setNombreNegocio(suscripcionJson.suscripcion?.nombre_negocio ?? '')
   }
 
   async function guardarCita(e: React.FormEvent) {
@@ -262,37 +237,6 @@ async function eliminarCita(id: string) {
   cargarDatos()
 }
 
-function normalizarTelefonoWhatsApp(valor: unknown) {
-  const digitos = String(valor ?? '').replace(/\D/g, '')
-
-  if (!digitos) return ''
-  if (digitos.startsWith('57')) return digitos
-  if (digitos.length === 10) return `57${digitos}`
-
-  return digitos
-}
-
-function aplicarPlantillaWhatsApp(cita: any, plantilla: string) {
-  return plantilla
-    .replaceAll('{{cliente}}', cita.Clientes?.Nombre ?? 'cliente')
-    .replaceAll('{{fecha}}', cita.Fecha ?? '')
-    .replaceAll('{{hora}}', cita.Hora ?? '')
-    .replaceAll(
-      '{{servicio}}',
-      cita.SERVICIOS?.['Nombre del servicio'] ?? 'servicio'
-    )
-    .replaceAll('{{empleado}}', cita.Empleados?.Nombre ?? 'equipo')
-    .replaceAll('{{negocio}}', nombreNegocio || 'tu negocio')
-    .replaceAll('{{confirmar}}', construirLinkReserva(cita, 'confirmar'))
-    .replaceAll('{{cancelar}}', construirLinkReserva(cita, 'cancelar'))
-}
-
-function construirLinkReserva(cita: any, accion: 'confirmar' | 'cancelar') {
-  if (typeof window === 'undefined') return ''
-
-  return `${window.location.origin}/reserva/${cita.ID}?accion=${accion}`
-}
-
 function claseEstadoCita(estado: string) {
   if (estado === 'confirmada') {
     return 'border-green-600/40 bg-green-950/20 text-green-300'
@@ -312,36 +256,6 @@ function claseEstadoCita(estado: string) {
 function confirmarEliminacionCita(cita: any) {
   return confirm(
     `Seguro que deseas eliminar la cita de ${cita.Clientes?.Nombre ?? 'este cliente'}?`
-  )
-}
-
-function abrirWhatsAppConMensaje(telefonoDestino: unknown, texto: string, error: string) {
-  const telefono = normalizarTelefonoWhatsApp(telefonoDestino)
-
-  if (!telefono) {
-    setMensaje(error)
-    return
-  }
-
-  const url = `https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`
-
-  window.open(url, '_blank', 'noopener,noreferrer')
-  setMensaje('WhatsApp preparado. Revisa el mensaje y presiona enviar.')
-}
-
-function abrirWhatsAppCliente(cita: any) {
-  abrirWhatsAppConMensaje(
-    cita.Clientes?.Numero,
-    aplicarPlantillaWhatsApp(cita, plantillaWhatsApp),
-    'Agrega el WhatsApp del cliente en Clientes para preparar el mensaje.'
-  )
-}
-
-function abrirWhatsAppNegocio(cita: any) {
-  abrirWhatsAppConMensaje(
-    telefonoNegocio,
-    aplicarPlantillaWhatsApp(cita, plantillaNegocioWhatsApp),
-    'Agrega el WhatsApp del negocio en la cuenta para preparar este aviso.'
   )
 }
 
@@ -391,20 +305,6 @@ async function guardarEdicionCita() {
   }, [])
 
   useEffect(() => {
-    const plantillaGuardada = window.localStorage.getItem('oboro_whatsapp_template')
-
-    if (plantillaGuardada) {
-      setPlantillaWhatsApp(plantillaGuardada)
-    }
-
-    const plantillaNegocioGuardada = window.localStorage.getItem('oboro_whatsapp_template_negocio')
-
-    if (plantillaNegocioGuardada) {
-      setPlantillaNegocioWhatsApp(plantillaNegocioGuardada)
-    }
-  }, [])
-
-  useEffect(() => {
   async function verificarSesion() {
     const { data } = await supabase.auth.getSession()
 
@@ -434,21 +334,21 @@ async function guardarEdicionCita() {
         <div className="mb-8 grid gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-4 shadow-xl shadow-orange-950/10">
             <p className="text-sm font-bold text-orange-500">
-              Aviso al cliente
+              Recordatorio al cliente
             </p>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
-              El boton abre WhatsApp con el mensaje listo. El negocio solo
-              revisa y presiona enviar desde su propio WhatsApp.
+              Oboro envia automaticamente el recordatorio al cliente final con
+              servicio, fecha, hora y empleado asignado.
             </p>
           </div>
 
           <div className="rounded-2xl border border-green-600/40 bg-green-950/10 p-4 shadow-xl shadow-green-950/10">
             <p className="text-sm font-bold text-green-300">
-              Aviso al negocio
+              Recordatorio al negocio
             </p>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
-              Oboro Lab enviara automaticamente un resumen de las citas del dia
-              siguiente al numero registrado del negocio.
+              Oboro envia automaticamente al negocio un resumen de las citas del
+              dia siguiente al WhatsApp registrado.
             </p>
           </div>
         </div>
@@ -691,23 +591,6 @@ async function guardarEdicionCita() {
           Eliminar
         </button>
 
-        <p className="col-span-2 mt-3 text-xs font-bold uppercase tracking-[2px] text-zinc-600">
-          Recordatorios
-        </p>
-
-        <button
-          onClick={() => abrirWhatsAppCliente(cita)}
-          className="min-h-11 rounded-xl bg-orange-600 px-3 py-2 text-sm font-bold transition hover:bg-orange-700 disabled:opacity-60"
-        >
-          Cliente
-        </button>
-
-        <button
-          onClick={() => abrirWhatsAppNegocio(cita)}
-          className="min-h-11 rounded-xl border border-green-600/60 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
-        >
-          Negocio
-        </button>
       </div>
     </div>
   ))}
@@ -722,7 +605,7 @@ async function guardarEdicionCita() {
           <th className="py-3 px-3">Servicio</th>
           <th className="py-3 px-3">Empleado</th>
           <th className="py-3 px-3">Estado</th>
-          <th className="py-3 px-3">Recordatorios</th>
+          <th className="py-3 px-3">Acciones</th>
         </tr>
       </thead>
 
@@ -756,54 +639,38 @@ async function guardarEdicionCita() {
             </td>
             <td className="py-3 px-3">
               <button
-                onClick={() => abrirWhatsAppCliente(cita)}
-                className="rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10 disabled:opacity-60"
+                onClick={() => actualizarEstado(cita.ID, 'confirmada')}
+                className="rounded-xl border border-green-600/50 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
               >
-                Avisar cliente
+                Confirmar
               </button>
               <button
-                onClick={() => abrirWhatsAppNegocio(cita)}
-                className="ml-2 rounded-xl border border-green-600/60 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
+                onClick={() => actualizarEstado(cita.ID, 'completada')}
+                className="ml-2 rounded-xl border border-blue-600/50 px-3 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-600/10"
               >
-                Avisar negocio
+                Completar
+              </button>
+              <button
+                onClick={() => abrirModalEditar(cita)}
+                className="ml-2 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmarEliminacionCita(cita)) {
+                    eliminarCita(cita.ID)
+                  }
+                }}
+                className="ml-2 rounded-xl border border-red-600/50 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
+              >
+                Eliminar
               </button>
             </td>
           </tr>
         ))}
       </tbody>
     </table>
-    <div className="hidden md:hidden">
-  {citasFiltradas.map((cita) => (
-    <div
-      key={cita.ID}
-      className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-4"
-    >
-      <div className="flex justify-between gap-4">
-        <div>
-          <p className="text-orange-500 font-bold">
-            {cita.Clientes?.Nombre}
-          </p>
-          <p className="text-sm text-zinc-300">
-            ✂️ {cita.SERVICIOS?.['Nombre del servicio']}
-          </p>
-          <p className="text-sm text-zinc-300">
-            🧑‍💼 {cita.Empleados?.Nombre}
-          </p>
-        </div>
-
-        <div className="text-right text-sm text-zinc-300">
-          <p>📅 {cita.Fecha}</p>
-          <p>🕒 {cita.Hora}</p>
-        </div>
-      </div>
-
-      <p className="mt-3 text-sm font-bold text-green-400">
-        {cita.Estado}
-      </p>
-    </div>
-  ))}
-</div>
-
     <div className="mt-10">
   <div className="flex items-center justify-between mb-6">
     
@@ -894,111 +761,6 @@ async function guardarEdicionCita() {
 </div>
   </div>
 </div>
-        <div className="hidden">
-          {citasFiltradas.map((cita) => (
-            <div
-              key={cita.ID}
-              className="rounded-2xl border border-orange-600/35 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20"
-            >
-              <h2 className="text-2xl font-black text-orange-500">
-                Cita programada
-              </h2>
-
-              <p className="text-zinc-300 mt-4">
-                📅 Fecha: {cita.Fecha}
-              </p>
-
-              <p className="text-zinc-300">
-                🕒 Hora: {cita.Hora}
-              </p>
-
-              <p className="text-zinc-300">
-                👤 Cliente: {cita.Clientes?.Nombre}
-              </p>
-
-              <p className="text-zinc-300">
-                ✂️ Servicio: {cita.SERVICIOS?.['Nombre del servicio']}
-              </p>
-
-              <p className="text-zinc-300">
-                🧑‍💼 Empleado: {cita.Empleados?.Nombre}
-              </p>
-
-              <div className="mt-5">
-              <span
-  className={
-    cita.Estado === 'confirmada'
-      ? 'text-green-400'
-      : cita.Estado === 'completada'
-      ? 'text-blue-400'
-      : cita.Estado === 'cancelada'
-      ? 'text-red-400'
-      : 'text-yellow-400'
-  }
->
-  Estado: {cita.Estado}
-</span>
-
-              <p className="mt-5 text-xs font-bold uppercase tracking-[2px] text-zinc-600">
-                Gestion
-              </p>
-              <div className="mt-2 grid grid-cols-4 gap-2">
-
-  <button
-    onClick={() => actualizarEstado(cita['ID'], 'confirmada')}
-    className="min-h-11 rounded-xl border border-green-600/50 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
-  >
-    Confirmar
-  </button>
-
-  <button
-    onClick={() => actualizarEstado(cita['ID'], 'completada')}
-    className="min-h-11 rounded-xl border border-blue-600/50 px-3 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-600/10"
-  >
-    Completar
-  </button>
-   
-  <button
-  onClick={() => abrirModalEditar(cita)}
-  className="min-h-11 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
->
-  Editar
-</button>
-
-  <button
-    onClick={() => {
-  if (confirmarEliminacionCita(cita)) {
-    eliminarCita(cita.ID)
-  }
-}}
-    className="min-h-11 rounded-xl border border-red-600/50 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
-  >
-    Eliminar
-  </button>
-
-  <p className="col-span-4 mt-3 text-xs font-bold uppercase tracking-[2px] text-zinc-600">
-    Recordatorios
-  </p>
-
-  <button
-    onClick={() => abrirWhatsAppCliente(cita)}
-    className="col-span-2 min-h-11 rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold transition hover:bg-orange-700 disabled:opacity-60"
-  >
-    WhatsApp cliente
-  </button>
-
-  <button
-    onClick={() => abrirWhatsAppNegocio(cita)}
-    className="col-span-2 min-h-11 rounded-xl border border-green-600/60 px-4 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
-  >
-    WhatsApp negocio
-  </button>
-
-</div>
-</div>
-            </div>
-          ))}
-        </div>
       </section>
   
   {citaEditando && (
