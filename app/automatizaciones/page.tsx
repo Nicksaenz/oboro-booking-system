@@ -1,51 +1,42 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import { obtenerContextoEquipo } from '@/lib/equipo'
 
-const TEMPLATE_KEY = 'oboro_whatsapp_template'
-const TEMPLATE_NEGOCIO_KEY = 'oboro_whatsapp_template_negocio'
-const MENSAJE_DEFAULT =
-  'Hola {{cliente}}, te recordamos tu cita en {{negocio}} para el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Te atendera {{empleado}}.\n\nConfirma aqui: {{confirmar}}\nCancela aqui: {{cancelar}}'
-const MENSAJE_NEGOCIO_DEFAULT =
-  'Recordatorio: tienes una cita con {{cliente}} el dia {{fecha}} a las {{hora}}. Servicio: {{servicio}}. Atiende: {{empleado}}.'
+type WhatsAppStatus = {
+  listo?: boolean
+  schedule?: string
+  endpoint?: string
+  customerReminderEndpoint?: string
+  webhookEndpoint?: string
+  template?: string
+  customerPhotoTemplate?: string
+  businessTemplate?: string
+  language?: string
+  variables?: Record<string, boolean>
+}
+
+const PLANES_AUTOMATICOS = ['pro', 'business', 'premium']
+const PLANES_QR = ['trial', 'basico', 'pro', 'business', 'premium']
 
 export default function AutomatizacionesPage() {
   const router = useRouter()
-  const [mensaje, setMensaje] = useState(MENSAJE_DEFAULT)
-  const [mensajeNegocio, setMensajeNegocio] = useState(MENSAJE_NEGOCIO_DEFAULT)
-  const [guardado, setGuardado] = useState(false)
   const [reservaUrl, setReservaUrl] = useState('')
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [planActual, setPlanActual] = useState('')
-  const tieneAutomatizaciones = ['pro', 'business', 'premium'].includes(planActual)
-  const tieneQrPublico = ['trial', 'basico', 'pro', 'business', 'premium'].includes(planActual)
+  const [estadoWhatsApp, setEstadoWhatsApp] = useState<WhatsAppStatus | null>(null)
+
+  const tieneAutomatizaciones = PLANES_AUTOMATICOS.includes(planActual)
+  const tieneQrPublico = PLANES_QR.includes(planActual)
+  const variablesListas = Object.entries(estadoWhatsApp?.variables ?? {})
 
   useEffect(() => {
-    const guardadoLocal = window.localStorage.getItem(TEMPLATE_KEY)
-    const guardadoNegocioLocal = window.localStorage.getItem(TEMPLATE_NEGOCIO_KEY)
-
-    if (
-      guardadoLocal &&
-      guardadoLocal.includes('{{confirmar}}') &&
-      guardadoLocal.includes('{{cancelar}}')
-    ) {
-      setMensaje(guardadoLocal)
-    } else {
-      window.localStorage.setItem(TEMPLATE_KEY, MENSAJE_DEFAULT)
-    }
-
-    if (guardadoNegocioLocal) {
-      setMensajeNegocio(guardadoNegocioLocal)
-    }
-
-    async function cargarLinkPublico() {
+    async function cargarDatos() {
       const { data } = await supabase.auth.getSession()
       const userId = data.session?.user?.id
       const token = data.session?.access_token
-
       const contexto = await obtenerContextoEquipo()
       const negocioId = contexto?.negocioId ?? userId
 
@@ -62,26 +53,14 @@ export default function AutomatizacionesPage() {
         const resultado = response.ok ? await response.json() : null
         setPlanActual(String(resultado?.suscripcion?.plan ?? '').toLowerCase())
       }
+
+      const whatsappResponse = await fetch('/api/whatsapp/status')
+      const whatsappJson = whatsappResponse.ok ? await whatsappResponse.json() : null
+      setEstadoWhatsApp(whatsappJson)
     }
 
-    cargarLinkPublico()
+    cargarDatos()
   }, [])
-
-  function guardarMensaje() {
-    window.localStorage.setItem(TEMPLATE_KEY, mensaje)
-    window.localStorage.setItem(TEMPLATE_NEGOCIO_KEY, mensajeNegocio)
-    setGuardado(true)
-    setTimeout(() => setGuardado(false), 2500)
-  }
-
-  function restaurarMensaje() {
-    setMensaje(MENSAJE_DEFAULT)
-    setMensajeNegocio(MENSAJE_NEGOCIO_DEFAULT)
-    window.localStorage.setItem(TEMPLATE_KEY, MENSAJE_DEFAULT)
-    window.localStorage.setItem(TEMPLATE_NEGOCIO_KEY, MENSAJE_NEGOCIO_DEFAULT)
-    setGuardado(true)
-    setTimeout(() => setGuardado(false), 2500)
-  }
 
   async function copiarLinkReserva() {
     if (!reservaUrl) return
@@ -90,23 +69,6 @@ export default function AutomatizacionesPage() {
     setLinkCopiado(true)
     setTimeout(() => setLinkCopiado(false), 2500)
   }
-
-  const vistaPreviaCliente = mensaje
-    .replaceAll('{{cliente}}', 'Juliana Gonzalez')
-    .replaceAll('{{negocio}}', 'Tu Negocio')
-    .replaceAll('{{fecha}}', 'martes 29 de julio')
-    .replaceAll('{{hora}}', '3:20 p. m.')
-    .replaceAll('{{servicio}}', 'Manicure semipermanente')
-    .replaceAll('{{empleado}}', 'Laura')
-    .replaceAll('{{confirmar}}', 'link de confirmar')
-    .replaceAll('{{cancelar}}', 'link de cancelar')
-
-  const vistaPreviaNegocio = mensajeNegocio
-    .replaceAll('{{cliente}}', 'Juliana Gonzalez')
-    .replaceAll('{{fecha}}', 'martes 29 de julio')
-    .replaceAll('{{hora}}', '3:20 p. m.')
-    .replaceAll('{{servicio}}', 'Manicure semipermanente')
-    .replaceAll('{{empleado}}', 'Laura')
 
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
@@ -118,90 +80,101 @@ export default function AutomatizacionesPage() {
         <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-4xl font-black leading-tight md:text-5xl">
-              Recordatorios por WhatsApp
+              Automatizaciones
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-              Mensajes manuales para clientes y recordatorio automatico para el
-              negocio.
+              Oboro envia recordatorios automaticos por WhatsApp al negocio y
+              al cliente final usando las citas guardadas en la agenda.
             </p>
           </div>
 
           <div className="rounded-2xl border border-green-500/50 bg-green-950/20 px-5 py-4 text-green-300">
-            <p className="text-sm text-zinc-400">Modo</p>
-            <p className="text-xl font-bold">Cliente manual / negocio automatico</p>
+            <p className="text-sm text-zinc-400">Modo actual</p>
+            <p className="text-xl font-bold">Automatico</p>
           </div>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
-          <h2 className="text-2xl font-bold">
-            Como lo usara tu cliente
-          </h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-zinc-800 bg-black p-4">
-              <h3 className="font-bold text-orange-500">
-                1. Crea la cita
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Guarda cliente, servicio, empleado, fecha y hora.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-zinc-800 bg-black p-4">
-              <h3 className="font-bold text-orange-500">
-                2. El cliente final es manual
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">
-                El negocio abre WhatsApp al cliente y presiona enviar.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-zinc-800 bg-black p-4">
-              <h3 className="font-bold text-orange-500">
-                3. El negocio recibe aviso
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Oboro le envia automatico al negocio un recordatorio de sus
-                citas del dia siguiente.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-green-600/40 bg-green-950/10 p-5">
-          <h2 className="text-2xl font-bold text-green-300">
-            Automatizaciones internas
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-zinc-300">
-            Oboro Booking usa el WhatsApp central de Oboro Lab para enviar los
-            recordatorios automaticos al numero que cada negocio registro al
-            crear su cuenta. El negocio no tiene que conectar Meta ni configurar
-            tokens.
-          </p>
-          <p className="mt-3 text-sm leading-6 text-zinc-400">
-            El cliente final no recibe mensajes automaticos: el negocio los
-            envia desde el boton de cada cita para que salgan desde su propio
-            WhatsApp.
-          </p>
-          {!tieneAutomatizaciones && (
-            <p className="mt-4 rounded-xl border border-orange-600/40 bg-black px-4 py-3 text-sm font-bold text-orange-200">
-              Los recordatorios automaticos se activan desde el plan Pro.
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
+            <p className="text-sm font-bold text-orange-500">1. Agenda</p>
+            <h2 className="mt-2 text-2xl font-bold">La cita queda completa</h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              El negocio crea la cita o el cliente la agenda desde el QR. Oboro
+              guarda cliente, servicio, empleado, fecha, hora y estado.
             </p>
-          )}
+          </div>
+
+          <div className="rounded-2xl border border-green-600/40 bg-green-950/10 p-5 shadow-2xl shadow-green-950/10">
+            <p className="text-sm font-bold text-green-300">2. Recordatorio</p>
+            <h2 className="mt-2 text-2xl font-bold">Se envia solo</h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              Cada dia Oboro revisa las citas del dia siguiente y envia el aviso
+              automatico al negocio y al cliente final.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-blue-600/40 bg-blue-950/10 p-5 shadow-2xl shadow-blue-950/10">
+            <p className="text-sm font-bold text-blue-300">3. Foto del equipo</p>
+            <h2 className="mt-2 text-2xl font-bold">Mensaje personalizado</h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              Si el empleado tiene foto, Oboro la usa en la plantilla de
+              WhatsApp con imagen para que el cliente vea quien lo atiende.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
+            <h2 className="text-2xl font-bold">Que recibe cada persona</h2>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
+                <p className="font-bold text-orange-400">Cliente final</p>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  Recibe un recordatorio con su nombre, negocio, fecha, hora,
+                  servicio y empleado asignado. Cuando hay foto de empleado y
+                  plantilla aprobada, el mensaje incluye imagen.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
+                <p className="font-bold text-green-300">Negocio</p>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  Recibe un recordatorio operativo con el cliente, servicio,
+                  fecha, hora y empleado para preparar la cita del dia siguiente.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-green-600/40 bg-green-950/10 p-5">
+            <h2 className="text-2xl font-bold text-green-300">Estado</h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-300">
+              {estadoWhatsApp?.listo
+                ? 'WhatsApp esta configurado para enviar recordatorios.'
+                : 'Falta revisar alguna variable de WhatsApp o cron.'}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              Horario: {estadoWhatsApp?.schedule ?? 'Todos los dias a las 8:00 a. m. Colombia'}
+            </p>
+            {!tieneAutomatizaciones && (
+              <p className="mt-4 rounded-xl border border-orange-600/40 bg-black px-4 py-3 text-sm font-bold text-orange-200">
+                Los recordatorios automaticos se activan desde el plan Pro.
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="mt-4 grid gap-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20 md:grid-cols-[1fr_auto] md:items-center">
           <div>
-            <h2 className="text-2xl font-bold">
-              QR publico para agendar
-            </h2>
+            <h2 className="text-2xl font-bold">QR publico para agendar</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
-              Comparte este codigo en recepcion, redes sociales o historias.
-              Tus clientes pueden escoger servicio, empleado, fecha y hora sin
-              escribirte primero.
+              Comparte este link o QR en recepcion, redes sociales e historias.
+              El cliente escoge servicio, empleado, fecha y hora sin escribir
+              primero al negocio.
             </p>
             {reservaUrl && tieneQrPublico && (
               <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-                <div className="rounded-xl border border-zinc-800 bg-black p-3 text-sm text-orange-200 break-all">
+                <div className="break-all rounded-xl border border-zinc-800 bg-black p-3 text-sm text-orange-200">
                   {reservaUrl}
                 </div>
                 <button
@@ -216,11 +189,11 @@ export default function AutomatizacionesPage() {
             {!tieneQrPublico && (
               <div className="mt-4 rounded-xl border border-zinc-800 bg-black p-4">
                 <p className="font-bold text-orange-400">
-                  Incluido en todos los planes
+                  Incluido en todos los planes activos
                 </p>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  El QR publico para que los clientes agenden solos esta
-                  incluido desde Basico y tambien durante la prueba gratis.
+                  El QR publico esta disponible desde Basico y durante la prueba
+                  gratis.
                 </p>
                 <button
                   type="button"
@@ -242,84 +215,49 @@ export default function AutomatizacionesPage() {
           )}
         </div>
 
-        <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
-          <h2 className="text-2xl font-bold">
-            Mensaje para el cliente final
-          </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
-            Puedes cambiar el texto. Oboro reemplaza automaticamente las
-            palabras entre llaves con los datos reales de cada cita y con los
-            enlaces para confirmar o cancelar.
-          </p>
-
-          <textarea
-            className="mt-5 min-h-44 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm leading-6 outline-none"
-            value={mensaje}
-            onChange={(e) => setMensaje(e.target.value)}
-          />
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20">
-          <h2 className="text-2xl font-bold">
-            Mensaje para el negocio
-          </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
-            Este mensaje tambien se usa para el recordatorio automatico al
-            negocio cuando la automatizacion central de Oboro Lab este activa.
-          </p>
-
-          <textarea
-            className="mt-5 min-h-36 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm leading-6 outline-none"
-            value={mensajeNegocio}
-            onChange={(e) => setMensajeNegocio(e.target.value)}
-          />
-
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={guardarMensaje}
-              className="min-h-12 rounded-xl bg-orange-600 px-5 py-3 font-bold transition hover:bg-orange-700"
-            >
-              Guardar mensaje
-            </button>
-
-            <button
-              type="button"
-              onClick={restaurarMensaje}
-              className="min-h-12 rounded-xl border border-orange-600/60 px-5 py-3 font-bold text-orange-200 transition hover:bg-orange-600/10"
-            >
-              Restaurar ejemplo
-            </button>
-          </div>
-
-          {guardado && (
-            <p className="mt-4 rounded-xl border border-orange-500/40 bg-black px-4 py-3 text-sm text-orange-200">
-              Mensaje guardado. Se usara en los botones de WhatsApp de Citas.
-            </p>
-          )}
-        </div>
-
         <div className="mt-4 rounded-2xl border border-zinc-800 bg-black p-5">
-          <h2 className="text-2xl font-bold">
-            Vista previa
-          </h2>
+          <h2 className="text-2xl font-bold">Configuracion tecnica</h2>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-orange-600/40 bg-zinc-950 p-4">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
               <p className="text-sm font-bold text-orange-500">
-                Mensaje para cliente final
+                Plantillas de Meta
               </p>
-              <p className="mt-3 whitespace-pre-line text-sm leading-6 text-zinc-300">
-                {vistaPreviaCliente}
-              </p>
+              <div className="mt-3 space-y-2 text-sm text-zinc-300">
+                <p>Cliente: {estadoWhatsApp?.template ?? 'recordatorio_cita'}</p>
+                <p>
+                  Cliente con foto:{' '}
+                  {estadoWhatsApp?.customerPhotoTemplate ?? 'recordatorio_cita_foto'}
+                </p>
+                <p>
+                  Negocio: {estadoWhatsApp?.businessTemplate ?? 'recordatorio_negocio'}
+                </p>
+                <p>Idioma: {estadoWhatsApp?.language ?? 'es_CO'}</p>
+              </div>
             </div>
 
-            <div className="rounded-xl border border-green-600/40 bg-zinc-950 p-4">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
               <p className="text-sm font-bold text-green-300">
-                Recordatorio para el negocio
+                Variables activas
               </p>
-              <p className="mt-3 whitespace-pre-line text-sm leading-6 text-zinc-300">
-                {vistaPreviaNegocio}
-              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {variablesListas.length ? (
+                  variablesListas.map(([nombre, configurada]) => (
+                    <div
+                      key={nombre}
+                      className="rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm"
+                    >
+                      <span className={configurada ? 'text-green-300' : 'text-red-300'}>
+                        {configurada ? 'Lista' : 'Falta'}
+                      </span>
+                      <span className="ml-2 text-zinc-400">{nombre}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-zinc-400">
+                    Cargando estado de configuracion...
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
