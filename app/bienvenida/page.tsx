@@ -23,7 +23,7 @@ const pasos = [
   },
   {
     titulo: '4. Agenda la primera cita',
-    texto: 'Une cliente, servicio, empleado, fecha y hora. Desde ahi puedes avisar por WhatsApp.',
+    texto: 'Une cliente, servicio, empleado, fecha y hora. Desde ahi Oboro prepara los recordatorios automaticos.',
     href: '/citas',
     boton: 'Agendar cita',
   },
@@ -31,9 +31,9 @@ const pasos = [
 
 const beneficios = [
   'Agenda organizada desde celular o computador.',
-  'WhatsApp listo para avisar al cliente sin escribir todo a mano.',
+  'WhatsApp automatico para recordar citas al negocio y al cliente final.',
   'QR publico incluido desde Basico para que el cliente agende solo.',
-  'Recordatorios automaticos al negocio desde Pro cuando Oboro Lab active Meta.',
+  'Fotos de empleados para personalizar el recordatorio del cliente final.',
   'Finanzas y liquidacion de colaboradores en Business.',
 ]
 
@@ -97,7 +97,7 @@ export default function BienvenidaPage() {
             </h2>
             <p className="mt-3 text-sm leading-6 text-zinc-300">
               El negocio agenda o recibe reservas por QR, confirma la cita,
-              avisa al cliente por WhatsApp y revisa su calendario. En Business
+              Oboro recuerda por WhatsApp y el equipo revisa su calendario. En Business
               tambien puede controlar ingresos, gastos y liquidaciones.
             </p>
           </section>

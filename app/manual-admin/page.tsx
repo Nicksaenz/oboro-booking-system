@@ -23,9 +23,9 @@ const PASOS = [
       'Crea servicios, empleados y clientes antes de llenar la agenda. Esto hace que las citas queden completas y faciles de consultar.',
   },
   {
-    titulo: '2. Agenda y avisa por WhatsApp',
+    titulo: '2. Agenda y deja que Oboro recuerde',
     texto:
-      'Desde Citas puedes crear una reserva, cambiar su estado, avisar al cliente y avisar al negocio. El mensaje se abre listo para enviar.',
+      'Desde Citas puedes crear una reserva y cambiar su estado. Oboro usa esos datos para enviar recordatorios automaticos por WhatsApp al negocio y al cliente final.',
   },
   {
     titulo: '3. Comparte el QR publico',
@@ -33,14 +33,14 @@ const PASOS = [
       'En todos los planes, el QR permite que el cliente seleccione servicio, empleado, fecha y hora sin escribirte primero.',
   },
   {
-    titulo: '4. Controla tu equipo',
+    titulo: '4. Personaliza el equipo',
     texto:
-      'En Equipo agregas correos por rol. Operativo puede manejar agenda. Solo lectura puede consultar. El administrador conserva el control.',
+      'En Empleados puedes agregar nombre, cargo, telefono y foto. La foto ayuda a que el cliente final vea quien lo atendera cuando reciba el recordatorio.',
   },
   {
-    titulo: '5. Usa finanzas solo en Business',
+    titulo: '5. Controla tu equipo y finanzas',
     texto:
-      'Finanzas registra gastos, calcula ingresos y ayuda a liquidar colaboradores. Esta parte queda protegida con clave admin.',
+      'En Equipo agregas accesos por rol. En Business, Finanzas registra gastos, calcula ingresos y ayuda a liquidar colaboradores con clave admin.',
   },
 ]
 

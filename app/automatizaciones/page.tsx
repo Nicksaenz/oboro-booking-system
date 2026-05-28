@@ -5,19 +5,6 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { obtenerContextoEquipo } from '@/lib/equipo'
 
-type WhatsAppStatus = {
-  listo?: boolean
-  schedule?: string
-  endpoint?: string
-  customerReminderEndpoint?: string
-  webhookEndpoint?: string
-  template?: string
-  customerPhotoTemplate?: string
-  businessTemplate?: string
-  language?: string
-  variables?: Record<string, boolean>
-}
-
 const PLANES_AUTOMATICOS = ['pro', 'business', 'premium']
 const PLANES_QR = ['trial', 'basico', 'pro', 'business', 'premium']
 
@@ -26,11 +13,9 @@ export default function AutomatizacionesPage() {
   const [reservaUrl, setReservaUrl] = useState('')
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [planActual, setPlanActual] = useState('')
-  const [estadoWhatsApp, setEstadoWhatsApp] = useState<WhatsAppStatus | null>(null)
 
   const tieneAutomatizaciones = PLANES_AUTOMATICOS.includes(planActual)
   const tieneQrPublico = PLANES_QR.includes(planActual)
-  const variablesListas = Object.entries(estadoWhatsApp?.variables ?? {})
 
   useEffect(() => {
     async function cargarDatos() {
@@ -54,9 +39,6 @@ export default function AutomatizacionesPage() {
         setPlanActual(String(resultado?.suscripcion?.plan ?? '').toLowerCase())
       }
 
-      const whatsappResponse = await fetch('/api/whatsapp/status')
-      const whatsappJson = whatsappResponse.ok ? await whatsappResponse.json() : null
-      setEstadoWhatsApp(whatsappJson)
     }
 
     cargarDatos()
@@ -149,12 +131,12 @@ export default function AutomatizacionesPage() {
           <div className="rounded-2xl border border-green-600/40 bg-green-950/10 p-5">
             <h2 className="text-2xl font-bold text-green-300">Estado</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-300">
-              {estadoWhatsApp?.listo
-                ? 'WhatsApp esta configurado para enviar recordatorios.'
-                : 'Falta revisar alguna variable de WhatsApp o cron.'}
+              Las automatizaciones usan la configuracion central de Oboro Lab.
+              El negocio solo debe mantener sus citas, clientes y empleados al
+              dia.
             </p>
             <p className="mt-3 text-sm leading-6 text-zinc-400">
-              Horario: {estadoWhatsApp?.schedule ?? 'Todos los dias a las 8:00 a. m. Colombia'}
+              Horario: todos los dias a las 8:00 a. m. Colombia.
             </p>
             {!tieneAutomatizaciones && (
               <p className="mt-4 rounded-xl border border-orange-600/40 bg-black px-4 py-3 text-sm font-bold text-orange-200">
@@ -215,52 +197,6 @@ export default function AutomatizacionesPage() {
           )}
         </div>
 
-        <div className="mt-4 rounded-2xl border border-zinc-800 bg-black p-5">
-          <h2 className="text-2xl font-bold">Configuracion tecnica</h2>
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-sm font-bold text-orange-500">
-                Plantillas de Meta
-              </p>
-              <div className="mt-3 space-y-2 text-sm text-zinc-300">
-                <p>Cliente: {estadoWhatsApp?.template ?? 'recordatorio_cita'}</p>
-                <p>
-                  Cliente con foto:{' '}
-                  {estadoWhatsApp?.customerPhotoTemplate ?? 'recordatorio_cita_foto'}
-                </p>
-                <p>
-                  Negocio: {estadoWhatsApp?.businessTemplate ?? 'recordatorio_negocio'}
-                </p>
-                <p>Idioma: {estadoWhatsApp?.language ?? 'es_CO'}</p>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-sm font-bold text-green-300">
-                Variables activas
-              </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {variablesListas.length ? (
-                  variablesListas.map(([nombre, configurada]) => (
-                    <div
-                      key={nombre}
-                      className="rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm"
-                    >
-                      <span className={configurada ? 'text-green-300' : 'text-red-300'}>
-                        {configurada ? 'Lista' : 'Falta'}
-                      </span>
-                      <span className="ml-2 text-zinc-400">{nombre}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-zinc-400">
-                    Cargando estado de configuracion...
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
     </main>
   )

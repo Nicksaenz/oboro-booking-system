@@ -15,13 +15,13 @@ const ESTADOS_PAGOS = ['activa', 'activo', 'pagada', 'paid']
 const BENEFICIOS_LANDING = [
   'Reservas por QR y link desde Basic',
   'Agenda, clientes, servicios y equipo en un solo panel',
-  'WhatsApp listo para confirmar, cancelar y recordar citas',
+  'WhatsApp automatico para recordar citas al negocio y al cliente',
   'Finanzas y liquidaciones para negocios que ya tienen equipo',
 ]
 const DIFERENCIALES_LANDING = [
   ['Sin instalar app', 'Tus clientes reservan desde el navegador con un link o QR.'],
   ['Hecho para citas', 'Barberias, unas, spa, veterinarias, consultorios, asesores e independientes.'],
-  ['Menos chats perdidos', 'Cada reserva llega con servicio, fecha, hora y profesional.'],
+  ['Menos chats perdidos', 'Cada reserva llega con servicio, fecha, hora, profesional y recordatorio automatico.'],
   ['Listo para crecer', 'Empieza solo y suma empleados, accesos y finanzas cuando lo necesites.'],
 ]
 const SECTORES_LANDING = [
@@ -60,7 +60,7 @@ const PASOS_LANDING = [
   ['01', 'Configura tu negocio', 'Servicios, precios, duracion, horarios y profesionales.'],
   ['02', 'Comparte el QR', 'Ponlo en Instagram, WhatsApp, recepcion o volantes impresos.'],
   ['03', 'Recibe reservas claras', 'El cliente elige servicio, fecha, hora y profesional disponible.'],
-  ['04', 'Controla el dia', 'Confirma citas, revisa pendientes y mide ingresos desde el panel.'],
+  ['04', 'Automatiza recordatorios', 'Oboro recuerda la cita al negocio y al cliente final por WhatsApp.'],
 ]
 const PLANES_LANDING = [
   {
@@ -76,7 +76,7 @@ const PLANES_LANDING = [
       'Hasta 2 empleados o profesionales',
       'Clientes, servicios, empleados y citas',
       'Dashboard de reservas',
-      'WhatsApp manual al cliente',
+      'Recordatorio automatico al cliente final',
     ],
   },
   {
@@ -90,7 +90,8 @@ const PLANES_LANDING = [
       'Hasta 5 empleados o profesionales',
       'Hasta 3 accesos adicionales para equipo',
       'Links para confirmar y cancelar cita',
-      'Recordatorio automatico al negocio',
+      'Recordatorio automatico al negocio y al cliente final',
+      'Foto del empleado en el recordatorio cuando Meta lo permite',
       'Mayor control de agenda y operacion',
     ],
   },
@@ -108,6 +109,7 @@ const PLANES_LANDING = [
       'Registro de gastos',
       'Liquidacion de colaboradores',
       'Administrador financiero incluido',
+      'Recordatorios automaticos con datos de servicio y empleado',
     ],
   },
 ]
