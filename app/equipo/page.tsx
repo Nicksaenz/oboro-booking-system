@@ -12,7 +12,18 @@ type Acceso = {
   rol: RolEquipo
   activo: boolean
   usuario_id: string | null
+  empleado_id?: string | null
   created_at: string
+  Empleados?: {
+    Nombre?: string | null
+  } | null
+}
+
+type Empleado = {
+  ID: string
+  Nombre: string
+  Cargo?: string | null
+  Activo?: boolean
 }
 
 const ROLES: Array<{ id: RolEquipo; nombre: string; descripcion: string }> = [
@@ -37,8 +48,10 @@ export default function EquipoPage() {
   const router = useRouter()
   const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
   const [accesos, setAccesos] = useState<Acceso[]>([])
+  const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [email, setEmail] = useState('')
   const [rol, setRol] = useState<RolEquipo>('lectura')
+  const [empleadoId, setEmpleadoId] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
@@ -58,12 +71,23 @@ export default function EquipoPage() {
     const { data: sessionData } = await supabase.auth.getSession()
     const token = sessionData.session?.access_token
 
-    const [equipoRes, suscripcionRes] = await Promise.all([
+    const [equipoRes, empleadosRes, suscripcionRes] = await Promise.all([
       supabase
         .from('equipo_accesos')
-        .select('*')
+        .select(`
+          *,
+          Empleados:empleado_id (
+            Nombre
+          )
+        `)
         .eq('negocio_id', acceso.negocioId)
         .order('created_at', { ascending: false }),
+      supabase
+        .from('Empleados')
+        .select('ID, Nombre, Cargo, Activo')
+        .eq('ID de Usuario', acceso.negocioId)
+        .eq('Activo', true)
+        .order('Nombre', { ascending: true }),
       token
         ? fetch('/api/suscripcion', {
             headers: {
@@ -77,6 +101,10 @@ export default function EquipoPage() {
       setMensaje(equipoRes.error.message)
     } else {
       setAccesos((equipoRes.data ?? []) as Acceso[])
+    }
+
+    if (!empleadosRes.error) {
+      setEmpleados((empleadosRes.data ?? []) as Empleado[])
     }
 
     if (suscripcionRes?.ok) {
@@ -102,6 +130,13 @@ export default function EquipoPage() {
 
     const correo = email.trim().toLowerCase()
     const plan = obtenerPlanOboro(planActual)
+    const accesoEmpleadoId = rol === 'admin' ? null : empleadoId || null
+
+    if (rol !== 'admin' && !accesoEmpleadoId) {
+      setMensaje('Selecciona el empleado al que pertenece este acceso.')
+      setGuardando(false)
+      return
+    }
 
     if (accesos.length >= plan.limites.accesosEquipo) {
       setMensaje(
@@ -117,6 +152,7 @@ export default function EquipoPage() {
           negocio_id: acceso.negocioId,
           email: correo,
           rol,
+          empleado_id: accesoEmpleadoId,
           activo: true,
         },
       ],
@@ -132,6 +168,7 @@ export default function EquipoPage() {
     setMensaje('Acceso guardado. La persona debe registrarse con ese mismo correo.')
     setEmail('')
     setRol('lectura')
+    setEmpleadoId('')
     setGuardando(false)
     cargarEquipo()
   }
@@ -228,7 +265,7 @@ export default function EquipoPage() {
 
         <form
           onSubmit={guardarAcceso}
-          className="mt-8 grid gap-3 rounded-2xl border border-orange-600/30 bg-zinc-950 p-4 shadow-2xl shadow-orange-950/20 md:grid-cols-[1fr_220px_auto]"
+          className="mt-8 grid gap-3 rounded-2xl border border-orange-600/30 bg-zinc-950 p-4 shadow-2xl shadow-orange-950/20 md:grid-cols-[1fr_220px_260px_auto]"
         >
           <input
             type="email"
@@ -241,13 +278,36 @@ export default function EquipoPage() {
           />
           <select
             value={rol}
-            onChange={(e) => setRol(e.target.value as RolEquipo)}
+            onChange={(e) => {
+              const nuevoRol = e.target.value as RolEquipo
+              setRol(nuevoRol)
+              if (nuevoRol === 'admin') {
+                setEmpleadoId('')
+              }
+            }}
             disabled={!puedeGestionar}
             className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none disabled:opacity-60"
           >
             {ROLES.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.nombre}
+              </option>
+            ))}
+          </select>
+          <select
+            value={empleadoId}
+            onChange={(e) => setEmpleadoId(e.target.value)}
+            disabled={!puedeGestionar || rol === 'admin'}
+            className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none disabled:opacity-60"
+            required={rol !== 'admin'}
+          >
+            <option value="">
+              {rol === 'admin' ? 'Admin ve todas las citas' : 'Empleado asignado'}
+            </option>
+            {empleados.map((empleado) => (
+              <option key={empleado.ID} value={empleado.ID}>
+                {empleado.Nombre}
+                {empleado.Cargo ? ` - ${empleado.Cargo}` : ''}
               </option>
             ))}
           </select>
@@ -291,7 +351,7 @@ export default function EquipoPage() {
             {accesos.map((acceso) => (
               <div
                 key={acceso.id}
-                className="grid gap-3 rounded-xl border border-zinc-800 bg-black p-4 md:grid-cols-[1fr_160px_160px_auto] md:items-center"
+                className="grid gap-3 rounded-xl border border-zinc-800 bg-black p-4 md:grid-cols-[1fr_160px_180px_160px_auto] md:items-center"
               >
                 <div>
                   <p className="font-bold text-zinc-100">{acceso.email}</p>
@@ -301,6 +361,11 @@ export default function EquipoPage() {
                 </div>
                 <span className="rounded-full border border-orange-600/40 px-3 py-2 text-center text-sm font-bold text-orange-300">
                   {acceso.rol}
+                </span>
+                <span className="rounded-full border border-blue-600/40 px-3 py-2 text-center text-sm font-bold text-blue-200">
+                  {acceso.rol === 'admin'
+                    ? 'Todas las citas'
+                    : acceso.Empleados?.Nombre || 'Sin empleado'}
                 </span>
                 <span
                   className={`rounded-full border px-3 py-2 text-center text-sm font-bold ${

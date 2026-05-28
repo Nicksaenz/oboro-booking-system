@@ -1,12 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/whatsapp/recordatorios-negocio",
-      "schedule": "0 13 * * *"
-    },
-    {
-      "path": "/api/whatsapp/recordatorios",
-      "schedule": "5 13 * * *"
-    }
-  ]
-}
+{}

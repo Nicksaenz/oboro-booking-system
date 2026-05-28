@@ -90,8 +90,8 @@ export default function AutomatizacionesPage() {
             <p className="text-sm font-bold text-green-300">2. Recordatorio</p>
             <h2 className="mt-2 text-2xl font-bold">Se envia solo</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-400">
-              Cada dia Oboro revisa las citas del dia siguiente y envia el aviso
-              automatico al negocio y al cliente final.
+              Oboro revisa las citas proximas y envia avisos automaticos 20
+              minutos antes y 5 minutos antes de la hora programada.
             </p>
           </div>
 
@@ -114,7 +114,8 @@ export default function AutomatizacionesPage() {
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
                   Recibe un recordatorio con su nombre, negocio, fecha, hora,
                   servicio y empleado asignado. Cuando hay foto de empleado y
-                  plantilla aprobada, el mensaje incluye imagen.
+                  plantilla aprobada, el mensaje incluye imagen. Se envia 20 y
+                  5 minutos antes de la cita.
                 </p>
               </div>
 
@@ -122,7 +123,7 @@ export default function AutomatizacionesPage() {
                 <p className="font-bold text-green-300">Negocio</p>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
                   Recibe un recordatorio operativo con el cliente, servicio,
-                  fecha, hora y empleado para preparar la cita del dia siguiente.
+                  fecha, hora y empleado 20 y 5 minutos antes de cada cita.
                 </p>
               </div>
             </div>
@@ -136,7 +137,8 @@ export default function AutomatizacionesPage() {
               dia.
             </p>
             <p className="mt-3 text-sm leading-6 text-zinc-400">
-              Horario: todos los dias a las 8:00 a. m. Colombia.
+              Frecuencia: revision cada 5 minutos para detectar citas que estan
+              a 20 o 5 minutos de empezar.
             </p>
             {!tieneAutomatizaciones && (
               <p className="mt-4 rounded-xl border border-orange-600/40 bg-black px-4 py-3 text-sm font-bold text-orange-200">

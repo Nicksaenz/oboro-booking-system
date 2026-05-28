@@ -5,6 +5,7 @@ export type RolEquipo = 'admin' | 'operativo' | 'lectura'
 export type ContextoEquipo = {
   usuarioId: string
   negocioId: string
+  empleadoId?: string | null
   email: string
   rol: RolEquipo
   esAdmin: boolean
@@ -16,6 +17,7 @@ type AccesoEquipo = {
   id: string
   negocio_id: string
   usuario_id: string | null
+  empleado_id?: string | null
   email: string
   rol: RolEquipo
   activo: boolean
@@ -51,6 +53,7 @@ export async function obtenerContextoEquipo(): Promise<ContextoEquipo | null> {
   return {
     usuarioId: user.id,
     negocioId,
+    empleadoId: acceso?.empleado_id ?? null,
     email: user.email,
     rol,
     esAdmin: rol === 'admin',

@@ -29,9 +29,9 @@ export async function GET() {
 
   return NextResponse.json({
     listo,
-    schedule: 'Todos los dias a las 8:00 a. m. Colombia',
-    endpoint: '/api/whatsapp/recordatorios-negocio',
-    customerReminderEndpoint: '/api/whatsapp/recordatorios',
+    schedule: 'Cada 5 minutos revisa citas proximas y envia avisos 20 y 5 minutos antes',
+    endpoint: '/api/whatsapp/recordatorios-proximos',
+    customerReminderEndpoint: '/api/whatsapp/recordatorios-proximos',
     webhookEndpoint: '/api/whatsapp/webhook',
     template:
       process.env.META_WHATSAPP_TEMPLATE_RECORDATORIO || 'recordatorio_cita',

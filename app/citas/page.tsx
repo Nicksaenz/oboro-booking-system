@@ -102,10 +102,24 @@ const citasFiltradas = citas.filter((cita) => {
 
     setContexto(acceso)
 
+    const empleadosQuery = supabase
+      .from('Empleados')
+      .select('*')
+      .eq('ID de Usuario', acceso.negocioId)
+
+    if (!acceso.esAdmin) {
+      if (acceso.empleadoId) {
+        empleadosQuery.eq('ID', acceso.empleadoId)
+        setEmpleadoId(acceso.empleadoId)
+      } else {
+        empleadosQuery.eq('ID', '00000000-0000-0000-0000-000000000000')
+      }
+    }
+
     const clientesRes = await supabase.from('Clientes').select('*').eq('usuario_id', acceso.negocioId)
     const serviciosRes = await supabase.from('SERVICIOS').select('*').eq('ID DE USUARIO', acceso.negocioId)
-    const empleadosRes = await supabase.from('Empleados').select('*').eq('ID de Usuario', acceso.negocioId)
-    const citasRes = await supabase
+    const empleadosRes = await empleadosQuery
+    const citasQuery = supabase
   .from('Citas')
   .select(`
   *,
@@ -121,8 +135,17 @@ const citasFiltradas = citas.filter((cita) => {
   )
 `)
    .eq('ID_Usuario', acceso.negocioId)
-   .order('Fecha', { ascending: true })
-   .order('Hora', { ascending: true })
+
+    if (!acceso.esAdmin) {
+      citasQuery.eq(
+        'ID_Empleado',
+        acceso.empleadoId ?? '00000000-0000-0000-0000-000000000000'
+      )
+    }
+
+    const citasRes = await citasQuery
+      .order('Fecha', { ascending: true })
+      .order('Hora', { ascending: true })
 
     setClientes(clientesRes.data || [])
     setServicios(serviciosRes.data || [])
@@ -152,6 +175,12 @@ if (!user) {
 
 if (!clienteId || !servicioId || !empleadoId || !fecha || !hora) {
   setMensaje('Por favor completa todos los campos antes de guardar la cita.')
+  setGuardandoCita(false)
+  return
+}
+
+if (!acceso.esAdmin && (!acceso.empleadoId || empleadoId !== acceso.empleadoId)) {
+  setMensaje('Tu acceso debe estar asociado a un empleado para crear citas propias.')
   setGuardandoCita(false)
   return
 }
@@ -268,7 +297,7 @@ function abrirModalEditar(cita: any) {
   setCitaEditando(cita)
   setEditFecha(cita.Fecha)
   setEditHora(cita.Hora)
-  setEditEmpleadoId(cita.ID_Empleado)
+  setEditEmpleadoId(contexto?.empleadoId ?? cita.ID_Empleado)
 }
 
 async function guardarEdicionCita() {
@@ -277,6 +306,11 @@ async function guardarEdicionCita() {
 
   if (!contexto?.puedeOperar) {
     setMensaje(mensajePermiso('editar citas'))
+    return
+  }
+
+  if (!contexto.esAdmin && (!contexto.empleadoId || editEmpleadoId !== contexto.empleadoId)) {
+    setMensaje('Tu acceso debe estar asociado a un empleado para editar citas propias.')
     return
   }
 
@@ -389,6 +423,7 @@ async function guardarEdicionCita() {
             className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm outline-none transition focus:border-orange-400"
             value={empleadoId}
             onChange={(e) => setEmpleadoId(e.target.value)}
+            disabled={!contexto?.esAdmin && Boolean(contexto?.empleadoId)}
             
           >
             <option value="">Seleccionar empleado</option>
@@ -789,10 +824,11 @@ async function guardarEdicionCita() {
         />
 
         <select
-          value={editEmpleadoId}
-          onChange={(e) => setEditEmpleadoId(e.target.value)}
-          className="w-full rounded-xl bg-zinc-900 border border-orange-600/50 p-4"
-        >
+            value={editEmpleadoId}
+            onChange={(e) => setEditEmpleadoId(e.target.value)}
+            className="w-full rounded-xl bg-zinc-900 border border-orange-600/50 p-4"
+            disabled={!contexto?.esAdmin && Boolean(contexto?.empleadoId)}
+          >
           {empleados.map((empleado) => (
             <option key={empleado.ID} value={empleado.ID}>
               {empleado.Nombre}
