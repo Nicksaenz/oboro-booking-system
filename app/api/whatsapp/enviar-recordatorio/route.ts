@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
-import {
-  CitaRecordatorio,
-  sendAppointmentReminder,
-  WhatsAppCredentials,
-} from '@/lib/whatsapp'
+import { CitaRecordatorio, sendAppointmentReminder } from '@/lib/whatsapp'
 
 export async function POST(request: Request) {
   try {
@@ -80,38 +76,8 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data: configuracion, error: configuracionError } = await supabase
-      .from('whatsapp_configuraciones')
-      .select('phone_number_id, access_token, template_recordatorio, template_language, activo')
-      .eq('usuario_id', userData.user.id)
-      .maybeSingle()
-
-    if (configuracionError) {
-      return NextResponse.json(
-        { error: configuracionError.message },
-        { status: 500 }
-      )
-    }
-
-    if (!configuracion?.activo) {
-      return NextResponse.json(
-        {
-          error:
-            'Este negocio aun no tiene conectado su WhatsApp Business en Automatizaciones.',
-        },
-        { status: 400 }
-      )
-    }
-
-    const credentials: WhatsAppCredentials = {
-      phoneNumberId: configuracion.phone_number_id,
-      accessToken: configuracion.access_token,
-      templateName: configuracion.template_recordatorio,
-      languageCode: configuracion.template_language,
-    }
     const respuesta = await sendAppointmentReminder(
-      data as CitaRecordatorio,
-      credentials
+      data as CitaRecordatorio
     )
 
     return NextResponse.json({

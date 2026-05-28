@@ -814,11 +814,6 @@ export default function LoginPage() {
                 Una agenda premium para negocios que venden tiempo y confianza.
               </h2>
             </div>
-            <p className="max-w-md text-sm leading-6 text-zinc-400">
-              La landing debe hablarle al tipo de cliente que quieres atraer:
-              negocios visuales, con atencion presencial y necesidad diaria de
-              reservar, confirmar y no perder turnos.
-            </p>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
