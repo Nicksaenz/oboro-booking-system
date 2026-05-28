@@ -13,5 +13,5 @@ jobs:
         run: |
           curl --fail --show-error --silent \
             --request GET \
-           -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
             "https://booking.oborolab.com/api/whatsapp/recordatorios-proximos"
