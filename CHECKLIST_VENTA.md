@@ -22,12 +22,16 @@ Usa esta lista antes de vender o activar una cuenta nueva.
 
 ## 3. WhatsApp automatico de Oboro Lab
 
-- [ ] Meta aprobo la cuenta de WhatsApp Business
+- [ ] App Meta `Oboro Booking` publicada
+- [ ] Webhook activo en Meta con `messages` y `message_template_status_update`
 - [ ] El numero de Oboro Lab esta aprobado y operativo
 - [ ] Plantilla `recordatorio_negocio` aprobada en Meta
+- [ ] Plantilla `codigo_recuperacion` aprobada en Meta
 - [ ] `META_WHATSAPP_PHONE_NUMBER_ID` configurado en Vercel
 - [ ] `META_WHATSAPP_ACCESS_TOKEN` configurado en Vercel
+- [ ] `META_WHATSAPP_VERIFY_TOKEN` configurado en Vercel
 - [ ] `META_WHATSAPP_TEMPLATE_RECORDATORIO_NEGOCIO` configurado en Vercel
+- [ ] `META_WHATSAPP_TEMPLATE_RECUPERACION` configurado en Vercel
 - [ ] `META_WHATSAPP_TEMPLATE_LANGUAGE=es_CO` configurado en Vercel
 - [ ] `CRON_SECRET` configurado en Vercel
 

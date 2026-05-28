@@ -7,8 +7,13 @@ on:
 
 jobs:
   send-reminders:
-    run: |
-  curl --fail --show-error --silent \
-    --request GET \
-    -H "Authorization: Bearer $CRON_SECRET" \
-    "https://booking.oborolab.com/api/whatsapp/recordatorios-proximos"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call WhatsApp reminder endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl --fail --show-error --silent \
+            --request GET \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "https://booking.oborolab.com/api/whatsapp/recordatorios-proximos"
