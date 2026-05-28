@@ -11,6 +11,8 @@ export async function GET() {
     accessToken: configured('META_WHATSAPP_ACCESS_TOKEN'),
     verifyToken: configured('META_WHATSAPP_VERIFY_TOKEN'),
     templateName: configured('META_WHATSAPP_TEMPLATE_RECORDATORIO'),
+    businessTemplateName: configured('META_WHATSAPP_TEMPLATE_RECORDATORIO_NEGOCIO'),
+    recoveryTemplateName: configured('META_WHATSAPP_TEMPLATE_RECUPERACION'),
     templateLanguage: configured('META_WHATSAPP_TEMPLATE_LANGUAGE'),
   }
 
@@ -20,6 +22,8 @@ export async function GET() {
     variables.accessToken &&
     variables.verifyToken &&
     variables.templateName &&
+    variables.businessTemplateName &&
+    variables.recoveryTemplateName &&
     variables.templateLanguage
 
   return NextResponse.json({
@@ -30,6 +34,11 @@ export async function GET() {
     webhookEndpoint: '/api/whatsapp/webhook',
     template:
       process.env.META_WHATSAPP_TEMPLATE_RECORDATORIO || 'recordatorio_cita',
+    businessTemplate:
+      process.env.META_WHATSAPP_TEMPLATE_RECORDATORIO_NEGOCIO ||
+      'recordatorio_negocio',
+    recoveryTemplate:
+      process.env.META_WHATSAPP_TEMPLATE_RECUPERACION || 'codigo_recuperacion',
     language: process.env.META_WHATSAPP_TEMPLATE_LANGUAGE || 'es_CO',
     variables,
   })
