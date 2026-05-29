@@ -50,10 +50,10 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-8">
         <Link href="/" className="flex items-center gap-3">
           <div>
-            <h1 className="text-2xl font-black tracking-[3px] text-orange-500">
+            <h1 className="text-base font-black tracking-[3px] text-orange-500 sm:text-lg">
               OBORO BOOKING
             </h1>
-            <p className="text-sm text-zinc-500">
+            <p className="mt-0.5 text-[11px] text-zinc-500">
               Powered by Oboro Lab
             </p>
           </div>
