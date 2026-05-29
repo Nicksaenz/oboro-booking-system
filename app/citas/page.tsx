@@ -101,6 +101,22 @@ function construirMensajeWhatsApp(cita: any) {
   ].join('\n')
 }
 
+function construirMensajeResena(cita: any) {
+  const cliente = cita.Clientes?.Nombre ?? 'cliente'
+  const servicio = cita.SERVICIOS?.['Nombre del servicio'] ?? 'tu servicio'
+  const empleado = cita.Empleados?.Nombre ?? 'nuestro equipo'
+  const enlace = `${window.location.origin}/reserva/${cita.ID}`
+
+  return [
+    `Hola ${cliente}, gracias por tu cita de ${servicio} con ${empleado}.`,
+    '',
+    'Nos ayudas calificando tu experiencia?',
+    'Tu opinion ayuda a mejorar el servicio y suma al perfil del profesional.',
+    '',
+    `Califica aqui: ${enlace}`,
+  ].join('\n')
+}
+
 function cambiarMes(direccion: number) {
   if (mesActual + direccion > 11) {
     setMesActual(0)
@@ -269,7 +285,7 @@ if (citaExistente && citaExistente.length > 0) {
     cargarDatos()
     setGuardandoCita(false)
   }
-    async function actualizarEstado(id: string, nuevoEstado: string) {
+    async function actualizarEstado(cita: any, nuevoEstado: string) {
   if (!contexto?.puedeOperar) {
     setMensaje(mensajePermiso('actualizar citas'))
     return
@@ -278,7 +294,7 @@ if (citaExistente && citaExistente.length > 0) {
   const { error } = await supabase
     .from('Citas')
     .update({ Estado: nuevoEstado })
-    .eq('ID', id)
+    .eq('ID', cita.ID)
 
   if (error) {
     setMensaje(`Error: ${error.message}`)
@@ -286,31 +302,17 @@ if (citaExistente && citaExistente.length > 0) {
   }
 
   if (nuevoEstado === 'completada') {
-    const { data: sessionData } = await supabase.auth.getSession()
-    const token = sessionData.session?.access_token
+    const numero = normalizarNumeroWhatsApp(cita.Clientes?.Numero)
 
-    if (token) {
-      const response = await fetch('/api/whatsapp/solicitar-resena', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ citaId: id }),
-      })
-      const resultado = await response.json().catch(() => null)
+    if (numero) {
+      const url = `https://wa.me/${numero}?text=${encodeURIComponent(
+        construirMensajeResena(cita)
+      )}`
 
-      if (response.ok) {
-        setMensaje('Cita completada. Se envio la calificacion por WhatsApp.')
-      } else {
-        setMensaje(
-          `Cita completada, pero no se pudo enviar la calificacion: ${
-            resultado?.error ?? 'revisa la plantilla de WhatsApp'
-          }`
-        )
-      }
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setMensaje('Cita completada. WhatsApp se abrio con la solicitud de resena lista.')
     } else {
-      setMensaje('Cita completada. No se encontro sesion para enviar WhatsApp.')
+      setMensaje('Cita completada. El cliente no tiene un WhatsApp valido para pedir resena.')
     }
   } else {
     setMensaje(`Cita marcada como ${nuevoEstado}.`)
@@ -687,14 +689,14 @@ async function guardarEdicionCita() {
       </p>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <button
-          onClick={() => actualizarEstado(cita.ID, 'confirmada')}
+          onClick={() => actualizarEstado(cita, 'confirmada')}
           className="min-h-11 rounded-xl border border-green-600/50 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
         >
           Confirmar
         </button>
 
         <button
-          onClick={() => actualizarEstado(cita.ID, 'completada')}
+          onClick={() => actualizarEstado(cita, 'completada')}
           className="min-h-11 rounded-xl border border-blue-600/50 px-3 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-600/10"
         >
           Completar
@@ -773,13 +775,13 @@ async function guardarEdicionCita() {
             </td>
             <td className="py-3 px-3">
               <button
-                onClick={() => actualizarEstado(cita.ID, 'confirmada')}
+                onClick={() => actualizarEstado(cita, 'confirmada')}
                 className="rounded-xl border border-green-600/50 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
               >
                 Confirmar
               </button>
               <button
-                onClick={() => actualizarEstado(cita.ID, 'completada')}
+                onClick={() => actualizarEstado(cita, 'completada')}
                 className="ml-2 rounded-xl border border-blue-600/50 px-3 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-600/10"
               >
                 Completar
