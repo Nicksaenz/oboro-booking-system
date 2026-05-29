@@ -43,6 +43,19 @@ function mesActual() {
   return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
 }
 
+function porcentaje(valor: number) {
+  if (!Number.isFinite(valor)) return '0%'
+
+  return `${Math.round(valor)}%`
+}
+
+function estadoFinancieroColor(valor: number) {
+  if (valor > 0) return 'text-green-300'
+  if (valor < 0) return 'text-red-300'
+
+  return 'text-zinc-300'
+}
+
 export default function FinanzasPage() {
   const router = useRouter()
   const [mes, setMes] = useState(mesActual())
@@ -75,27 +88,91 @@ export default function FinanzasPage() {
     [gastos]
   )
   const utilidad = ingresos - totalGastos
+  const citasCompletadas = useMemo(
+    () =>
+      citas.filter((cita) => String(cita.Estado ?? '').toLowerCase() === 'completada')
+        .length,
+    [citas]
+  )
+  const ticketPromedio = citas.length ? ingresos / citas.length : 0
+  const margenOperativo = ingresos ? (utilidad / ingresos) * 100 : 0
+  const puntoEquilibrio = Math.max(totalGastos - ingresos, 0)
   const liquidaciones = useMemo(() => {
-    const mapa = new Map<string, { nombre: string; citas: number; ingresos: number }>()
+    const mapa = new Map<
+      string,
+      {
+        nombre: string
+        citas: number
+        completadas: number
+        ingresos: number
+      }
+    >()
 
     citas.forEach((cita) => {
       const empleadoId = cita.Empleados?.ID ?? cita.Empleados?.Nombre ?? 'sin-empleado'
+      const estado = String(cita.Estado ?? '').toLowerCase()
       const actual = mapa.get(empleadoId) ?? {
         nombre: cita.Empleados?.Nombre ?? 'Sin empleado',
         citas: 0,
+        completadas: 0,
         ingresos: 0,
       }
 
       actual.citas += 1
+      if (estado === 'completada') actual.completadas += 1
       actual.ingresos += Number(cita.SERVICIOS?.['Precio del servicio'] ?? 0)
       mapa.set(empleadoId, actual)
     })
 
-    return Array.from(mapa.values()).map((item) => ({
-      ...item,
-      liquidar: Math.round((item.ingresos * comision) / 100),
-    }))
+    return Array.from(mapa.values())
+      .map((item) => {
+        const liquidar = Math.round((item.ingresos * comision) / 100)
+
+        return {
+          ...item,
+          liquidar,
+          negocio: item.ingresos - liquidar,
+          ticketPromedio: item.citas ? item.ingresos / item.citas : 0,
+        }
+      })
+      .sort((a, b) => b.ingresos - a.ingresos)
   }, [citas, comision])
+  const totalLiquidar = liquidaciones.reduce(
+    (total, item) => total + item.liquidar,
+    0
+  )
+  const utilidadDespuesLiquidacion = utilidad - totalLiquidar
+  const gastosPorCategoria = useMemo(() => {
+    const mapa = new Map<string, number>()
+
+    for (const gasto of gastos) {
+      const categoria = gasto.categoria || 'General'
+      mapa.set(categoria, (mapa.get(categoria) ?? 0) + Number(gasto.monto ?? 0))
+    }
+
+    return Array.from(mapa.entries())
+      .map(([categoria, monto]) => ({
+        categoria,
+        monto,
+        peso: totalGastos ? (monto / totalGastos) * 100 : 0,
+      }))
+      .sort((a, b) => b.monto - a.monto)
+  }, [gastos, totalGastos])
+  const topColaborador = liquidaciones[0]
+  const resumenEjecutivo = [
+    ingresos > 0
+      ? `Ingresaste ${formatoDinero(ingresos)} en ${citas.length} citas.`
+      : 'Aun no hay ingresos registrados para este mes.',
+    totalGastos > 0
+      ? `Tus gastos suman ${formatoDinero(totalGastos)}.`
+      : 'No hay gastos cargados en el mes.',
+    totalLiquidar > 0
+      ? `Liquidacion estimada para el equipo: ${formatoDinero(totalLiquidar)}.`
+      : 'No hay liquidaciones pendientes calculadas.',
+    utilidadDespuesLiquidacion >= 0
+      ? `Resultado despues de gastos y liquidaciones: ${formatoDinero(utilidadDespuesLiquidacion)}.`
+      : `El mes queda en negativo por ${formatoDinero(Math.abs(utilidadDespuesLiquidacion))}.`,
+  ]
 
   async function cargarFinanzas() {
     setCargando(true)
@@ -212,9 +289,9 @@ export default function FinanzasPage() {
     cargarFinanzas()
   }
 
-  function mensajeLiquidacion(item: { nombre: string; citas: number; ingresos: number; liquidar: number }) {
+  function mensajeLiquidacion(item: { nombre: string; citas: number; completadas: number; ingresos: number; liquidar: number; negocio: number }) {
     return encodeURIComponent(
-      `Hola ${item.nombre}, este es tu resumen de liquidacion:\n\nCitas atendidas: ${item.citas}\nIngresos generados: ${formatoDinero(item.ingresos)}\nComision (${comision}%): ${formatoDinero(item.liquidar)}\n\nGracias por tu trabajo.`
+      `Hola ${item.nombre}, este es tu resumen de liquidacion:\n\nCitas del mes: ${item.citas}\nCitas completadas: ${item.completadas}\nIngresos generados: ${formatoDinero(item.ingresos)}\nComision (${comision}%): ${formatoDinero(item.liquidar)}\nBase del negocio: ${formatoDinero(item.negocio)}\n\nGracias por tu trabajo.`
     )
   }
 
@@ -252,11 +329,11 @@ export default function FinanzasPage() {
               OBORO BOOKING
             </p>
             <h1 className="mt-2 text-4xl font-black leading-tight md:text-5xl">
-              Finanzas
+              Finanzas Business
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-              Registra ingresos, controla gastos y liquida colaboradores en
-              segundos.
+              Control ejecutivo de ingresos, gastos, utilidad y liquidacion de
+              colaboradores para tomar decisiones con datos.
             </p>
           </div>
 
@@ -325,7 +402,7 @@ export default function FinanzasPage() {
           </div>
         </form>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border border-green-600/40 bg-green-950/10 p-5 shadow-lg shadow-green-950/20">
             <p className="text-zinc-400">Ingresos del mes</p>
             <h2 className="mt-2 text-3xl font-black text-green-300">
@@ -349,6 +426,74 @@ export default function FinanzasPage() {
             </h2>
             <p className="mt-2 text-sm text-zinc-500">Ingresos menos gastos</p>
           </div>
+
+          <div className="rounded-2xl border border-blue-600/40 bg-blue-950/10 p-5 shadow-lg shadow-blue-950/20">
+            <p className="text-zinc-400">Despues de liquidar</p>
+            <h2 className={`mt-2 text-3xl font-black ${estadoFinancieroColor(utilidadDespuesLiquidacion)}`}>
+              {formatoDinero(utilidadDespuesLiquidacion)}
+            </h2>
+            <p className="mt-2 text-sm text-zinc-500">
+              Utilidad menos comisiones
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[3px] text-orange-500">
+                  Resumen ejecutivo
+                </p>
+                <h2 className="mt-2 text-2xl font-black">Lectura del mes</h2>
+              </div>
+              <span className="rounded-xl border border-orange-500/30 bg-black px-4 py-3 text-sm font-black text-orange-200">
+                Margen {porcentaje(margenOperativo)}
+              </span>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {resumenEjecutivo.map((item) => (
+                <p
+                  key={item}
+                  className="rounded-xl border border-zinc-800 bg-black px-4 py-3 text-sm leading-6 text-zinc-300"
+                >
+                  {item}
+                </p>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <p className="text-xs font-bold uppercase tracking-[3px] text-green-300">
+              Indicadores
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
+                <p className="text-xs text-zinc-500">Ticket promedio</p>
+                <p className="mt-1 text-xl font-black text-white">
+                  {formatoDinero(ticketPromedio)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
+                <p className="text-xs text-zinc-500">Completadas</p>
+                <p className="mt-1 text-xl font-black text-blue-300">
+                  {citasCompletadas}/{citas.length}
+                </p>
+              </div>
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
+                <p className="text-xs text-zinc-500">Por liquidar</p>
+                <p className="mt-1 text-xl font-black text-orange-300">
+                  {formatoDinero(totalLiquidar)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
+                <p className="text-xs text-zinc-500">Falta equilibrio</p>
+                <p className="mt-1 text-xl font-black text-yellow-300">
+                  {formatoDinero(puntoEquilibrio)}
+                </p>
+              </div>
+            </div>
+          </section>
         </div>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -420,6 +565,32 @@ export default function FinanzasPage() {
 
           <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
             <h2 className="text-2xl font-bold">Gastos registrados</h2>
+            {gastosPorCategoria.length > 0 && (
+              <div className="mt-5 grid gap-3 md:grid-cols-2">
+                {gastosPorCategoria.map((item) => (
+                  <div
+                    key={item.categoria}
+                    className="rounded-xl border border-zinc-800 bg-black p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-bold text-zinc-200">{item.categoria}</p>
+                      <p className="text-sm font-bold text-red-300">
+                        {formatoDinero(item.monto)}
+                      </p>
+                    </div>
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-900">
+                      <div
+                        className="h-full rounded-full bg-red-400"
+                        style={{ width: `${Math.min(100, item.peso)}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-zinc-500">
+                      {porcentaje(item.peso)} de los gastos
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="mt-5 space-y-3">
               {cargando && <p className="text-zinc-400">Cargando finanzas...</p>}
 
@@ -482,36 +653,91 @@ export default function FinanzasPage() {
             </label>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {liquidaciones.length === 0 && (
-              <p className="rounded-xl border border-zinc-800 bg-black p-4 text-sm text-zinc-400">
+          {topColaborador && (
+            <div className="mt-5 rounded-2xl border border-yellow-500/30 bg-yellow-950/10 p-4">
+              <p className="text-xs font-bold uppercase tracking-[3px] text-yellow-300">
+                Mejor productor
+              </p>
+              <p className="mt-2 text-2xl font-black text-white">
+                {topColaborador.nombre}
+              </p>
+              <p className="mt-1 text-sm text-zinc-400">
+                Genero {formatoDinero(topColaborador.ingresos)} en{' '}
+                {topColaborador.citas} citas.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-5 overflow-hidden rounded-2xl border border-zinc-800">
+            <div className="hidden grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_0.8fr] gap-3 border-b border-zinc-800 bg-black px-4 py-3 text-xs font-bold uppercase tracking-[2px] text-zinc-500 md:grid">
+              <p>Colaborador</p>
+              <p>Citas</p>
+              <p>Ingresos</p>
+              <p>Liquidar</p>
+              <p>Negocio</p>
+            </div>
+            {liquidaciones.length === 0 ? (
+              <p className="bg-black p-4 text-sm text-zinc-400">
                 No hay citas para liquidar en este mes.
               </p>
-            )}
-
-            {liquidaciones.map((item) => (
-              <div
-                key={item.nombre}
-                className="rounded-xl border border-zinc-800 bg-black p-4"
-              >
-                <h3 className="text-xl font-bold text-green-300">{item.nombre}</h3>
-                <p className="mt-3 text-sm text-zinc-400">Citas: {item.citas}</p>
-                <p className="text-sm text-zinc-400">
-                  Ingresos: {formatoDinero(item.ingresos)}
-                </p>
-                <p className="mt-3 text-2xl font-black text-orange-500">
-                  {formatoDinero(item.liquidar)}
-                </p>
-                <a
-                  href={`https://wa.me/?text=${mensajeLiquidacion(item)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-green-600/60 px-4 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
+            ) : (
+              liquidaciones.map((item) => (
+                <div
+                  key={item.nombre}
+                  className="grid gap-3 border-b border-zinc-900 bg-black p-4 last:border-b-0 md:grid-cols-[1.2fr_0.6fr_0.8fr_0.8fr_0.8fr] md:items-center"
                 >
-                  Enviar resumen
-                </a>
-              </div>
-            ))}
+                  <div>
+                    <h3 className="text-xl font-bold text-green-300">{item.nombre}</h3>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Ticket promedio {formatoDinero(item.ticketPromedio)}
+                    </p>
+                  </div>
+                  <p className="text-sm text-zinc-300">
+                    {item.citas} citas · {item.completadas} hechas
+                  </p>
+                  <p className="font-bold text-zinc-100">
+                    {formatoDinero(item.ingresos)}
+                  </p>
+                  <p className="text-xl font-black text-orange-500">
+                    {formatoDinero(item.liquidar)}
+                  </p>
+                  <div>
+                    <p className="font-bold text-blue-300">
+                      {formatoDinero(item.negocio)}
+                    </p>
+                    <a
+                      href={`https://wa.me/?text=${mensajeLiquidacion(item)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-flex min-h-10 items-center rounded-xl border border-green-600/60 px-3 py-2 text-xs font-bold text-green-200 transition hover:bg-green-600/10"
+                    >
+                      Enviar resumen
+                    </a>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-zinc-800 bg-black p-4">
+              <p className="text-sm text-zinc-500">Total equipo</p>
+              <p className="mt-1 text-2xl font-black text-orange-400">
+                {formatoDinero(totalLiquidar)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-zinc-800 bg-black p-4">
+              <p className="text-sm text-zinc-500">Base negocio</p>
+              <p className="mt-1 text-2xl font-black text-blue-300">
+                {formatoDinero(ingresos - totalLiquidar)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-zinc-800 bg-black p-4">
+              <p className="text-sm text-zinc-500">Resultado final</p>
+              <p className={`mt-1 text-2xl font-black ${estadoFinancieroColor(utilidadDespuesLiquidacion)}`}>
+                {formatoDinero(utilidadDespuesLiquidacion)}
+              </p>
+            </div>
           </div>
         </div>
           </>

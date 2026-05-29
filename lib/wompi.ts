@@ -19,7 +19,7 @@ export const WOMPI_PLANES: Record<
   business: {
     nombre: 'Business',
     precioCop: 120000,
-    descripcion: 'Finanzas, gastos, liquidaciones, reportes y control administrativo.',
+    descripcion: 'Finanzas Business, gastos por categoria, utilidad y liquidaciones avanzadas.',
   },
 }
 
