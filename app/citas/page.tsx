@@ -58,6 +58,49 @@ const nombreMes = primerDiaMes.toLocaleDateString('es-CO', {
   month: 'long',
   year: 'numeric',
 })
+
+function normalizarNumeroWhatsApp(valor: unknown) {
+  const digitos = String(valor ?? '').replace(/\D/g, '')
+
+  if (!digitos) return ''
+  if (digitos.startsWith('57')) return digitos
+  if (digitos.length === 10) return `57${digitos}`
+
+  return digitos
+}
+
+function formatoHoraAmPm(hora: string) {
+  const [horasTexto, minutosTexto = '00'] = String(hora ?? '').split(':')
+  const horas = Number(horasTexto)
+  const minutos = Number(minutosTexto)
+
+  if (Number.isNaN(horas)) return hora || 'Sin hora'
+
+  const periodo = horas >= 12 ? 'PM' : 'AM'
+  const hora12 = horas % 12 || 12
+
+  return `${hora12}:${String(minutos).padStart(2, '0')} ${periodo}`
+}
+
+function construirMensajeWhatsApp(cita: any) {
+  const cliente = cita.Clientes?.Nombre ?? 'cliente'
+  const servicio = cita.SERVICIOS?.['Nombre del servicio'] ?? 'tu servicio'
+  const empleado = cita.Empleados?.Nombre ?? 'nuestro equipo'
+  const fecha = cita.Fecha ?? 'la fecha programada'
+  const hora = formatoHoraAmPm(cita.Hora ?? '')
+
+  return [
+    `Hola ${cliente}, te recordamos tu cita en Oboro Booking.`,
+    '',
+    `Servicio: ${servicio}`,
+    `Profesional: ${empleado}`,
+    `Fecha: ${fecha}`,
+    `Hora: ${hora}`,
+    '',
+    'Te esperamos.',
+  ].join('\n')
+}
+
 function cambiarMes(direccion: number) {
   if (mesActual + direccion > 11) {
     setMesActual(0)
@@ -295,41 +338,24 @@ async function eliminarCita(id: string) {
   cargarDatos()
 }
 
-async function enviarRecordatorioManual(id: string) {
+function abrirWhatsAppManual(cita: any) {
   if (!contexto?.puedeOperar) {
     setMensaje(mensajePermiso('enviar recordatorios'))
     return
   }
 
-  const { data: sessionData } = await supabase.auth.getSession()
-  const token = sessionData.session?.access_token
+  const numero = normalizarNumeroWhatsApp(cita.Clientes?.Numero)
 
-  if (!token) {
-    router.push('/login')
+  if (!numero) {
+    setMensaje('Este cliente no tiene un numero de WhatsApp valido.')
     return
   }
 
-  setMensaje('Enviando recordatorio por WhatsApp...')
+  const mensaje = construirMensajeWhatsApp(cita)
+  const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`
 
-  const response = await fetch('/api/whatsapp/enviar-recordatorio', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ citaId: id }),
-  })
-  const resultado = await response.json().catch(() => null)
-
-  if (!response.ok) {
-    setMensaje(
-      resultado?.error ??
-        'No se pudo enviar el recordatorio. Revisa WhatsApp y la plantilla.'
-    )
-    return
-  }
-
-  setMensaje('Recordatorio enviado por WhatsApp.')
+  window.open(url, '_blank', 'noopener,noreferrer')
+  setMensaje('WhatsApp abierto con el recordatorio listo para enviar.')
 }
 
 function claseEstadoCita(estado: string) {
@@ -675,7 +701,7 @@ async function guardarEdicionCita() {
         </button>
 
         <button
-          onClick={() => enviarRecordatorioManual(cita.ID)}
+          onClick={() => abrirWhatsAppManual(cita)}
           className="min-h-11 rounded-xl border border-emerald-600/50 px-3 py-2 text-sm font-bold text-emerald-200 transition hover:bg-emerald-600/10"
         >
           WhatsApp
@@ -759,7 +785,7 @@ async function guardarEdicionCita() {
                 Completar
               </button>
               <button
-                onClick={() => enviarRecordatorioManual(cita.ID)}
+                onClick={() => abrirWhatsAppManual(cita)}
                 className="ml-2 rounded-xl border border-emerald-600/50 px-3 py-2 text-sm font-bold text-emerald-200 transition hover:bg-emerald-600/10"
               >
                 WhatsApp
