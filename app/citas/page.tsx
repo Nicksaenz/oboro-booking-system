@@ -208,20 +208,29 @@ const citasHoy = citas.filter((cita) => cita.Fecha === new Date().toISOString().
       )
     }
 
-    const citasRes = await citasQuery
-      .order('Fecha', { ascending: true })
-      .order('Hora', { ascending: true })
-    const { data: suscripcionData } = await supabase
-      .from('suscripciones')
-      .select('nombre_negocio')
-      .eq('usuario_id', acceso.negocioId)
-      .maybeSingle()
+    const [citasRes, suscripcionRes] = await Promise.all([
+      citasQuery
+        .order('Fecha', { ascending: true })
+        .order('Hora', { ascending: true }),
+      sessionData.session?.access_token
+        ? fetch('/api/suscripcion', {
+            headers: {
+              Authorization: `Bearer ${sessionData.session.access_token}`,
+            },
+          })
+        : null,
+    ])
+    const suscripcionJson = suscripcionRes?.ok
+      ? await suscripcionRes.json()
+      : null
 
     setClientes(clientesRes.data || [])
     setServicios(serviciosRes.data || [])
     setEmpleados(empleadosRes.data || [])
     setCitas(citasRes.data || [])
-    setNombreNegocio(suscripcionData?.nombre_negocio ?? 'Oboro Booking')
+    setNombreNegocio(
+      suscripcionJson?.suscripcion?.nombre_negocio?.trim() || 'Oboro Booking'
+    )
   }
 
   async function guardarCita(e: React.FormEvent) {
@@ -355,6 +364,11 @@ async function eliminarCita(id: string) {
 function abrirWhatsAppManual(cita: any) {
   if (!contexto?.puedeOperar) {
     setMensaje(mensajePermiso('enviar recordatorios'))
+    return
+  }
+
+  if (nombreNegocio === 'Oboro Booking') {
+    setMensaje('Estamos cargando el nombre del negocio. Intenta de nuevo en unos segundos.')
     return
   }
 
