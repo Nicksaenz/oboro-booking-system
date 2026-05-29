@@ -115,27 +115,29 @@ export default function ReservaPublicaPage() {
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
       <section className="mx-auto flex min-h-[calc(100vh-48px)] w-full max-w-3xl flex-col justify-center">
-        <p className="text-sm font-bold tracking-[4px] text-orange-500">
-          OBORO BOOKING
+        <p className="text-[11px] font-bold uppercase tracking-[3px] text-orange-500/80 sm:text-xs">
+          Agenda con Oboro Booking
         </p>
 
-        <div className="mt-2 flex items-center gap-4">
+        <div className="mt-3 flex items-center gap-4">
           {fotoNegocio && (
             <img
               src={fotoNegocio}
               alt={negocio}
-              className="h-16 w-16 rounded-full border border-orange-500/50 object-cover"
+              className="h-20 w-20 rounded-full border border-orange-500/60 object-cover shadow-lg shadow-orange-950/40 sm:h-24 sm:w-24"
             />
           )}
 
-          <h1 className="text-4xl font-black leading-tight md:text-5xl">
-            Agenda tu cita
-          </h1>
+          <div>
+            <p className="text-sm font-bold text-zinc-500">Reserva en</p>
+            <h1 className="text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl">
+              {negocio}
+            </h1>
+          </div>
         </div>
 
-        <p className="mt-3 text-sm leading-6 text-zinc-400 sm:text-base">
-          Reserva directamente con {negocio}. Elige servicio, profesional, fecha
-          y hora.
+        <p className="mt-4 text-sm leading-6 text-zinc-400 sm:text-base">
+          Agenda tu cita directamente. Elige servicio, profesional, fecha y hora.
         </p>
 
         <div className="mt-8 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
