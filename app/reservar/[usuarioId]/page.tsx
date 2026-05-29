@@ -205,34 +205,55 @@ export default function ReservaPublicaPage() {
     (total, empleado) => total + (empleado.disponibilidad?.length ?? 0),
     0
   )
+  const mapaEmbedUrl =
+    direccionNegocio || googleMapsUrl
+      ? `https://maps.google.com/maps?q=${encodeURIComponent(
+          direccionNegocio || negocio
+        )}&output=embed`
+      : ''
 
   return (
     <main className="min-h-screen bg-black px-4 py-5 text-white sm:px-6 lg:px-10">
-      <section className="mx-auto grid min-h-[calc(100vh-40px)] w-full max-w-6xl items-center gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="relative overflow-hidden rounded-[28px] border border-orange-500/30 bg-zinc-950 shadow-2xl shadow-orange-950/30">
-          {fotoNegocio ? (
-            <img
-              src={fotoNegocio}
-              alt={negocio}
-              className="h-[420px] w-full object-cover sm:h-[520px] lg:h-[640px]"
-            />
-          ) : (
-            <div className="flex h-[420px] w-full items-center justify-center bg-zinc-900 sm:h-[520px] lg:h-[640px]">
-              <span className="text-7xl font-black text-orange-400">
-                {inicialesNegocio || 'OB'}
-              </span>
-            </div>
-          )}
-
-          <div className="absolute inset-x-0 bottom-0 bg-black/80 px-5 py-6 backdrop-blur-md sm:px-7">
+      <section className="mx-auto grid w-full max-w-7xl items-start gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+        <div className="overflow-hidden rounded-[28px] border border-orange-500/30 bg-zinc-950 p-4 shadow-2xl shadow-orange-950/30 sm:p-5">
+          <div className="rounded-[22px] border border-white/10 bg-black p-5 sm:p-6">
             <p className="text-[10px] font-bold uppercase tracking-[3px] text-orange-300/80">
               Agenda con Oboro Booking
             </p>
-            <h1 className="mt-2 text-5xl font-black leading-none text-white sm:text-6xl lg:text-7xl">
+            <h1 className="mt-2 text-4xl font-black leading-none text-white sm:text-5xl lg:text-6xl">
               {negocio}
             </h1>
+
+            <div className="mt-5 overflow-hidden rounded-2xl border border-orange-500/25 bg-zinc-900">
+              {fotoNegocio ? (
+                <img
+                  src={fotoNegocio}
+                  alt={negocio}
+                  className="h-48 w-full object-cover sm:h-56 lg:h-64"
+                />
+              ) : (
+                <div className="flex h-48 w-full items-center justify-center bg-[radial-gradient(circle_at_20%_20%,rgba(249,115,22,0.26),transparent_36%),linear-gradient(135deg,#171717,#050505)] sm:h-56 lg:h-64">
+                  <span className="text-6xl font-black text-orange-300">
+                    {inicialesNegocio || 'OB'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {mapaEmbedUrl && (
+              <div className="mt-4 overflow-hidden rounded-2xl border border-green-500/30 bg-black">
+                <iframe
+                  src={mapaEmbedUrl}
+                  title={`Mapa de ${negocio}`}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="h-56 w-full border-0 sm:h-64"
+                />
+              </div>
+            )}
+
             <div className="mt-5 grid grid-cols-3 gap-2">
-              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-3">
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3">
                 <p className="text-[11px] font-bold uppercase tracking-[1px] text-zinc-500">
                   Servicios
                 </p>
@@ -240,7 +261,7 @@ export default function ReservaPublicaPage() {
                   {servicios.length}
                 </p>
               </div>
-              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-3">
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3">
                 <p className="text-[11px] font-bold uppercase tracking-[1px] text-zinc-500">
                   Equipo
                 </p>
@@ -248,7 +269,7 @@ export default function ReservaPublicaPage() {
                   {empleados.length}
                 </p>
               </div>
-              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-3">
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3">
                 <p className="text-[11px] font-bold uppercase tracking-[1px] text-zinc-500">
                   Horarios
                 </p>
@@ -258,32 +279,34 @@ export default function ReservaPublicaPage() {
               </div>
             </div>
             {(direccionNegocio || googleMapsUrl || googleReviewsUrl) && (
-              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              <div className="mt-4 grid gap-2">
                 {direccionNegocio && (
-                  <p className="rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-xs leading-5 text-zinc-200 sm:col-span-3">
+                  <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm leading-5 text-zinc-200">
                     {direccionNegocio}
                   </p>
                 )}
-                {googleMapsUrl && (
-                  <a
-                    href={googleMapsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-lg border border-green-400/40 bg-green-950/20 px-3 py-3 text-center text-xs font-black text-green-100 transition hover:bg-green-500/20"
-                  >
-                    Como llegar
-                  </a>
-                )}
-                {googleReviewsUrl && (
-                  <a
-                    href={googleReviewsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-lg border border-yellow-300/40 bg-yellow-950/20 px-3 py-3 text-center text-xs font-black text-yellow-100 transition hover:bg-yellow-400/20"
-                  >
-                    Resenas Google
-                  </a>
-                )}
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {googleMapsUrl && (
+                    <a
+                      href={googleMapsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="min-h-12 rounded-xl border border-green-400/40 bg-green-950/20 px-4 py-3 text-center text-sm font-black text-green-100 transition hover:bg-green-500/20"
+                    >
+                      Como llegar
+                    </a>
+                  )}
+                  {googleReviewsUrl && (
+                    <a
+                      href={googleReviewsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="min-h-12 rounded-xl border border-yellow-300/40 bg-yellow-950/20 px-4 py-3 text-center text-sm font-black text-yellow-100 transition hover:bg-yellow-400/20"
+                    >
+                      Resenas Google
+                    </a>
+                  )}
+                </div>
               </div>
             )}
           </div>
