@@ -39,7 +39,13 @@ function estaActiva(suscripcion: SuscripcionCrm) {
 }
 
 function clasificarPago(suscripcion: SuscripcionCrm) {
+  const estado = estadoNormalizado(suscripcion.estado)
+
   if (suscripcion.ultimo_pago_at || suscripcion.origen_estado === 'wompi') {
+    return 'pago_confirmado'
+  }
+
+  if (['pagada', 'paid'].includes(estado)) {
     return 'pago_confirmado'
   }
 
@@ -47,7 +53,7 @@ function clasificarPago(suscripcion: SuscripcionCrm) {
     return 'prueba_o_activa'
   }
 
-  if (estadoNormalizado(suscripcion.estado).includes('pendiente')) {
+  if (estado.includes('pendiente')) {
     return 'pendiente'
   }
 

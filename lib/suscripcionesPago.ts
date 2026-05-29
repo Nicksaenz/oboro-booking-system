@@ -41,7 +41,7 @@ export async function registrarPagoAprobado({
   const ahora = new Date().toISOString()
   const datosBase = {
     plan,
-    estado: 'activa',
+    estado: 'pagada',
     fecha_vencimiento: calcularVencimiento(),
   }
   const datosPago = {
