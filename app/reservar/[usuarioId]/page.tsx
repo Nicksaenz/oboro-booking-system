@@ -16,11 +16,32 @@ type Empleado = {
   foto_url?: string | null
   rating?: number | null
   resenas?: number
+  comentarios?: {
+    cliente_nombre: string
+    calificacion: number
+    comentario: string
+    created_at: string
+  }[]
   disponibilidad?: {
     fecha: string
     hora: string
     label: string
   }[]
+}
+
+function Estrellas({ valor }: { valor: number }) {
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${valor} de 5`}>
+      {[1, 2, 3, 4, 5].map((estrella) => (
+        <span
+          key={estrella}
+          className={estrella <= Math.round(valor) ? 'text-yellow-300' : 'text-zinc-700'}
+        >
+          ★
+        </span>
+      ))}
+    </span>
+  )
 }
 
 export default function ReservaPublicaPage() {
@@ -277,35 +298,68 @@ export default function ReservaPublicaPage() {
               </select>
 
               {empleadoSeleccionado && (
-                <div className="flex items-center gap-4 rounded-lg border border-orange-500/30 bg-black p-4">
-                  {empleadoSeleccionado.foto_url ? (
-                    <img
-                      src={empleadoSeleccionado.foto_url}
-                      alt={empleadoSeleccionado.Nombre}
-                      className="h-16 w-16 rounded-lg border border-orange-500/50 object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-orange-500/50 bg-zinc-900 text-xl font-black text-orange-400">
-                      {empleadoSeleccionado.Nombre.slice(0, 1).toUpperCase()}
+                <div className="rounded-lg border border-orange-500/30 bg-black p-4">
+                  <div className="flex items-center gap-4">
+                    {empleadoSeleccionado.foto_url ? (
+                      <img
+                        src={empleadoSeleccionado.foto_url}
+                        alt={empleadoSeleccionado.Nombre}
+                        className="h-20 w-20 rounded-lg border border-orange-500/50 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-orange-500/50 bg-zinc-900 text-2xl font-black text-orange-400">
+                        {empleadoSeleccionado.Nombre.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+
+                    <div className="min-w-0">
+                      <p className="text-sm text-zinc-500">Te atiende</p>
+                      <p className="truncate text-xl font-black text-orange-200">
+                        {empleadoSeleccionado.Nombre}
+                      </p>
+                      {empleadoSeleccionado.Cargo && (
+                        <p className="text-sm text-zinc-400">
+                          {empleadoSeleccionado.Cargo}
+                        </p>
+                      )}
+                      {empleadoSeleccionado.rating ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                          <Estrellas valor={empleadoSeleccionado.rating} />
+                          <span className="font-bold text-yellow-200">
+                            {empleadoSeleccionado.rating}/5
+                          </span>
+                          <span className="text-zinc-500">
+                            {empleadoSeleccionado.resenas} resenas
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-sm text-zinc-500">
+                          Profesional disponible para nuevas experiencias.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {Boolean(empleadoSeleccionado.comentarios?.length) && (
+                    <div className="mt-4 grid gap-2">
+                      {empleadoSeleccionado.comentarios?.map((resena, index) => (
+                        <div
+                          key={`${resena.created_at}-${index}`}
+                          className="rounded-lg border border-zinc-800 bg-zinc-950 p-3"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate text-sm font-bold text-zinc-200">
+                              {resena.cliente_nombre}
+                            </p>
+                            <Estrellas valor={resena.calificacion} />
+                          </div>
+                          <p className="mt-2 text-sm leading-5 text-zinc-400">
+                            &quot;{resena.comentario}&quot;
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   )}
-
-                  <div>
-                    <p className="text-sm text-zinc-500">Te atiende</p>
-                    <p className="font-bold text-orange-300">
-                      {empleadoSeleccionado.Nombre}
-                    </p>
-                    {empleadoSeleccionado.Cargo && (
-                      <p className="text-sm text-zinc-400">
-                        {empleadoSeleccionado.Cargo}
-                      </p>
-                    )}
-                    {empleadoSeleccionado.rating && (
-                      <p className="mt-1 text-sm text-yellow-300">
-                        {empleadoSeleccionado.rating}/5 · {empleadoSeleccionado.resenas} resenas
-                      </p>
-                    )}
-                  </div>
                 </div>
               )}
 

@@ -71,21 +71,47 @@ export async function GET(
     ])
     const { data: resenas } = await supabase
       .from('empleado_resenas')
-      .select('empleado_id, calificacion')
+      .select('empleado_id, cliente_nombre, calificacion, comentario, created_at')
       .eq('negocio_id', usuarioId)
       .eq('visible', true)
+      .order('created_at', { ascending: false })
 
-    const resenasPorEmpleado = new Map<string, { total: number; cantidad: number }>()
+    const resenasPorEmpleado = new Map<
+      string,
+      {
+        total: number
+        cantidad: number
+        comentarios: {
+          cliente_nombre: string
+          calificacion: number
+          comentario: string
+          created_at: string
+        }[]
+      }
+    >()
 
     for (const resena of resenas ?? []) {
       const actual = resenasPorEmpleado.get(resena.empleado_id) ?? {
         total: 0,
         cantidad: 0,
+        comentarios: [],
       }
+      const comentario = String(resena.comentario ?? '').trim()
 
       resenasPorEmpleado.set(resena.empleado_id, {
         total: actual.total + Number(resena.calificacion ?? 0),
         cantidad: actual.cantidad + 1,
+        comentarios: comentario
+          ? [
+              ...actual.comentarios,
+              {
+                cliente_nombre: resena.cliente_nombre ?? 'Cliente',
+                calificacion: Number(resena.calificacion ?? 0),
+                comentario,
+                created_at: resena.created_at,
+              },
+            ].slice(0, 3)
+          : actual.comentarios,
       })
     }
 
@@ -99,6 +125,7 @@ export async function GET(
         ...empleado,
         rating,
         resenas: resumen?.cantidad ?? 0,
+        comentarios: resumen?.comentarios ?? [],
         disponibilidad: construirDisponibilidad({
           empleadoId: empleado.ID,
           citas: citas ?? [],
