@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { construirDisponibilidad, horarioEstaDisponible } from '@/lib/agenda'
 
 const ESTADOS_VALIDOS = ['activa', 'activo', 'pagada', 'paid']
 const PLANES_CON_AGENDA_PUBLICA = ['trial', 'basico', 'pro', 'business', 'premium']
@@ -48,7 +49,7 @@ export async function GET(
       )
     }
 
-    const [{ data: servicios }, { data: empleados }] = await Promise.all([
+    const [{ data: servicios }, { data: empleados }, { data: citas }] = await Promise.all([
       supabase
         .from('SERVICIOS')
         .select('ID, "Nombre del servicio", "Precio del servicio", ACTIVO')
@@ -61,7 +62,49 @@ export async function GET(
         .eq('ID de Usuario', usuarioId)
         .eq('Activo', true)
         .order('Nombre', { ascending: true }),
+      supabase
+        .from('Citas')
+        .select('ID, Fecha, Hora, Estado, ID_Empleado')
+        .eq('ID_Usuario', usuarioId)
+        .gte('Fecha', new Date().toISOString().slice(0, 10))
+        .in('Estado', ['pendiente', 'confirmada']),
     ])
+    const { data: resenas } = await supabase
+      .from('empleado_resenas')
+      .select('empleado_id, calificacion')
+      .eq('negocio_id', usuarioId)
+      .eq('visible', true)
+
+    const resenasPorEmpleado = new Map<string, { total: number; cantidad: number }>()
+
+    for (const resena of resenas ?? []) {
+      const actual = resenasPorEmpleado.get(resena.empleado_id) ?? {
+        total: 0,
+        cantidad: 0,
+      }
+
+      resenasPorEmpleado.set(resena.empleado_id, {
+        total: actual.total + Number(resena.calificacion ?? 0),
+        cantidad: actual.cantidad + 1,
+      })
+    }
+
+    const empleadosConPerfil = (empleados ?? []).map((empleado) => {
+      const resumen = resenasPorEmpleado.get(empleado.ID)
+      const rating = resumen?.cantidad
+        ? Number((resumen.total / resumen.cantidad).toFixed(1))
+        : null
+
+      return {
+        ...empleado,
+        rating,
+        resenas: resumen?.cantidad ?? 0,
+        disponibilidad: construirDisponibilidad({
+          empleadoId: empleado.ID,
+          citas: citas ?? [],
+        }).slice(0, 36),
+      }
+    })
 
     return NextResponse.json({
       negocio: {
@@ -69,7 +112,7 @@ export async function GET(
         foto_url: suscripcion?.foto_negocio_url ?? null,
       },
       servicios: servicios ?? [],
-      empleados: empleados ?? [],
+      empleados: empleadosConPerfil,
     })
   } catch {
     return NextResponse.json(
@@ -116,19 +159,24 @@ export async function POST(
       )
     }
 
-    const { data: citaExistente } = await supabase
+    const { data: citasEmpleado } = await supabase
       .from('Citas')
-      .select('ID')
+      .select('ID, Fecha, Hora, Estado, ID_Empleado')
       .eq('ID_Usuario', usuarioId)
-      .eq('Fecha', fecha)
-      .eq('Hora', hora)
       .eq('ID_Empleado', empleadoId)
-      .neq('Estado', 'cancelada')
-      .maybeSingle()
+      .gte('Fecha', new Date().toISOString().slice(0, 10))
+      .in('Estado', ['pendiente', 'confirmada'])
 
-    if (citaExistente) {
+    if (
+      !horarioEstaDisponible({
+        empleadoId,
+        fecha,
+        hora,
+        citas: citasEmpleado ?? [],
+      })
+    ) {
       return NextResponse.json(
-        { error: 'Ese horario ya fue reservado. Elige otro.' },
+        { error: 'Ese horario no esta disponible. Elige otro.' },
         { status: 409 }
       )
     }

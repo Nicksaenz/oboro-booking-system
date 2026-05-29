@@ -14,6 +14,13 @@ type Empleado = {
   Nombre: string
   Cargo?: string
   foto_url?: string | null
+  rating?: number | null
+  resenas?: number
+  disponibilidad?: {
+    fecha: string
+    hora: string
+    label: string
+  }[]
 }
 
 export default function ReservaPublicaPage() {
@@ -103,6 +110,7 @@ export default function ReservaPublicaPage() {
   const empleadoSeleccionado = empleados.find(
     (empleado) => empleado.ID === form.empleadoId
   )
+  const horariosDisponibles = empleadoSeleccionado?.disponibilidad ?? []
 
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
@@ -199,7 +207,11 @@ export default function ReservaPublicaPage() {
               <select
                 className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
                 value={form.empleadoId}
-                onChange={(e) => actualizarCampo('empleadoId', e.target.value)}
+                onChange={(e) => {
+                  actualizarCampo('empleadoId', e.target.value)
+                  actualizarCampo('fecha', '')
+                  actualizarCampo('hora', '')
+                }}
                 required
               >
                 <option value="">Selecciona quien te atiende</option>
@@ -235,31 +247,56 @@ export default function ReservaPublicaPage() {
                         {empleadoSeleccionado.Cargo}
                       </p>
                     )}
+                    {empleadoSeleccionado.rating && (
+                      <p className="mt-1 text-sm text-yellow-300">
+                        {empleadoSeleccionado.rating}/5 · {empleadoSeleccionado.resenas} resenas
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <input
-                  className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
-                  type="date"
-                  value={form.fecha}
-                  onChange={(e) => actualizarCampo('fecha', e.target.value)}
-                  required
-                />
+              {form.empleadoId && (
+                <div className="rounded-xl border border-orange-600/30 bg-black p-4">
+                  <p className="text-sm font-bold text-orange-300">
+                    Horarios disponibles
+                  </p>
+                  {horariosDisponibles.length === 0 ? (
+                    <p className="mt-2 text-sm text-zinc-400">
+                      No hay horarios libres para este profesional en los proximos dias.
+                    </p>
+                  ) : (
+                    <div className="mt-3 grid max-h-64 gap-2 overflow-y-auto sm:grid-cols-2">
+                      {horariosDisponibles.map((slot) => {
+                        const activo =
+                          form.fecha === slot.fecha && form.hora === slot.hora
 
-                <input
-                  className="min-h-12 rounded-xl border border-orange-600/50 bg-black p-4 outline-none"
-                  type="time"
-                  value={form.hora}
-                  onChange={(e) => actualizarCampo('hora', e.target.value)}
-                  required
-                />
-              </div>
+                        return (
+                          <button
+                            key={`${slot.fecha}-${slot.hora}`}
+                            type="button"
+                            onClick={() => {
+                              actualizarCampo('fecha', slot.fecha)
+                              actualizarCampo('hora', slot.hora)
+                            }}
+                            className={`min-h-11 rounded-xl border px-3 py-2 text-left text-sm font-bold transition ${
+                              activo
+                                ? 'border-orange-400 bg-orange-600 text-black'
+                                : 'border-zinc-800 bg-zinc-950 text-zinc-200 hover:border-orange-500'
+                            }`}
+                          >
+                            {slot.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
                 type="submit"
-                disabled={guardando}
+                disabled={guardando || !form.fecha || !form.hora}
                 className="mt-2 min-h-12 rounded-xl bg-orange-600 px-5 py-4 font-bold transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {guardando ? 'Reservando...' : 'Reservar cita'}

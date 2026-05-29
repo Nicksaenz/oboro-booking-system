@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
 import {
   CitaRecordatorio,
   sendAppointmentReminder,
@@ -23,12 +24,26 @@ const RECORDATORIOS_MINUTOS = [20, 5]
 const VENTANA_MINUTOS = 2
 const ESTADOS_ACTIVOS = ['pendiente', 'confirmada']
 
-function isAuthorized(request: Request) {
+async function isAuthorized(request: Request) {
   const cronSecret = process.env.CRON_SECRET
+  const authorization = request.headers.get('authorization')
 
-  if (!cronSecret) return false
+  if (cronSecret && authorization === `Bearer ${cronSecret}`) return true
 
-  return request.headers.get('authorization') === `Bearer ${cronSecret}`
+  const token = authorization?.replace('Bearer ', '')
+
+  if (!token) return false
+
+  const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  })
+  const { data } = await supabaseAuth.auth.getUser()
+
+  return Boolean(data.user)
 }
 
 function getBogotaParts(date = new Date()) {
@@ -92,34 +107,68 @@ async function yaFueEnviado({
 }) {
   const { data } = await supabase
     .from('whatsapp_recordatorios_envios')
-    .select('id')
+    .select('id, estado')
     .eq('cita_id', citaId)
     .eq('destinatario', destinatario)
     .eq('minutos_antes', minutosAntes)
     .maybeSingle()
 
-  return Boolean(data)
+  return data?.estado === 'enviado'
 }
 
-async function registrarEnvio({
+async function registrarIntento({
   supabase,
   citaId,
   destinatario,
   minutosAntes,
+  estado,
   respuesta,
+  error,
 }: {
   supabase: ReturnType<typeof getSupabaseAdmin>
   citaId: string
   destinatario: 'cliente' | 'negocio'
   minutosAntes: number
-  respuesta: unknown
+  estado: 'enviado' | 'fallido'
+  respuesta?: unknown
+  error?: string
 }) {
+  const { data: existente } = await supabase
+    .from('whatsapp_recordatorios_envios')
+    .select('id, intento_count')
+    .eq('cita_id', citaId)
+    .eq('destinatario', destinatario)
+    .eq('minutos_antes', minutosAntes)
+    .maybeSingle()
+  const siguienteIntento = Number(existente?.intento_count ?? 0) + 1
+  const cambios = {
+    cita_id: citaId,
+    destinatario,
+    minutos_antes: minutosAntes,
+    estado,
+    intento_count: siguienteIntento,
+    enviado_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    ultimo_error: error ?? null,
+    proximo_reintento_at:
+      estado === 'fallido'
+        ? new Date(Date.now() + 5 * 60_000).toISOString()
+        : null,
+    respuesta: respuesta ?? null,
+  }
+
+  if (existente?.id) {
+    await supabase
+      .from('whatsapp_recordatorios_envios')
+      .update(cambios)
+      .eq('id', existente.id)
+    return
+  }
+
   await supabase.from('whatsapp_recordatorios_envios').insert([
     {
-      cita_id: citaId,
-      destinatario,
-      minutos_antes: minutosAntes,
-      respuesta,
+      ...cambios,
+      intento_count: 1,
     },
   ])
 }
@@ -132,7 +181,7 @@ export async function GET(request: Request) {
     )
   }
 
-  if (!isAuthorized(request)) {
+  if (!(await isAuthorized(request))) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
@@ -233,21 +282,31 @@ export async function GET(request: Request) {
       if (!enviado) {
         const respuesta = await sendAppointmentReminder(cita)
 
-        await registrarEnvio({
+        await registrarIntento({
           supabase,
           citaId: cita.ID,
           destinatario: 'cliente',
           minutosAntes,
+          estado: 'enviado',
           respuesta,
         })
         resultado.enviadoCliente = true
       }
     } catch (sendError) {
-      resultado.errores.push(
+      const mensaje =
         sendError instanceof Error
           ? sendError.message
           : 'No se pudo enviar el recordatorio al cliente'
-      )
+
+      await registrarIntento({
+        supabase,
+        citaId: cita.ID,
+        destinatario: 'cliente',
+        minutosAntes,
+        estado: 'fallido',
+        error: mensaje,
+      })
+      resultado.errores.push(mensaje)
     }
 
     try {
@@ -269,21 +328,31 @@ export async function GET(request: Request) {
           empleado: cita.Empleados?.Nombre ?? 'equipo',
         })
 
-        await registrarEnvio({
+        await registrarIntento({
           supabase,
           citaId: cita.ID,
           destinatario: 'negocio',
           minutosAntes,
+          estado: 'enviado',
           respuesta,
         })
         resultado.enviadoNegocio = true
       }
     } catch (sendError) {
-      resultado.errores.push(
+      const mensaje =
         sendError instanceof Error
           ? sendError.message
           : 'No se pudo enviar el recordatorio al negocio'
-      )
+
+      await registrarIntento({
+        supabase,
+        citaId: cita.ID,
+        destinatario: 'negocio',
+        minutosAntes,
+        estado: 'fallido',
+        error: mensaje,
+      })
+      resultado.errores.push(mensaje)
     }
 
     resultados.push(resultado)
