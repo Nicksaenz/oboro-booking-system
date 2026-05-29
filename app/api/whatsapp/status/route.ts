@@ -15,6 +15,7 @@ export async function GET(request: Request) {
     templateName: configured('META_WHATSAPP_TEMPLATE_RECORDATORIO'),
     customerPhotoTemplateName: configured('META_WHATSAPP_TEMPLATE_RECORDATORIO_CLIENTE_FOTO'),
     businessTemplateName: configured('META_WHATSAPP_TEMPLATE_RECORDATORIO_NEGOCIO'),
+    reviewTemplateName: configured('META_WHATSAPP_TEMPLATE_RESENA'),
     recoveryTemplateName: configured('META_WHATSAPP_TEMPLATE_RECUPERACION'),
     templateLanguage: configured('META_WHATSAPP_TEMPLATE_LANGUAGE'),
   }
@@ -98,6 +99,7 @@ export async function GET(request: Request) {
     businessTemplate:
       process.env.META_WHATSAPP_TEMPLATE_RECORDATORIO_NEGOCIO ||
       'recordatorio_negocio',
+    reviewTemplate: process.env.META_WHATSAPP_TEMPLATE_RESENA || 'solicitud_resena',
     recoveryTemplate:
       process.env.META_WHATSAPP_TEMPLATE_RECUPERACION || 'codigo_recuperacion',
     language: process.env.META_WHATSAPP_TEMPLATE_LANGUAGE || 'es_CO',

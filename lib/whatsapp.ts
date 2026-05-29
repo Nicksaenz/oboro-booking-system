@@ -83,6 +83,10 @@ export function getCustomerPhotoReminderTemplateName() {
   return process.env.META_WHATSAPP_TEMPLATE_RECORDATORIO_CLIENTE_FOTO || ''
 }
 
+export function getReviewRequestTemplateName() {
+  return process.env.META_WHATSAPP_TEMPLATE_RESENA || 'solicitud_resena'
+}
+
 function getImageMimeFromDataUrl(dataUrl: string) {
   const match = dataUrl.match(/^data:(image\/(?:png|jpe?g|webp));base64,/i)
   return match?.[1] ?? ''
@@ -332,6 +336,38 @@ export async function sendBusinessAppointmentReminder({
       { type: 'text', text: hora },
       { type: 'text', text: servicio || 'servicio' },
       { type: 'text', text: empleado || 'equipo' },
+    ],
+  })
+}
+
+export async function sendReviewRequest({
+  to,
+  cliente,
+  servicio,
+  empleado,
+  reviewUrl,
+}: {
+  to: string
+  cliente: string
+  servicio: string
+  empleado: string
+  reviewUrl: string
+}) {
+  const telefono = normalizeWhatsAppNumber(to)
+
+  if (!telefono) {
+    throw new Error('El cliente no tiene un numero de WhatsApp valido')
+  }
+
+  return sendWhatsAppTemplate({
+    to: telefono,
+    templateName: getReviewRequestTemplateName(),
+    languageCode: getReminderTemplateLanguage(),
+    parameters: [
+      { type: 'text', text: cliente || 'cliente' },
+      { type: 'text', text: servicio || 'servicio' },
+      { type: 'text', text: empleado || 'equipo' },
+      { type: 'text', text: reviewUrl },
     ],
   })
 }

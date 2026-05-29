@@ -264,10 +264,86 @@ export default function DashboardPage() {
     }
 
     const negocioId = contexto.negocioId
+    const empleadoAsignadoId =
+      !contexto.esAdmin && contexto.empleadoId
+        ? contexto.empleadoId
+        : null
 
     const hoy = fechaIsoLocal()
     const inicioMes = fechaIsoLocal(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
     const finMes = fechaIsoLocal(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0))
+
+    const citasBase = supabase
+      .from('Citas')
+      .select('*', { count: 'exact', head: true })
+      .eq('ID_Usuario', negocioId)
+    const citasHoyBase = supabase
+      .from('Citas')
+      .select('*', { count: 'exact', head: true })
+      .eq('ID_Usuario', negocioId)
+      .eq('Fecha', hoy)
+    const citasPendientesBase = supabase
+      .from('Citas')
+      .select('*', { count: 'exact', head: true })
+      .eq('ID_Usuario', negocioId)
+      .eq('Estado', 'pendiente')
+    const citasMesBase = supabase
+      .from('Citas')
+      .select('*', { count: 'exact', head: true })
+      .eq('ID_Usuario', negocioId)
+      .gte('Fecha', inicioMes)
+      .lte('Fecha', finMes)
+    const citasMesDataBase = supabase
+      .from('Citas')
+      .select(`
+        Estado,
+        SERVICIOS:ID_Servicio (
+          "Precio del servicio"
+        )
+      `)
+      .eq('ID_Usuario', negocioId)
+      .gte('Fecha', inicioMes)
+      .lte('Fecha', finMes)
+    const proximasBase = supabase
+      .from('Citas')
+      .select(`
+        ID,
+        Fecha,
+        Hora,
+        Estado,
+        Clientes:ID_Cliente (
+          Nombre
+        ),
+        SERVICIOS:ID_Servicio (
+          "Nombre del servicio",
+          "Precio del servicio"
+        ),
+        Empleados:ID_Empleado (
+          Nombre
+        )
+      `)
+      .eq('ID_Usuario', negocioId)
+      .gte('Fecha', hoy)
+      .neq('Estado', 'cancelada')
+      .order('Fecha', { ascending: true })
+      .order('Hora', { ascending: true })
+      .limit(5)
+
+    if (empleadoAsignadoId) {
+      citasBase.eq('ID_Empleado', empleadoAsignadoId)
+      citasHoyBase.eq('ID_Empleado', empleadoAsignadoId)
+      citasPendientesBase.eq('ID_Empleado', empleadoAsignadoId)
+      citasMesBase.eq('ID_Empleado', empleadoAsignadoId)
+      citasMesDataBase.eq('ID_Empleado', empleadoAsignadoId)
+      proximasBase.eq('ID_Empleado', empleadoAsignadoId)
+    } else if (!contexto.esAdmin) {
+      citasBase.eq('ID_Empleado', '00000000-0000-0000-0000-000000000000')
+      citasHoyBase.eq('ID_Empleado', '00000000-0000-0000-0000-000000000000')
+      citasPendientesBase.eq('ID_Empleado', '00000000-0000-0000-0000-000000000000')
+      citasMesBase.eq('ID_Empleado', '00000000-0000-0000-0000-000000000000')
+      citasMesDataBase.eq('ID_Empleado', '00000000-0000-0000-0000-000000000000')
+      proximasBase.eq('ID_Empleado', '00000000-0000-0000-0000-000000000000')
+    }
 
     const [
       clientesRes,
@@ -299,61 +375,12 @@ export default function DashboardPage() {
         .select('*', { count: 'exact', head: true })
         .eq('ID DE USUARIO', negocioId)
         .eq('ACTIVO', true),
-      supabase
-        .from('Citas')
-        .select('*', { count: 'exact', head: true })
-        .eq('ID_Usuario', negocioId),
-      supabase
-        .from('Citas')
-        .select('*', { count: 'exact', head: true })
-        .eq('ID_Usuario', negocioId)
-        .eq('Fecha', hoy),
-      supabase
-        .from('Citas')
-        .select('*', { count: 'exact', head: true })
-        .eq('ID_Usuario', negocioId)
-        .eq('Estado', 'pendiente'),
-      supabase
-        .from('Citas')
-        .select('*', { count: 'exact', head: true })
-        .eq('ID_Usuario', negocioId)
-        .gte('Fecha', inicioMes)
-        .lte('Fecha', finMes),
-      supabase
-        .from('Citas')
-        .select(`
-          Estado,
-          SERVICIOS:ID_Servicio (
-            "Precio del servicio"
-          )
-        `)
-        .eq('ID_Usuario', negocioId)
-        .gte('Fecha', inicioMes)
-        .lte('Fecha', finMes),
-      supabase
-        .from('Citas')
-        .select(`
-          ID,
-          Fecha,
-          Hora,
-          Estado,
-          Clientes:ID_Cliente (
-            Nombre
-          ),
-          SERVICIOS:ID_Servicio (
-            "Nombre del servicio",
-            "Precio del servicio"
-          ),
-          Empleados:ID_Empleado (
-            Nombre
-          )
-        `)
-        .eq('ID_Usuario', negocioId)
-        .gte('Fecha', hoy)
-        .neq('Estado', 'cancelada')
-        .order('Fecha', { ascending: true })
-        .order('Hora', { ascending: true })
-        .limit(5),
+      citasBase,
+      citasHoyBase,
+      citasPendientesBase,
+      citasMesBase,
+      citasMesDataBase,
+      proximasBase,
       fetch('/api/suscripcion', {
         headers: {
           Authorization: `Bearer ${token}`,

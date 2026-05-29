@@ -15,6 +15,16 @@ type Empleado = {
   Activo: boolean
 }
 
+type ResenaEmpleado = {
+  id: string
+  empleado_id: string
+  cliente_nombre: string
+  calificacion: number
+  comentario?: string | null
+  visible: boolean
+  created_at: string
+}
+
 const MAX_FOTO_EMPLEADO_CHARS = 450_000
 
 function leerArchivoComoDataUrl(file: File) {
@@ -90,6 +100,7 @@ export default function EmpleadosPage() {
   const [editActivo, setEditActivo] = useState(true)
   const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
   const [planActual, setPlanActual] = useState('basico')
+  const [resenas, setResenas] = useState<ResenaEmpleado[]>([])
 
   async function cargarEmpleados() {
     const { data: sessionData } = await supabase.auth.getSession()
@@ -110,7 +121,7 @@ export default function EmpleadosPage() {
     setContexto(acceso)
 
     const token = sessionData.session?.access_token
-    const [empleadosRes, suscripcionRes] = await Promise.all([
+    const [empleadosRes, suscripcionRes, resenasRes] = await Promise.all([
       supabase
       .from('Empleados')
       .select('*')
@@ -118,6 +129,13 @@ export default function EmpleadosPage() {
         .order('Nombre', { ascending: true }),
       token
         ? fetch('/api/suscripcion', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        : null,
+      token && acceso.esAdmin
+        ? fetch('/api/resenas', {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -133,6 +151,13 @@ export default function EmpleadosPage() {
     if (suscripcionRes?.ok) {
       const resultado = await suscripcionRes.json()
       setPlanActual(resultado?.suscripcion?.plan ?? 'basico')
+    }
+
+    if (resenasRes?.ok) {
+      const resultado = await resenasRes.json()
+      setResenas(resultado?.resenas ?? [])
+    } else {
+      setResenas([])
     }
 
     setEmpleados(empleadosRes.data || [])
@@ -311,12 +336,53 @@ export default function EmpleadosPage() {
     cargarEmpleados()
   }
 
+  async function removerResena(resenaId: string) {
+    if (!contexto?.esAdmin) {
+      setMensaje('Solo el administrador puede remover resenas.')
+      return
+    }
+
+    const confirmar = confirm('Seguro que deseas remover esta resena?')
+
+    if (!confirmar) return
+
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+
+    if (!token) {
+      router.push('/login')
+      return
+    }
+
+    const response = await fetch(`/api/resenas/${resenaId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    const resultado = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      setMensaje(resultado?.error ?? 'No se pudo remover la resena.')
+      return
+    }
+
+    setMensaje('Resena removida.')
+    cargarEmpleados()
+  }
+
   useEffect(() => {
     cargarEmpleados()
   }, [])
 
   const plan = obtenerPlanOboro(planActual)
   const cuposDisponibles = Math.max(plan.limites.empleados - empleados.length, 0)
+  const resenasPorEmpleado = new Map<string, ResenaEmpleado[]>()
+
+  for (const resena of resenas) {
+    const lista = resenasPorEmpleado.get(resena.empleado_id) ?? []
+    resenasPorEmpleado.set(resena.empleado_id, [...lista, resena])
+  }
 
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
@@ -435,6 +501,19 @@ export default function EmpleadosPage() {
               key={empleado.ID}
               className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20"
             >
+              {(() => {
+                const resenasEmpleado = resenasPorEmpleado.get(empleado.ID) ?? []
+                const promedio = resenasEmpleado.length
+                  ? (
+                      resenasEmpleado.reduce(
+                        (total, resena) => total + Number(resena.calificacion ?? 0),
+                        0
+                      ) / resenasEmpleado.length
+                    ).toFixed(1)
+                  : null
+
+                return (
+                  <>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex gap-4">
                   {empleado.foto_url ? (
@@ -457,6 +536,11 @@ export default function EmpleadosPage() {
                   <p className="mt-1 text-sm text-zinc-500">
                     {empleado.Telefono || 'Sin telefono'}
                   </p>
+                  {promedio && (
+                    <p className="mt-2 text-sm font-bold text-yellow-300">
+                      ★ {promedio}/5 · {resenasEmpleado.length} resenas
+                    </p>
+                  )}
                   </div>
                 </div>
 
@@ -496,6 +580,48 @@ export default function EmpleadosPage() {
                   Eliminar empleado
                 </button>
               </div>
+
+              {contexto?.esAdmin && resenasEmpleado.length > 0 && (
+                <div className="mt-5 rounded-xl border border-zinc-800 bg-black p-4">
+                  <p className="text-sm font-bold text-zinc-200">
+                    Resenas del empleado
+                  </p>
+                  <div className="mt-3 grid gap-3">
+                    {resenasEmpleado.slice(0, 3).map((resena) => (
+                      <div
+                        key={resena.id}
+                        className="rounded-xl border border-zinc-800 bg-zinc-950 p-3"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-bold text-zinc-200">
+                              {resena.cliente_nombre}
+                            </p>
+                            <p className="mt-1 text-sm text-yellow-300">
+                              ★ {resena.calificacion}/5
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removerResena(resena.id)}
+                            className="rounded-lg border border-red-600/50 px-3 py-2 text-xs font-bold text-red-200 transition hover:bg-red-600/10"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                        {resena.comentario && (
+                          <p className="mt-2 text-sm leading-5 text-zinc-400">
+                            {resena.comentario}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+                  </>
+                )
+              })()}
             </div>
           ))}
         </div>

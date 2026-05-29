@@ -242,7 +242,36 @@ if (citaExistente && citaExistente.length > 0) {
     return
   }
 
-  setMensaje(`Cita marcada como ${nuevoEstado}.`)
+  if (nuevoEstado === 'completada') {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+
+    if (token) {
+      const response = await fetch('/api/whatsapp/solicitar-resena', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ citaId: id }),
+      })
+      const resultado = await response.json().catch(() => null)
+
+      if (response.ok) {
+        setMensaje('Cita completada. Se envio la calificacion por WhatsApp.')
+      } else {
+        setMensaje(
+          `Cita completada, pero no se pudo enviar la calificacion: ${
+            resultado?.error ?? 'revisa la plantilla de WhatsApp'
+          }`
+        )
+      }
+    } else {
+      setMensaje('Cita completada. No se encontro sesion para enviar WhatsApp.')
+    }
+  } else {
+    setMensaje(`Cita marcada como ${nuevoEstado}.`)
+  }
   cargarDatos()
 }
 
