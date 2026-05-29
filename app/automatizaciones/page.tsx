@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { obtenerContextoEquipo } from '@/lib/equipo'
 
-const PLANES_AUTOMATICOS = ['pro', 'business', 'premium']
+const PLANES_AUTOMATICOS = ['basico', 'pro', 'business', 'premium']
 const PLANES_QR = ['trial', 'basico', 'pro', 'business', 'premium']
 
 export default function AutomatizacionesPage() {
@@ -142,7 +142,7 @@ export default function AutomatizacionesPage() {
             </p>
             {!tieneAutomatizaciones && (
               <p className="mt-4 rounded-xl border border-orange-600/40 bg-black px-4 py-3 text-sm font-bold text-orange-200">
-                Los recordatorios automaticos se activan desde el plan Pro.
+                Los recordatorios automaticos estan incluidos desde el plan Basico.
               </p>
             )}
           </div>
@@ -216,6 +216,48 @@ export default function AutomatizacionesPage() {
             </div>
           )}
         </div>
+
+        {reservaUrl && tieneQrPublico && (
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            {[
+              [
+                'Historia',
+                'Agenda tu cita desde este link. Elige servicio, profesional, fecha y hora en segundos.',
+              ],
+              [
+                'Recepcion',
+                'Escanea el QR, reserva tu cita y recibe recordatorios por WhatsApp antes de venir.',
+              ],
+              [
+                'WhatsApp',
+                `Reserva directamente con nosotros aqui: ${reservaUrl}`,
+              ],
+            ].map(([titulo, texto]) => (
+              <article
+                key={titulo}
+                className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5"
+              >
+                <p className="text-xs font-bold uppercase tracking-[3px] text-orange-500">
+                  Material {titulo}
+                </p>
+                <p className="mt-3 min-h-24 text-sm leading-6 text-zinc-300">
+                  {texto}
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(texto)
+                    setLinkCopiado(true)
+                    setTimeout(() => setLinkCopiado(false), 2500)
+                  }}
+                  className="mt-4 min-h-11 rounded-xl border border-orange-500/50 px-4 py-2 text-sm font-bold text-orange-100 transition hover:bg-orange-500/10"
+                >
+                  Copiar texto
+                </button>
+              </article>
+            ))}
+          </div>
+        )}
 
       </section>
     </main>

@@ -20,6 +20,14 @@ type FormularioCliente = {
   notas: string
 }
 
+type HistorialCliente = {
+  total: number
+  completadas: number
+  ultimaFecha: string
+  proximaFecha: string
+  estadoUltima: string
+}
+
 const FORMULARIO_INICIAL: FormularioCliente = {
   nombre: '',
   numero: '',
@@ -47,6 +55,9 @@ export default function ClientesPage() {
   const [guardando, setGuardando] = useState(false)
   const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null)
   const [contexto, setContexto] = useState<ContextoEquipo | null>(null)
+  const [historialClientes, setHistorialClientes] = useState<
+    Record<string, HistorialCliente>
+  >({})
 
   const clientesFiltrados = useMemo(() => {
     const termino = busqueda.trim().toLowerCase()
@@ -102,6 +113,43 @@ export default function ClientesPage() {
     } else {
       setClientes(data ?? [])
     }
+
+    const { data: citas } = await supabase
+      .from('Citas')
+      .select('ID, ID_Cliente, Fecha, Estado')
+      .eq('ID_Usuario', acceso.negocioId)
+
+    const hoy = new Date().toISOString().slice(0, 10)
+    const siguienteHistorial: Record<string, HistorialCliente> = {}
+
+    for (const cita of citas ?? []) {
+      const clienteId = String(cita.ID_Cliente ?? '')
+      if (!clienteId) continue
+
+      const actual = siguienteHistorial[clienteId] ?? {
+        total: 0,
+        completadas: 0,
+        ultimaFecha: '',
+        proximaFecha: '',
+        estadoUltima: '',
+      }
+      const fecha = String(cita.Fecha ?? '')
+      const estado = String(cita.Estado ?? '').toLowerCase()
+
+      actual.total += 1
+      if (estado === 'completada') actual.completadas += 1
+      if (!actual.ultimaFecha || fecha > actual.ultimaFecha) {
+        actual.ultimaFecha = fecha
+        actual.estadoUltima = estado
+      }
+      if (fecha >= hoy && (!actual.proximaFecha || fecha < actual.proximaFecha)) {
+        actual.proximaFecha = fecha
+      }
+
+      siguienteHistorial[clienteId] = actual
+    }
+
+    setHistorialClientes(siguienteHistorial)
 
     setCargando(false)
   }
@@ -345,6 +393,16 @@ export default function ClientesPage() {
         ) : (
           <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {clientesFiltrados.map((cliente) => (
+              (() => {
+                const historial = historialClientes[cliente.id]
+                const paraReactivar = Boolean(
+                  historial?.total &&
+                  !historial.proximaFecha &&
+                  historial.estadoUltima !== 'pendiente' &&
+                  historial.estadoUltima !== 'confirmada'
+                )
+
+                return (
               <article
                 key={cliente.id}
                 className="flex min-h-[260px] flex-col rounded-2xl border border-orange-600/35 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20 transition hover:border-orange-500/70"
@@ -358,12 +416,39 @@ export default function ClientesPage() {
                       Cliente registrado
                     </p>
                   </div>
-                  <span className="rounded-full border border-green-600/40 bg-green-950/20 px-3 py-1 text-xs font-bold text-green-300">
-                    Activo
+                  <span
+                    className={`rounded-full border px-3 py-1 text-xs font-bold ${
+                      paraReactivar
+                        ? 'border-yellow-500/40 bg-yellow-950/20 text-yellow-300'
+                        : 'border-green-600/40 bg-green-950/20 text-green-300'
+                    }`}
+                  >
+                    {paraReactivar ? 'Reactivar' : 'Activo'}
                   </span>
                 </div>
 
-                <div className="mt-5 space-y-3 text-sm">
+                <div className="mt-5 grid grid-cols-3 gap-2 text-sm">
+                  <p className="rounded-xl border border-zinc-800 bg-black px-3 py-3">
+                    <span className="block text-xs text-zinc-500">Citas</span>
+                    <span className="font-black text-zinc-100">
+                      {historial?.total ?? 0}
+                    </span>
+                  </p>
+                  <p className="rounded-xl border border-zinc-800 bg-black px-3 py-3">
+                    <span className="block text-xs text-zinc-500">Hechas</span>
+                    <span className="font-black text-green-300">
+                      {historial?.completadas ?? 0}
+                    </span>
+                  </p>
+                  <p className="rounded-xl border border-zinc-800 bg-black px-3 py-3">
+                    <span className="block text-xs text-zinc-500">Proxima</span>
+                    <span className="font-black text-orange-200">
+                      {historial?.proximaFecha || 'No'}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="mt-3 space-y-3 text-sm">
                   <p className="rounded-xl border border-zinc-800 bg-black px-4 py-3">
                     <span className="text-zinc-500">WhatsApp: </span>
                     <span className="font-bold text-zinc-100">{cliente.Numero || 'Sin numero'}</span>
@@ -377,6 +462,12 @@ export default function ClientesPage() {
                 {cliente.Notas && (
                   <p className="mt-4 line-clamp-3 text-sm leading-6 text-zinc-400">
                     {cliente.Notas}
+                  </p>
+                )}
+
+                {paraReactivar && (
+                  <p className="mt-4 rounded-xl border border-yellow-500/30 bg-yellow-950/10 px-4 py-3 text-sm font-bold text-yellow-200">
+                    Buena oportunidad para escribirle y traerlo de vuelta.
                   </p>
                 )}
 
@@ -404,6 +495,8 @@ export default function ClientesPage() {
                   </button>
                 </div>
               </article>
+                )
+              })()
             ))}
           </div>
         )}

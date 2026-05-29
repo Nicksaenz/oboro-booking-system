@@ -86,6 +86,12 @@ export default function EstadoReservaPage() {
     cargarReserva()
   }, [accionInicial])
 
+  const volverReservarUrl = cita?.ID_Usuario
+    ? `/reservar/${cita.ID_Usuario}${
+        cita.ID_Empleado ? `?empleado=${cita.ID_Empleado}` : ''
+      }`
+    : ''
+
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
       <section className="mx-auto flex min-h-[calc(100vh-48px)] w-full max-w-xl flex-col justify-center">
@@ -214,6 +220,15 @@ export default function EstadoReservaPage() {
                 Enviar calificacion
               </button>
             </div>
+          )}
+
+          {volverReservarUrl && (
+            <a
+              href={volverReservarUrl}
+              className="mt-5 flex min-h-12 items-center justify-center rounded-xl border border-orange-500/60 px-5 py-3 text-center font-bold text-orange-100 transition hover:bg-orange-500/10"
+            >
+              Volver a reservar con este profesional
+            </a>
           )}
         </div>
       </section>

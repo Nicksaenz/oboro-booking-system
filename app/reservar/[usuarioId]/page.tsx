@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 
 type Servicio = {
   ID: string
@@ -77,7 +77,9 @@ function formatoFechaCorta(fecha: string) {
 
 export default function ReservaPublicaPage() {
   const params = useParams<{ usuarioId: string }>()
+  const searchParams = useSearchParams()
   const usuarioId = params.usuarioId
+  const empleadoPreferido = searchParams.get('empleado')
   const [negocio, setNegocio] = useState('Oboro Booking')
   const [fotoNegocio, setFotoNegocio] = useState('')
   const [servicios, setServicios] = useState<Servicio[]>([])
@@ -113,12 +115,23 @@ export default function ReservaPublicaPage() {
       setFotoNegocio(data.negocio?.foto_url ?? '')
       setServicios(data.servicios ?? [])
       setEmpleados(data.empleados ?? [])
+      if (
+        empleadoPreferido &&
+        (data.empleados ?? []).some((empleado: Empleado) => empleado.ID === empleadoPreferido)
+      ) {
+        setForm((actual) => ({
+          ...actual,
+          empleadoId: empleadoPreferido,
+          fecha: '',
+          hora: '',
+        }))
+      }
       setAgendaDisponible(true)
       setCargando(false)
     }
 
     cargarAgenda()
-  }, [usuarioId])
+  }, [usuarioId, empleadoPreferido])
 
   function actualizarCampo(campo: keyof typeof form, valor: string) {
     setReservaCreada(null)

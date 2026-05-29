@@ -15,7 +15,7 @@ const ESTADOS_PAGOS = ['activa', 'activo', 'pagada', 'paid']
 const BENEFICIOS_LANDING = [
   'Reservas por QR y link desde Basic',
   'Agenda, clientes, servicios y equipo en un solo panel',
-  'WhatsApp automatico para recordar citas al negocio y al cliente',
+  'WhatsApp automatico incluido desde Basic',
   'Finanzas y liquidaciones para negocios que ya tienen equipo',
 ]
 const DIFERENCIALES_LANDING = [
@@ -66,8 +66,8 @@ const PLANES_LANDING = [
   {
     id: 'basico' as const,
     nombre: 'Basic',
-    precio: '$39.900',
-    detalle: 'Ideal para independientes y negocios pequenos que quieren ordenar sus reservas.',
+    precio: '$40.000',
+    detalle: 'Ideal para independientes y negocios pequenos que quieren agenda, QR y automatizacion.',
     funciones: [
       '7 dias gratis al crear la cuenta',
       'QR de agendamiento incluido',
@@ -76,13 +76,14 @@ const PLANES_LANDING = [
       'Hasta 2 empleados o profesionales',
       'Clientes, servicios, empleados y citas',
       'Dashboard de reservas',
-      'Recordatorio automatico al cliente final',
+      'Recordatorios automaticos al negocio y al cliente',
+      'Resenas y calificacion por empleado',
     ],
   },
   {
     id: 'pro' as const,
     nombre: 'Pro',
-    precio: '$59.900',
+    precio: '$90.000',
     detalle: 'Para equipos que necesitan mas capacidad, seguimiento y operacion diaria.',
     funciones: [
       'Todo lo del plan Basic',
@@ -92,13 +93,14 @@ const PLANES_LANDING = [
       'Links para confirmar y cancelar cita',
       'Recordatorio automatico al negocio y al cliente final',
       'Foto del empleado en el recordatorio cuando Meta lo permite',
+      'Ranking interno e historial de clientes',
       'Mayor control de agenda y operacion',
     ],
   },
   {
     id: 'business' as const,
     nombre: 'Business',
-    precio: '$79.900',
+    precio: '$120.000',
     detalle: 'Para negocios con equipo, gastos, ingresos y liquidacion de colaboradores.',
     funciones: [
       'Todo lo del plan Pro',
@@ -486,7 +488,7 @@ export default function LoginPage() {
               <p className="mt-1 text-xs leading-5 text-zinc-500">Para redes y volantes</p>
             </div>
             <div className="border-l border-sky-500/50 pl-4">
-              <p className="text-2xl font-black text-white">$39.900</p>
+            <p className="text-2xl font-black text-white">$40.000</p>
               <p className="mt-1 text-xs leading-5 text-zinc-500">Plan inicial mensual</p>
             </div>
           </div>
@@ -897,8 +899,8 @@ export default function LoginPage() {
               </h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-zinc-400">
-              Igualamos el rango de la competencia y mantenemos el QR desde el
-              plan inicial para que puedas vender desde redes y material impreso.
+              Cada plan incluye herramientas reales de reserva, seguimiento y
+              recordatorios para justificar el valor mensual desde el primer dia.
             </p>
           </div>
 

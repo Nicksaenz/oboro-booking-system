@@ -384,6 +384,26 @@ export default function EmpleadosPage() {
     resenasPorEmpleado.set(resena.empleado_id, [...lista, resena])
   }
 
+  const rankingEmpleados = empleados
+    .map((empleado) => {
+      const lista = resenasPorEmpleado.get(empleado.ID) ?? []
+      const promedio = lista.length
+        ? lista.reduce(
+            (total, resena) => total + Number(resena.calificacion ?? 0),
+            0
+          ) / lista.length
+        : 0
+
+      return {
+        empleado,
+        promedio,
+        total: lista.length,
+      }
+    })
+    .filter((item) => item.total > 0)
+    .sort((a, b) => b.promedio - a.promedio || b.total - a.total)
+    .slice(0, 3)
+
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
       <section className="mx-auto w-full max-w-7xl">
@@ -419,6 +439,55 @@ export default function EmpleadosPage() {
             Cada plan incluye 1 administrador principal separado de estos cupos.
           </p>
         </div>
+
+        {rankingEmpleados.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-yellow-500/30 bg-yellow-950/10 p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[3px] text-yellow-300">
+                  Ranking interno
+                </p>
+                <h2 className="mt-2 text-2xl font-black">
+                  Profesionales mejor calificados
+                </h2>
+              </div>
+              <p className="text-sm leading-6 text-zinc-400">
+                Se calcula con las resenas visibles que dejan los clientes.
+              </p>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {rankingEmpleados.map((item, index) => (
+                <article
+                  key={item.empleado.ID}
+                  className="rounded-xl border border-zinc-800 bg-black p-4"
+                >
+                  <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
+                    Puesto #{index + 1}
+                  </p>
+                  <div className="mt-3 flex items-center gap-3">
+                    {item.empleado.foto_url ? (
+                      <img
+                        src={item.empleado.foto_url}
+                        alt={item.empleado.Nombre}
+                        className="h-12 w-12 rounded-full border border-yellow-500/40 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-yellow-500/40 bg-zinc-950 font-black text-yellow-300">
+                        {item.empleado.Nombre.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-black text-white">{item.empleado.Nombre}</p>
+                      <p className="text-sm font-bold text-yellow-300">
+                        ★ {item.promedio.toFixed(1)}/5 · {item.total} resenas
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
 
         <form
           onSubmit={guardarEmpleado}

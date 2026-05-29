@@ -88,7 +88,7 @@ function tieneAutomatizaciones(suscripcion?: SuscripcionNegocio) {
     : Date.now()
 
   return (
-    ['pro', 'business', 'premium'].includes(plan) &&
+    ['basico', 'pro', 'business', 'premium'].includes(plan) &&
     ['activa', 'activo', 'pagada', 'paid'].includes(estado) &&
     vence >= Date.now()
   )
