@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
+import { supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
+import { registrarPagoAprobado } from '@/lib/suscripcionesPago'
 import {
   WOMPI_PLANES,
   getWompiApiUrl,
@@ -16,12 +17,6 @@ type WompiTransactionResponse = {
     amount_in_cents?: number
     currency?: string
   }
-}
-
-function calcularVencimiento() {
-  const fecha = new Date()
-  fecha.setDate(fecha.getDate() + 30)
-  return fecha.toISOString()
 }
 
 export async function POST(request: Request) {
@@ -103,51 +98,14 @@ export async function POST(request: Request) {
       )
     }
 
-    const supabase = getSupabaseAdmin()
-    const datosSuscripcion = {
+    await registrarPagoAprobado({
+      usuarioId: userData.user.id,
       plan: referencia.plan,
-      estado: 'activa',
-      fecha_vencimiento: calcularVencimiento(),
-    }
-
-    const { data: existente, error: consultaError } = await supabase
-      .from('suscripciones')
-      .select('usuario_id')
-      .eq('usuario_id', userData.user.id)
-      .maybeSingle()
-
-    if (consultaError) {
-      return NextResponse.json(
-        { error: consultaError.message },
-        { status: 500 }
-      )
-    }
-
-    const { error } = existente
-      ? await supabase
-        .from('suscripciones')
-        .update(datosSuscripcion)
-        .eq('usuario_id', userData.user.id)
-      : await supabase
-        .from('suscripciones')
-        .insert([
-          {
-            usuario_id: userData.user.id,
-            nombre_negocio: 'Nuevo negocio',
-            email: userData.user.email ?? 'pendiente@oborobooking.local',
-            telefono: 'Pendiente',
-            whatsapp_enviado: false,
-            fecha_inicio: new Date().toISOString(),
-            ...datosSuscripcion,
-          },
-        ])
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      )
-    }
+      transactionId: transaction.id,
+      reference: transaction.reference,
+      amountInCents: transaction.amount_in_cents,
+      currency: transaction.currency,
+    })
 
     return NextResponse.json({
       activada: true,

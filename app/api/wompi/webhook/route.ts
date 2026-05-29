@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseAdmin } from '@/lib/supabase'
+import { registrarPagoAprobado } from '@/lib/suscripcionesPago'
 import {
   WOMPI_PLANES,
   getWompiEventSecret,
@@ -51,12 +51,6 @@ function validarChecksum(evento: WompiEvento, headerChecksum: string | null) {
   return calculado.toLowerCase() === checksum.toLowerCase()
 }
 
-function calcularVencimiento() {
-  const fecha = new Date()
-  fecha.setDate(fecha.getDate() + 30)
-  return fecha.toISOString()
-}
-
 export async function POST(request: Request) {
   const evento = (await request.json()) as WompiEvento
   const headerChecksum = request.headers.get('x-event-checksum')
@@ -97,48 +91,18 @@ export async function POST(request: Request) {
     )
   }
 
-  const supabase = getSupabaseAdmin()
-  const datosSuscripcion = {
-    plan: referencia.plan,
-    estado: 'activa',
-    fecha_vencimiento: calcularVencimiento(),
-  }
-
-  const { data: existente, error: consultaError } = await supabase
-    .from('suscripciones')
-    .select('usuario_id')
-    .eq('usuario_id', referencia.usuarioId)
-    .maybeSingle()
-
-  if (consultaError) {
+  try {
+    await registrarPagoAprobado({
+      usuarioId: referencia.usuarioId,
+      plan: referencia.plan,
+      transactionId: transaction.id,
+      reference: transaction.reference,
+      amountInCents: transaction.amount_in_cents,
+      currency: transaction.currency,
+    })
+  } catch (error) {
     return NextResponse.json(
-      { error: consultaError.message },
-      { status: 500 }
-    )
-  }
-
-  const { error } = existente
-    ? await supabase
-    .from('suscripciones')
-      .update(datosSuscripcion)
-      .eq('usuario_id', referencia.usuarioId)
-    : await supabase
-      .from('suscripciones')
-      .insert([
-        {
-          usuario_id: referencia.usuarioId,
-          nombre_negocio: 'Nuevo negocio',
-          email: 'pendiente@oborobooking.local',
-          telefono: 'Pendiente',
-          whatsapp_enviado: false,
-          fecha_inicio: new Date().toISOString(),
-          ...datosSuscripcion,
-        },
-      ])
-
-  if (error) {
-    return NextResponse.json(
-      { error: error.message },
+      { error: error instanceof Error ? error.message : 'No se pudo registrar el pago' },
       { status: 500 }
     )
   }

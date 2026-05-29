@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 
 type EstadoAcceso = 'cargando' | 'permitido' | 'bloqueado'
 
-const RUTAS_PUBLICAS = ['/login', '/instalar', '/privacidad', '/terminos']
+const RUTAS_PUBLICAS = ['/login', '/instalar', '/privacidad', '/terminos', '/admin-crm']
 const RUTAS_SUSCRIPCION = ['/suscripcion']
 const ESTADOS_VALIDOS = ['activa', 'activo', 'pagada', 'paid']
 
