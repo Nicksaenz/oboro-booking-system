@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Propuesta Oboro Web Premium</title>
+  <style>
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @page { size: 13.333in 7.5in; margin: 0; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #030303;
+      color: #fff;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+    }
+    .page {
+      width: 13.333in;
+      height: 7.5in;
+      position: relative;
+      overflow: hidden;
+      padding: 52px 64px;
+      page-break-after: always;
+      background:
+        radial-gradient(circle at 92% 18%, rgba(255, 123, 24, 0.28), transparent 22%),
+        radial-gradient(circle at 18% 88%, rgba(255, 92, 0, 0.12), transparent 28%),
+        linear-gradient(125deg, #030303 0%, #0b0b0d 53%, #190d05 100%);
+    }
+    .page::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: .12;
+      background-image:
+        linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+    .page::after {
+      content: "";
+      position: absolute;
+      inset: 20px;
+      border: 1px solid rgba(255, 116, 23, .15);
+      border-radius: 28px;
+      pointer-events: none;
+    }
+    .content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 280px;
+    }
+    .brand img {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 18px rgba(255,116,23,.55));
+    }
+    .brand b {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 19px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .brand small {
+      display: block;
+      margin-top: 3px;
+      color: #b8b8b8;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+    .tag {
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: rgba(255,255,255,.055);
+      color: #f5f5f5;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 430px;
+      gap: 56px;
+      align-items: end;
+      flex: 1;
+      padding-bottom: 18px;
+    }
+    h1, h2 {
+      margin: 0;
+      letter-spacing: -.055em;
+      line-height: .96;
+    }
+    h1 {
+      font-size: 76px;
+      max-width: 720px;
+    }
+    h2 {
+      margin-top: 50px;
+      font-size: 58px;
+      max-width: 950px;
+    }
+    .orange { color: #ff7417; }
+    .lead {
+      margin: 24px 0 0;
+      max-width: 720px;
+      color: #e7e7e7;
+      font-size: 22px;
+      line-height: 1.38;
+    }
+    .micro {
+      margin-top: 18px;
+      color: rgba(255,255,255,.48);
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .price-card {
+      border: 1px solid rgba(255,116,23,.38);
+      border-radius: 30px;
+      padding: 30px;
+      background: linear-gradient(150deg, rgba(255,116,23,.19), rgba(255,255,255,.055));
+      box-shadow: 0 36px 100px rgba(0,0,0,.42);
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #aaa;
+      font-size: 13px;
+      font-weight: 950;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+    .big-price {
+      color: #ff7417;
+      font-size: 54px;
+      font-weight: 950;
+      letter-spacing: -.055em;
+      line-height: 1;
+    }
+    .price-card p,
+    .box p,
+    .step p {
+      color: #d5d5d5;
+      font-size: 16px;
+      line-height: 1.38;
+    }
+    .section-grid {
+      display: grid;
+      gap: 18px;
+      margin-top: 34px;
+    }
+    .two { grid-template-columns: 1.08fr .92fr; }
+    .three { grid-template-columns: repeat(3, 1fr); }
+    .four { grid-template-columns: repeat(4, 1fr); }
+    .box {
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 26px;
+      padding: 26px;
+      background: rgba(255,255,255,.052);
+      box-shadow: 0 30px 70px rgba(0,0,0,.22);
+    }
+    .box.hot {
+      border-color: rgba(255,116,23,.4);
+      background: linear-gradient(150deg, rgba(255,116,23,.17), rgba(255,255,255,.052));
+    }
+    .box h3 {
+      margin: 0 0 16px;
+      color: #ff7417;
+      font-size: 22px;
+      font-weight: 950;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    li {
+      position: relative;
+      padding-left: 30px;
+      margin: 0 0 14px;
+      color: #f2f2f2;
+      font-size: 16px;
+      line-height: 1.32;
+    }
+    li::before {
+      content: "";
+      position: absolute;
+      top: 7px;
+      left: 0;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ff7417;
+      box-shadow: 0 0 0 7px rgba(255,116,23,.13);
+    }
+    .total {
+      margin-top: 22px;
+      min-height: 86px;
+      border-radius: 22px;
+      padding: 0 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      background: #ff7417;
+      color: #050505;
+      font-size: 15px;
+      font-weight: 950;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .total strong {
+      font-size: 42px;
+      letter-spacing: -.055em;
+      text-transform: none;
+      white-space: nowrap;
+    }
+    .metric {
+      color: #ff7417;
+      font-size: 38px;
+      font-weight: 950;
+      letter-spacing: -.045em;
+      line-height: 1;
+    }
+    .step-number {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: #ff7417;
+      color: #050505;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      font-weight: 950;
+      margin-bottom: 18px;
+    }
+    .final-logo {
+      width: 280px;
+      align-self: center;
+      margin-top: 40px;
+      filter: drop-shadow(0 0 30px rgba(255,116,23,.32));
+    }
+  </style>
+</head>
+<body>
+  <section class="page">
+    <main class="content">
+      <div class="nav">
+        <div class="brand"><img src="oboro-labs-symbol-hd.png" alt=""><div><b>Oboro Web</b><small>Cotización premium</small></div></div>
+        <div class="tag">Sitios web profesionales</div>
+      </div>
+      <div class="hero">
+        <div>
+          <h1>Tu negocio merece una web que <span class="orange">venda confianza</span>.</h1>
+          <p class="lead">Creamos páginas modernas, rápidas y claras para que tus clientes entiendan tu oferta, te contacten por WhatsApp y tomen acción.</p>
+          <div class="micro">Propuesta comercial Oboro Lab</div>
+        </div>
+        <aside class="price-card">
+          <p class="eyebrow">Inversión inicial</p>
+          <div class="big-price">$750.000 COP</div>
+          <p>Sitio web base listo para presentar servicios, captar contactos y conectar dominio propio.</p>
+          <p class="eyebrow" style="margin-top:26px;">Contenido opcional</p>
+          <div class="big-price" style="font-size:38px;">$250.000 COP</div>
+        </aside>
+      </div>
+    </main>
+  </section>
+
+  <section class="page">
+    <main class="content">
+      <div class="nav">
+        <div class="brand"><img src="oboro-labs-symbol-hd.png" alt=""><div><b>Oboro Web</b><small>Paquete base</small></div></div>
+        <div class="tag">Alcance del proyecto</div>
+      </div>
+      <h2>Paquete web base <span class="orange">$750.000 COP</span></h2>
+      <p class="lead">Ideal para negocios que necesitan una página profesional, responsive y enfocada en generar confianza desde el primer contacto.</p>
+      <div class="section-grid two">
+        <article class="box">
+          <h3>Incluye</h3>
+          <ul>
+            <li>Diseño visual responsive para celular, tablet y escritorio.</li>
+            <li>Estructura tipo landing o web informativa: inicio, servicios, nosotros, galería/testimonios y contacto.</li>
+            <li>Botones de WhatsApp y llamados a la acción.</li>
+            <li>Formulario básico de contacto o captura de interesados.</li>
+            <li>SEO básico: títulos, descripción, estructura y carga optimizada.</li>
+            <li>Publicación en hosting o despliegue listo para conectar dominio.</li>
+          </ul>
+        </article>
+        <article class="box hot">
+          <h3>Entrega</h3>
+          <ul>
+            <li>Tiempo estimado: 7 a 10 días hábiles después de recibir información completa.</li>
+            <li>Incluye una ronda de ajustes visuales y de contenido.</li>
+            <li>Se entrega enlace final publicado y archivos base del proyecto.</li>
+          </ul>
+          <div class="total"><span>Total paquete</span><strong>$750.000</strong></div>
+        </article>
+      </div>
+    </main>
+  </section>
+
+  <section class="page">
+    <main class="content">
+      <div class="nav">
+        <div class="brand"><img src="oboro-labs-symbol-hd.png" alt=""><div><b>Oboro Web</b><small>Lo que resuelve</small></div></div>
+        <div class="tag">Más que diseño</div>
+      </div>
+      <h2>Una página bonita no basta. Tu web debe <span class="orange">convertir visitas en conversaciones</span>.</h2>
+      <div class="section-grid four">
+        <article class="box"><h3>Claridad</h3><p>Ordenamos la información para que el cliente entienda qué haces, para quién es y por qué elegirte.</p></article>
+        <article class="box hot"><h3>Confianza</h3><p>Diseño visual serio, premium y coherente con una marca que quiere verse profesional.</p></article>
+        <article class="box"><h3>Contacto</h3><p>WhatsApp, formularios y llamados a la acción ubicados para facilitar la decisión.</p></article>
+        <article class="box"><h3>Base</h3><p>Una estructura lista para crecer con automatización, analítica, pagos o módulos futuros.</p></article>
+      </div>
+      <div class="total"><span>Objetivo principal</span><strong>Vender confianza</strong></div>
+    </main>
+  </section>
+
+  <section class="page">
+    <main class="content">
+      <div class="nav">
+        <div class="brand"><img src="oboro-labs-symbol-hd.png" alt=""><div><b>Oboro Web</b><small>Contenido opcional</small></div></div>
+        <div class="tag">Redacción comercial</div>
+      </div>
+      <h2>Redacción de contenido web <span class="orange">$250.000 COP</span></h2>
+      <p class="lead">Para clientes que quieren que Oboro escriba textos claros, comerciales y listos para publicar.</p>
+      <div class="section-grid two">
+        <article class="box">
+          <h3>Incluye</h3>
+          <ul>
+            <li>Investigación básica del negocio, público objetivo y tono de marca.</li>
+            <li>Redacción de textos para secciones principales.</li>
+            <li>Propuesta de títulos, subtítulos y llamados a la acción.</li>
+            <li>Corrección de estilo, ortografía y coherencia comercial.</li>
+            <li>Enfoque SEO básico con palabras clave principales.</li>
+          </ul>
+        </article>
+        <article class="box hot">
+          <h3>Entrega</h3>
+          <ul>
+            <li>Documento editable con textos organizados por sección.</li>
+            <li>Tiempo estimado: 3 a 5 días hábiles según la información entregada.</li>
+          </ul>
+          <div class="total"><span>Total contenido</span><strong>$250.000</strong></div>
+        </article>
+      </div>
+    </main>
+  </section>
+
+  <section class="page">
+    <main class="content">
+      <div class="nav">
+        <div class="brand"><img src="oboro-labs-symbol-hd.png" alt=""><div><b>Oboro Web</b><small>Proceso</small></div></div>
+        <div class="tag">Orden y velocidad</div>
+      </div>
+      <h2>Un proceso claro para avanzar sin enredos.</h2>
+      <p class="lead">Definimos información, diseñamos, desarrollamos, ajustamos y publicamos con una ruta simple.</p>
+      <div class="section-grid four">
+        <article class="box step"><div class="step-number">1</div><h3>Diagnóstico</h3><p>Objetivo, secciones, estilo visual, público y mensaje principal.</p></article>
+        <article class="box step"><div class="step-number">2</div><h3>Material</h3><p>Logo, fotos, servicios, precios, contacto y textos disponibles.</p></article>
+        <article class="box hot step"><div class="step-number">3</div><h3>Diseño</h3><p>Construcción visual responsive enfocada en claridad y conversión.</p></article>
+        <article class="box step"><div class="step-number">4</div><h3>Entrega</h3><p>Ajustes, publicación y entrega del enlace final del sitio.</p></article>
+      </div>
+      <div class="box" style="margin-top:24px;"><h3>Para iniciar</h3><p>Se requiere logo, colores si existen, servicios, fotos disponibles, datos de contacto y confirmación del paquete elegido.</p></div>
+    </main>
+  </section>
+
+  <section class="page">
+    <main class="content">
+      <div class="nav">
+        <div class="brand"><img src="oboro-labs-symbol-hd.png" alt=""><div><b>Oboro Web</b><small>Resumen final</small></div></div>
+        <div class="tag">Inversión</div>
+      </div>
+      <h2>Una presencia digital profesional, lista para vender.</h2>
+      <div class="section-grid three">
+        <article class="box hot"><h3>Web base</h3><div class="metric">$750.000</div><p>Diseño, desarrollo, estructura responsive, WhatsApp, formulario y publicación inicial.</p></article>
+        <article class="box"><h3>Contenido</h3><div class="metric">$250.000</div><p>Redacción estratégica opcional para explicar mejor la oferta y generar más confianza.</p></article>
+        <article class="box"><h3>Total completo</h3><div class="metric">$1.000.000</div><p>Sitio web base más contenido comercial completo para publicar con más fuerza.</p></article>
+      </div>
+      <div class="box" style="margin-top:24px;"><h3>Forma de pago</h3><p>50% para iniciar y 50% contra entrega antes de publicación final. Cotización vigente por 10 días calendario. Dominio, hosting premium, pauta, fotografía, tienda online o integraciones avanzadas no están incluidos salvo acuerdo adicional.</p></div>
+    </main>
+  </section>
+
+  <section class="page">
+    <main class="content">
+      <div class="nav">
+        <div class="brand"><img src="oboro-labs-symbol-hd.png" alt=""><div><b>Oboro Web</b><small>Siguiente paso</small></div></div>
+        <div class="tag">Oboro Lab</div>
+      </div>
+      <h2>Si tu negocio ya existe, tu página debe hacerlo ver como una marca en serio.</h2>
+      <p class="lead">Con Oboro Web tendrás una base clara, moderna y lista para que tus clientes conozcan tu oferta y te contacten sin fricción.</p>
+      <div class="section-grid three">
+        <article class="box"><div class="step-number">1</div><h3>Confirmar</h3><p>Elegimos paquete, alcance y fecha de inicio.</p></article>
+        <article class="box hot"><div class="step-number">2</div><h3>Enviar</h3><p>Compartes material del negocio y datos de contacto.</p></article>
+        <article class="box"><div class="step-number">3</div><h3>Publicar</h3><p>Oboro diseña, ajusta y entrega el sitio listo.</p></article>
+      </div>
+      <img class="final-logo" src="oboro-labs-logo-hd.png" alt="Oboro Lab">
+    </main>
+  </section>
+</body>
+</html>
