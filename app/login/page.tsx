@@ -79,6 +79,38 @@ const SECTORES_LANDING = [
       'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=80',
   },
 ]
+const CARRUSEL_NEGOCIOS = [
+  {
+    titulo: 'Barberias',
+    detalle: 'Cortes, barba y agenda por profesional',
+    imagen: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1100&q=85',
+  },
+  {
+    titulo: 'Salones de belleza',
+    detalle: 'Servicios, horarios y reseñas visibles',
+    imagen: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1100&q=85',
+  },
+  {
+    titulo: 'Uñas y estética',
+    detalle: 'Reservas por QR desde redes y recepción',
+    imagen: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1100&q=85',
+  },
+  {
+    titulo: 'Spa',
+    detalle: 'Cabinas, tratamientos y recordatorios',
+    imagen: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1100&q=85',
+  },
+  {
+    titulo: 'Veterinarias',
+    detalle: 'Consultas, vacunas y peluqueria',
+    imagen: 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=1100&q=85',
+  },
+  {
+    titulo: 'Consultorios',
+    detalle: 'Citas organizadas y confirmadas',
+    imagen: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1100&q=85',
+  },
+]
 const PASOS_LANDING = [
   ['01', 'Configura tu negocio', 'Servicios, precios, duracion, horarios y profesionales.'],
   ['02', 'Comparte el QR', 'Ponlo en Instagram, WhatsApp, recepcion o volantes impresos.'],
@@ -450,6 +482,7 @@ export default function LoginPage() {
             <a href="#beneficios" className="transition hover:text-orange-400">Beneficios</a>
             <a href="#sectores" className="transition hover:text-orange-400">Negocios</a>
             <a href="#precios" className="transition hover:text-orange-400">Precios</a>
+            <a href="mailto:contacto@oborolab.com" className="transition hover:text-orange-400">Contacto</a>
             <a href="#registro" className="transition hover:text-orange-400">Entrar</a>
           </div>
           <button
@@ -850,6 +883,45 @@ export default function LoginPage() {
         </div>
       </section>
 
+      <section className="overflow-hidden border-y border-zinc-900 bg-black py-10">
+        <div className="mx-auto mb-6 flex max-w-7xl flex-col gap-3 px-5 sm:px-8 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[4px] text-orange-500">
+              Negocios en movimiento
+            </p>
+            <h2 className="mt-2 max-w-3xl text-3xl font-black sm:text-5xl">
+              Una sola plataforma para agendas que no se pueden detener.
+            </h2>
+          </div>
+          <a
+            href="mailto:contacto@oborolab.com"
+            className="text-sm font-bold text-orange-200 transition hover:text-orange-400"
+          >
+            contacto@oborolab.com
+          </a>
+        </div>
+
+        <div className="oboro-marquee flex w-max gap-5">
+          {[...CARRUSEL_NEGOCIOS, ...CARRUSEL_NEGOCIOS].map((negocio, index) => (
+            <article
+              key={`${negocio.titulo}-${index}`}
+              className="relative h-80 w-[280px] shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black sm:h-96 sm:w-[360px]"
+            >
+              <img
+                src={negocio.imagen}
+                alt={negocio.titulo}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/15 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <h3 className="text-2xl font-black text-white">{negocio.titulo}</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-200">{negocio.detalle}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="border-y border-zinc-800 bg-zinc-950/70 px-5 py-16 sm:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -1056,6 +1128,40 @@ export default function LoginPage() {
           </div>
         </div>
       </section>
+
+      <footer className="border-t border-zinc-900 px-5 py-8 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-bold uppercase tracking-[3px] text-orange-500">
+            OBORO BOOKING
+          </p>
+          <a
+            href="mailto:contacto@oborolab.com"
+            className="font-bold text-zinc-200 transition hover:text-orange-400"
+          >
+            contacto@oborolab.com
+          </a>
+        </div>
+      </footer>
+
+      <style jsx global>{`
+        @keyframes oboro-slide-right {
+          from {
+            transform: translateX(-50%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+
+        .oboro-marquee {
+          animation: oboro-slide-right 42s linear infinite;
+          will-change: transform;
+        }
+
+        .oboro-marquee:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </main>
   )
 }
