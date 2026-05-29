@@ -13,7 +13,13 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl --fail --show-error --silent \
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET no esta configurado en GitHub Secrets."
+            echo "Crea el secret CRON_SECRET en GitHub con el mismo valor que esta en Vercel."
+            exit 1
+          fi
+
+          curl --fail-with-body --show-error \
             --request GET \
             -H "Authorization: Bearer $CRON_SECRET" \
             "https://booking.oborolab.com/api/whatsapp/recordatorios-proximos"
