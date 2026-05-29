@@ -5,211 +5,107 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { usePathname } from 'next/navigation'
 
+const LINKS = [
+  ['Inicio', '/bienvenida'],
+  ['Dashboard', '/'],
+  ['Clientes', '/clientes'],
+  ['Citas', '/citas'],
+  ['Empleados', '/empleados'],
+  ['Equipo', '/equipo'],
+  ['Servicios', '/servicios'],
+  ['Automatizaciones', '/automatizaciones'],
+  ['Finanzas', '/finanzas'],
+  ['Manual', '/manual-admin'],
+]
+
 export default function Navbar() {
- const [menuAbierto, setMenuAbierto] = useState(false)
- const pathname = usePathname()
- if (
-  pathname === '/login' ||
-  pathname.startsWith('/reservar') ||
-  pathname.startsWith('/reserva/')
- ) {
-  return null
-}
- async function cerrarSesion() {
-  await supabase.auth.signOut()
-  window.location.href = '/login'
-} 
+  const [menuAbierto, setMenuAbierto] = useState(false)
+  const pathname = usePathname()
+
+  if (
+    pathname === '/login' ||
+    pathname.startsWith('/reservar') ||
+    pathname.startsWith('/reserva/')
+  ) {
+    return null
+  }
+
+  async function cerrarSesion() {
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+  }
+
+  function linkClass(href: string) {
+    const activo = href === '/' ? pathname === href : pathname.startsWith(href)
+
+    return `rounded-xl px-3 py-2 text-sm font-bold transition ${
+      activo
+        ? 'border border-orange-500/40 bg-orange-600/15 text-orange-200'
+        : 'text-zinc-300 hover:bg-white/5 hover:text-white'
+    }`
+  }
+
   return (
-    <nav className="w-full border-b border-orange-500/20 bg-black">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between gap-4">
-        
-        <div>
-          <h1 className="text-orange-500 font-black text-2xl">
-            OBORO BOOKING
-          </h1>
+    <nav className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/85 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-8">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-orange-500/40 bg-orange-600/10 text-lg font-black text-orange-300">
+            OB
+          </div>
+          <div>
+            <h1 className="text-xl font-black tracking-[2px] text-white">
+              OBORO
+            </h1>
+            <p className="text-xs font-bold uppercase tracking-[2px] text-orange-500/80">
+              Booking System
+            </p>
+          </div>
+        </Link>
 
-          <p className="text-gray-500 text-sm">
-            Powered by Oboro Lab
-          </p>
-        </div>
-
-        <div className="hidden lg:flex flex-wrap justify-end gap-3 text-sm xl:gap-4 xl:text-base">
-          <Link
-            href="/bienvenida"
-            className="text-white hover:text-orange-500 transition"
-          >
-            Inicio
-          </Link>
-
-          <Link
-            href="/"
-            className="text-white hover:text-orange-500 transition"
-          >
-            Dashboard
-          </Link>
-
-          <Link
-            href="/clientes"
-            className="text-white hover:text-orange-500 transition"
-          >
-            Clientes
-          </Link>
-
-          <Link
-            href="/citas"
-            className="text-white hover:text-orange-500 transition"
-          >
-            Citas
-          </Link>
-
-          <Link
-            href="/empleados"
-            className="text-white hover:text-orange-500 transition"
-          >
-            Empleados
-          </Link>
-
-          <Link
-            href="/equipo"
-            className="text-white hover:text-orange-500 transition"
-          >
-            Equipo
-          </Link>
-          
-          <Link
-            href="/servicios"
-            className="text-white hover:text-orange-500 transition"
->
-  Servicios
-</Link>
-
-          <Link
-            href="/automatizaciones"
-            className="text-white hover:text-orange-500 transition"
-          >
-            Automatizaciones
-          </Link>
-
-          <Link
-            href="/finanzas"
-            className="text-white hover:text-orange-500 transition"
-          >
-            Finanzas
-          </Link>
-
-          <Link
-            href="/manual-admin"
-            className="text-white hover:text-orange-500 transition"
-          >
-            Manual admin
-          </Link>
+        <div className="hidden items-center gap-1 lg:flex">
+          {LINKS.map(([label, href]) => (
+            <Link key={href} href={href} className={linkClass(href)}>
+              {label}
+            </Link>
+          ))}
 
           <button
-  onClick={cerrarSesion}
-  className="text-white hover:text-red-500 transition"
->
-  Salir
-</button>
+            onClick={cerrarSesion}
+            className="ml-2 rounded-xl border border-red-600/40 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
+          >
+            Salir
+          </button>
         </div>
-          
+
         <button
-  onClick={() => setMenuAbierto(!menuAbierto)}
-  className="lg:hidden rounded-xl border border-orange-600/40 px-3 py-2 text-sm font-bold text-white"
->
-  Menu
-</button>
+          onClick={() => setMenuAbierto(!menuAbierto)}
+          className="lg:hidden rounded-xl border border-orange-600/40 px-4 py-2 text-sm font-bold text-white"
+        >
+          Menu
+        </button>
       </div>
-    {menuAbierto && (
-  <div className="lg:hidden mx-4 mb-4 rounded-2xl border border-orange-600/30 bg-zinc-950/95 p-4 shadow-2xl shadow-orange-950/30 backdrop-blur-xl flex flex-col gap-3">
-    <Link
-      href="/bienvenida"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Inicio
-    </Link>
 
-    <Link
-      href="/"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Dashboard
-    </Link>
+      {menuAbierto && (
+        <div className="mx-4 mb-4 grid gap-2 rounded-2xl border border-orange-600/30 bg-zinc-950/95 p-4 shadow-2xl shadow-orange-950/30 backdrop-blur-xl lg:hidden">
+          {LINKS.map(([label, href]) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setMenuAbierto(false)}
+              className={linkClass(href)}
+            >
+              {label}
+            </Link>
+          ))}
 
-    <Link
-      href="/clientes"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Clientes
-    </Link>
-
-    <Link
-      href="/citas"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Citas
-    </Link>
-
-    <Link
-      href="/empleados"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Empleados
-    </Link>
-
-    <Link
-      href="/equipo"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Equipo
-    </Link>
-
-    <Link
-      href="/servicios"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Servicios
-    </Link>
-
-    <Link
-      href="/automatizaciones"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Automatizaciones
-    </Link>
-
-    <Link
-      href="/finanzas"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Finanzas
-    </Link>
-
-    <Link
-      href="/manual-admin"
-      onClick={() => setMenuAbierto(false)}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Manual admin
-    </Link>
-
-    <button
-      onClick={cerrarSesion}
-      className="rounded-xl px-4 py-3 text-white hover:bg-orange-600/10 hover:text-orange-500 transition"
-    >
-      Salir
-    </button>
-
-  </div>
-)}
+          <button
+            onClick={cerrarSesion}
+            className="rounded-xl border border-red-600/40 px-4 py-3 text-left text-sm font-bold text-red-200 transition hover:bg-red-600/10"
+          >
+            Salir
+          </button>
+        </div>
+      )}
     </nav>
   )
 }

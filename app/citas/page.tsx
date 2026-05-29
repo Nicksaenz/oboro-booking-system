@@ -514,6 +514,42 @@ async function guardarEdicionCita() {
           </div>
         </div>
 
+        <div className="mb-8 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-2xl shadow-black/30">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[3px] text-orange-500">
+                Acciones rapidas
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-white">
+                Que hace cada boton
+              </h2>
+            </div>
+            <p className="text-sm text-zinc-500">
+              Usa estas acciones para operar cada cita sin salir de la agenda.
+            </p>
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-5">
+            {[
+              ['Confirmar', 'Marca la cita como aceptada por el negocio.', 'border-green-600/40 text-green-300'],
+              ['Completar', 'Cierra el servicio y abre WhatsApp para pedir resena.', 'border-blue-600/40 text-blue-300'],
+              ['WhatsApp', 'Abre un recordatorio listo para enviar al cliente.', 'border-emerald-600/40 text-emerald-300'],
+              ['Editar', 'Cambia fecha, hora o profesional asignado.', 'border-orange-600/40 text-orange-300'],
+              ['Eliminar', 'Borra la cita. Solo disponible para admin.', 'border-red-600/40 text-red-300'],
+            ].map(([titulo, detalle, clase]) => (
+              <div
+                key={titulo}
+                className={`rounded-xl border bg-black p-4 ${clase}`}
+              >
+                <p className="font-black">{titulo}</p>
+                <p className="mt-2 text-xs leading-5 text-zinc-500">
+                  {detalle}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <form
           onSubmit={guardarCita}
           className="mb-8 grid grid-cols-1 gap-3 rounded-2xl border border-orange-600/30 bg-zinc-950 p-4 shadow-2xl shadow-orange-950/20 sm:gap-4 sm:p-5 md:grid-cols-3"
