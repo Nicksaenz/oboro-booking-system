@@ -3,6 +3,32 @@ import { createClient } from '@supabase/supabase-js'
 import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
 import { CitaRecordatorio, sendAppointmentReminder } from '@/lib/whatsapp'
 
+async function obtenerAcceso({
+  supabase,
+  usuarioId,
+  email,
+}: {
+  supabase: ReturnType<typeof getSupabaseAdmin>
+  usuarioId: string
+  email?: string
+}) {
+  const correo = email?.toLowerCase() ?? ''
+  const { data } = await supabase
+    .from('equipo_accesos')
+    .select('negocio_id, empleado_id, rol, activo')
+    .eq('activo', true)
+    .or(`usuario_id.eq.${usuarioId},email.eq.${correo}`)
+    .limit(1)
+  const acceso = data?.[0]
+
+  return {
+    negocioId: acceso?.negocio_id ?? usuarioId,
+    empleadoId: acceso?.empleado_id ?? null,
+    rol: acceso?.rol ?? 'admin',
+    puedeOperar: ['admin', 'operativo'].includes(acceso?.rol ?? 'admin'),
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
@@ -42,11 +68,25 @@ export async function POST(request: Request) {
     }
 
     const supabase = getSupabaseAdmin()
+    const acceso = await obtenerAcceso({
+      supabase,
+      usuarioId: userData.user.id,
+      email: userData.user.email,
+    })
+
+    if (!acceso.puedeOperar) {
+      return NextResponse.json(
+        { error: 'Tu acceso es de solo lectura.' },
+        { status: 403 }
+      )
+    }
+
     const { data, error } = await supabase
       .from('Citas')
       .select(`
         ID,
         ID_Usuario,
+        ID_Empleado,
         Fecha,
         Hora,
         Estado,
@@ -63,7 +103,7 @@ export async function POST(request: Request) {
         )
       `)
       .eq('ID', citaId)
-      .eq('ID_Usuario', userData.user.id)
+      .eq('ID_Usuario', acceso.negocioId)
       .maybeSingle()
 
     if (error) {
@@ -74,6 +114,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'No encontramos esa cita en tu cuenta' },
         { status: 404 }
+      )
+    }
+
+    if (acceso.rol !== 'admin' && data.ID_Empleado !== acceso.empleadoId) {
+      return NextResponse.json(
+        { error: 'Solo puedes recordar citas asignadas a tu empleado.' },
+        { status: 403 }
       )
     }
 

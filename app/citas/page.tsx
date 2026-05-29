@@ -295,6 +295,43 @@ async function eliminarCita(id: string) {
   cargarDatos()
 }
 
+async function enviarRecordatorioManual(id: string) {
+  if (!contexto?.puedeOperar) {
+    setMensaje(mensajePermiso('enviar recordatorios'))
+    return
+  }
+
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData.session?.access_token
+
+  if (!token) {
+    router.push('/login')
+    return
+  }
+
+  setMensaje('Enviando recordatorio por WhatsApp...')
+
+  const response = await fetch('/api/whatsapp/enviar-recordatorio', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ citaId: id }),
+  })
+  const resultado = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    setMensaje(
+      resultado?.error ??
+        'No se pudo enviar el recordatorio. Revisa WhatsApp y la plantilla.'
+    )
+    return
+  }
+
+  setMensaje('Recordatorio enviado por WhatsApp.')
+}
+
 function claseEstadoCita(estado: string) {
   if (estado === 'confirmada') {
     return 'border-green-600/40 bg-green-950/20 text-green-300'
@@ -638,6 +675,13 @@ async function guardarEdicionCita() {
         </button>
 
         <button
+          onClick={() => enviarRecordatorioManual(cita.ID)}
+          className="min-h-11 rounded-xl border border-emerald-600/50 px-3 py-2 text-sm font-bold text-emerald-200 transition hover:bg-emerald-600/10"
+        >
+          WhatsApp
+        </button>
+
+        <button
           onClick={() => abrirModalEditar(cita)}
           className="min-h-11 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
         >
@@ -713,6 +757,12 @@ async function guardarEdicionCita() {
                 className="ml-2 rounded-xl border border-blue-600/50 px-3 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-600/10"
               >
                 Completar
+              </button>
+              <button
+                onClick={() => enviarRecordatorioManual(cita.ID)}
+                className="ml-2 rounded-xl border border-emerald-600/50 px-3 py-2 text-sm font-bold text-emerald-200 transition hover:bg-emerald-600/10"
+              >
+                WhatsApp
               </button>
               <button
                 onClick={() => abrirModalEditar(cita)}
