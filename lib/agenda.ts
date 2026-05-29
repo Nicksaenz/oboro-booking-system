@@ -48,6 +48,28 @@ function formatoHora(totalMinutos: number) {
   return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`
 }
 
+function formatoHoraAmPm(hora: string) {
+  const [horasTexto, minutosTexto = '00'] = hora.split(':')
+  const horas = Number(horasTexto)
+  const minutos = Number(minutosTexto)
+  const periodo = horas >= 12 ? 'PM' : 'AM'
+  const hora12 = horas % 12 || 12
+
+  return `${hora12}:${String(minutos).padStart(2, '0')} ${periodo}`
+}
+
+function formatoFechaCorta(fecha: string) {
+  const [year, month, day] = fecha.split('-').map(Number)
+
+  if (!year || !month || !day) return fecha
+
+  return new Date(year, month - 1, day).toLocaleDateString('es-CO', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
 function normalizarHora(hora: string) {
   return hora.length >= 5 ? hora.slice(0, 5) : hora
 }
@@ -100,7 +122,7 @@ export function construirDisponibilidad({
       disponibilidad.push({
         fecha,
         hora,
-        label: `${fecha} ${hora}`,
+        label: `${formatoFechaCorta(fecha)} · ${formatoHoraAmPm(hora)}`,
       })
     }
   }

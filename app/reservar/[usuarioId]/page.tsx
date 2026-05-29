@@ -44,6 +44,28 @@ function Estrellas({ valor }: { valor: number }) {
   )
 }
 
+function formatoHoraAmPm(hora: string) {
+  const [horasTexto, minutosTexto = '00'] = hora.split(':')
+  const horas = Number(horasTexto)
+  const minutos = Number(minutosTexto)
+  const periodo = horas >= 12 ? 'PM' : 'AM'
+  const hora12 = horas % 12 || 12
+
+  return `${hora12}:${String(minutos).padStart(2, '0')} ${periodo}`
+}
+
+function formatoFechaCorta(fecha: string) {
+  const [year, month, day] = fecha.split('-').map(Number)
+
+  if (!year || !month || !day) return fecha
+
+  return new Date(year, month - 1, day).toLocaleDateString('es-CO', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
 export default function ReservaPublicaPage() {
   const params = useParams<{ usuarioId: string }>()
   const usuarioId = params.usuarioId
@@ -421,7 +443,7 @@ export default function ReservaPublicaPage() {
                 <p>{empleadoSeleccionado?.Nombre ?? 'Profesional pendiente'}</p>
                 <p>
                   {form.fecha && form.hora
-                    ? `${form.fecha} ${form.hora}`
+                    ? `${formatoFechaCorta(form.fecha)} · ${formatoHoraAmPm(form.hora)}`
                     : 'Horario pendiente'}
                 </p>
               </div>
