@@ -22,17 +22,17 @@ const MODULOS_LANDING = [
   [
     'Reserva QR premium',
     'Foto del negocio, mapa abierto, Google Reviews, profesional, horarios AM/PM y confirmacion clara para el cliente.',
-    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1300&q=85',
+    'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1300&q=85',
   ],
   [
     'WhatsApp operativo',
     'Recordatorios automaticos al cliente y al negocio, boton manual por cita y solicitud de resena al completar.',
-    'https://images.unsplash.com/photo-1611605698335-8b1569810432?auto=format&fit=crop&w=1300&q=85',
+    'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=1300&q=85',
   ],
   [
     'Finanzas por plan',
     'Pro mide ingresos, gastos y utilidad. Business suma margen, ticket promedio, liquidaciones y resumen por colaborador.',
-    'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1300&q=85',
+    'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1300&q=85',
   ],
 ]
 const WHATSAPP_LANDING = [
@@ -45,7 +45,7 @@ const DIFERENCIALES_LANDING = [
   ['Sin instalar app', 'Tus clientes reservan desde el navegador con un link o QR.'],
   ['Hecho para citas', 'Barberias, unas, spa, veterinarias, consultorios, asesores e independientes.'],
   ['Menos chats perdidos', 'Cada reserva llega con servicio, fecha, hora, profesional y recordatorio automatico.'],
-  ['Listo para crecer', 'Empieza solo y suma empleados, accesos y finanzas cuando lo necesites.'],
+  ['Listo para crecer', 'Empieza solo y suma empleados, accesos y finanzas al ritmo del negocio.'],
 ]
 const SECTORES_LANDING = [
   {
@@ -116,7 +116,7 @@ const PLANES_LANDING = [
       'Hasta 3 accesos adicionales para equipo',
       'Links para confirmar y cancelar cita',
       'Recordatorio automatico al negocio y al cliente final',
-      'Foto del empleado en el recordatorio cuando Meta lo permite',
+      'Foto del empleado en el perfil publico de reserva',
       'Ranking interno e historial de clientes',
       'Finanzas basicas: ingresos, gastos y utilidad',
       'Perfil publico mas completo para convertir visitas',
@@ -462,7 +462,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl gap-10 px-5 py-10 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:py-16">
+      <section className="mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl gap-10 px-5 py-10 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-16">
         <div>
           <p className="inline-flex rounded-full border border-orange-500/35 bg-orange-500/10 px-4 py-2 text-sm font-bold text-orange-200">
             7 dias gratis. QR, WhatsApp y Google Maps desde Basic.
@@ -525,7 +525,7 @@ export default function LoginPage() {
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black">
             <div className="relative h-72 overflow-hidden sm:h-96">
               <img
-                src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1400&q=85"
+                src="https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1400&q=85"
                 alt="Negocio de servicios usando reservas premium"
                 className="h-full w-full object-cover"
               />
@@ -564,7 +564,7 @@ export default function LoginPage() {
                 <div className="mt-4 space-y-3">
                   {[
                     ['Juliana G.', 'Manicure semipermanente', 'Confirmada', 'emerald'],
-                    ['Daniel R.', 'Corte + barba', 'Pendiente', 'orange'],
+                    ['Daniel R.', 'Corte + barba', 'Por confirmar', 'orange'],
                     ['Camila P.', 'Pestanas volumen', 'Reservada por QR', 'sky'],
                   ].map(([cliente, servicio, estado, color]) => (
                     <div key={cliente} className="rounded-xl border border-white/10 bg-zinc-950 p-4">
@@ -597,8 +597,8 @@ export default function LoginPage() {
                   className="mt-4 aspect-square w-full rounded-xl border border-white/20 bg-white p-4"
                 />
                 <p className="mt-4 text-sm leading-6 text-orange-100">
-                  Este QR es de ejemplo para la landing. Dentro de Oboro, cada
-                  negocio tiene su propio QR para que sus clientes agenden.
+                  Cada negocio recibe su propio QR publico para redes,
+                  recepcion, historias y material impreso.
                 </p>
               </div>
             </div>
@@ -847,6 +847,8 @@ export default function LoginPage() {
           </p>
         )}
       </section>
+        </div>
+      </section>
 
       <section className="border-y border-zinc-800 bg-zinc-950/70 px-5 py-16 sm:px-8">
         <div className="mx-auto max-w-7xl">
@@ -856,7 +858,7 @@ export default function LoginPage() {
                 Plataforma completa
               </p>
               <h2 className="mt-3 max-w-4xl text-3xl font-black sm:text-5xl">
-                Todo lo que montamos para que la reserva se sienta de marca.
+                Una reserva con identidad, confianza y operacion conectada.
               </h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-zinc-400">
@@ -885,8 +887,6 @@ export default function LoginPage() {
               </article>
             ))}
           </div>
-        </div>
-      </section>
         </div>
       </section>
 
@@ -979,8 +979,8 @@ export default function LoginPage() {
                 </h2>
               </div>
               <p className="max-w-md text-sm leading-6 text-zinc-400">
-                Si Meta falla o el negocio quiere insistir, Oboro conserva el
-                boton manual con plantilla lista para enviar.
+                Oboro combina recordatorios automaticos con botones manuales
+                para que el negocio mantenga el control de cada cita.
               </p>
             </div>
             <div className="mt-5 grid gap-3 md:grid-cols-4">
