@@ -144,6 +144,11 @@ const citasFiltradas = citas.filter((cita) => {
 
   return coincideBusqueda && coincideEmpleado && coincideEstado
 })
+const citasPendientes = citas.filter((cita) => cita.Estado === 'pendiente').length
+const citasConfirmadas = citas.filter((cita) => cita.Estado === 'confirmada').length
+const citasCompletadas = citas.filter((cita) => cita.Estado === 'completada').length
+const citasHoy = citas.filter((cita) => cita.Fecha === new Date().toISOString().slice(0, 10)).length
+
   async function cargarDatos() {
     const { data: sessionData } = await supabase.auth.getSession()
     const user = sessionData.session?.user
@@ -447,19 +452,47 @@ async function guardarEdicionCita() {
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
       <section className="mx-auto w-full max-w-7xl">
-        <p className="text-sm font-bold tracking-[4px] text-orange-500">
-          OBORO BOOKING
-        </p>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[4px] text-orange-500">
+              OBORO BOOKING
+            </p>
+            <h1 className="mt-2 text-4xl font-black leading-tight md:text-5xl">
+              Citas
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
+              Agenda reservas conectando clientes, servicios y empleados.
+            </p>
+          </div>
 
-        <h1 className="mt-2 text-4xl font-black leading-tight md:text-5xl">
-          Citas
-        </h1>
+          <div className="rounded-2xl border border-orange-500/30 bg-zinc-950 px-5 py-4 text-sm text-zinc-400 shadow-xl shadow-orange-950/10">
+            <span className="font-bold text-orange-200">
+              {contexto?.esAdmin ? 'Vista administrador' : 'Vista empleado'}
+            </span>
+            <span className="mx-2 text-zinc-700">/</span>
+            {citasFiltradas.length} citas visibles
+          </div>
+        </div>
 
-        <p className="mt-3 mb-8 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-          Agenda reservas conectando clientes, servicios y empleados.
-        </p>
+        <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[
+            ['Hoy', citasHoy, 'Movimiento del dia', 'border-blue-600/40 text-blue-300'],
+            ['Pendientes', citasPendientes, 'Por confirmar', 'border-yellow-600/40 text-yellow-300'],
+            ['Confirmadas', citasConfirmadas, 'Listas para atender', 'border-green-600/40 text-green-300'],
+            ['Completadas', citasCompletadas, 'Servicios cerrados', 'border-orange-600/40 text-orange-300'],
+          ].map(([titulo, valor, detalle, clase]) => (
+            <div
+              key={String(titulo)}
+              className={`rounded-2xl border bg-zinc-950 p-4 shadow-lg shadow-black/30 ${clase}`}
+            >
+              <p className="text-sm text-zinc-500">{titulo}</p>
+              <p className="mt-2 text-3xl font-black">{valor}</p>
+              <p className="mt-1 text-xs text-zinc-500">{detalle}</p>
+            </div>
+          ))}
+        </div>
 
-        <div className="mb-8 grid gap-3 md:grid-cols-2">
+        <div className="mt-5 mb-8 grid gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-orange-600/40 bg-zinc-950 p-4 shadow-xl shadow-orange-950/10">
             <p className="text-sm font-bold text-orange-500">
               Recordatorio al cliente
@@ -483,7 +516,7 @@ async function guardarEdicionCita() {
 
         <form
           onSubmit={guardarCita}
-          className="mb-8 grid grid-cols-1 gap-3 rounded-2xl border border-orange-600/30 bg-zinc-950/70 p-4 shadow-2xl shadow-orange-950/20 sm:gap-4 sm:p-5 md:grid-cols-3"
+          className="mb-8 grid grid-cols-1 gap-3 rounded-2xl border border-orange-600/30 bg-zinc-950 p-4 shadow-2xl shadow-orange-950/20 sm:gap-4 sm:p-5 md:grid-cols-3"
           >
           <select
             className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-4 text-sm outline-none transition focus:border-orange-400"
@@ -559,10 +592,20 @@ async function guardarEdicionCita() {
   </div>
 )}
 
-        <div className="col-span-full mb-8 mt-6 w-full rounded-2xl border border-orange-600/40 bg-zinc-950 p-4 shadow-2xl shadow-orange-950/20 md:mt-10 md:p-6">
-       <h2 className="mb-4 text-2xl font-bold text-orange-500">
-    Calendario de citas
-  </h2>
+        <div className="col-span-full mb-8 mt-6 w-full rounded-2xl border border-orange-600/30 bg-zinc-950 p-4 shadow-2xl shadow-orange-950/20 md:mt-10 md:p-6">
+       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p className="text-xs font-bold uppercase tracking-[3px] text-orange-500">
+        Gestion operativa
+      </p>
+      <h2 className="mt-1 text-2xl font-black text-white">
+        Calendario de citas
+      </h2>
+    </div>
+    <p className="text-sm text-zinc-500">
+      {citasFiltradas.length} resultados
+    </p>
+  </div>
 
   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
 
@@ -571,13 +614,13 @@ async function guardarEdicionCita() {
     placeholder="Buscar cliente..."
     value={busqueda}
     onChange={(e) => setBusqueda(e.target.value)}
-    className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-3 text-white outline-none"
+    className="min-h-12 w-full rounded-xl border border-zinc-800 bg-black p-3 text-white outline-none transition focus:border-orange-500"
   />
 
   <select
     value={filtroEmpleado}
     onChange={(e) => setFiltroEmpleado(e.target.value)}
-    className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-3 text-white outline-none"
+    className="min-h-12 w-full rounded-xl border border-zinc-800 bg-black p-3 text-white outline-none transition focus:border-orange-500"
   >
     <option value="">Todos los empleados</option>
 
@@ -591,7 +634,7 @@ async function guardarEdicionCita() {
   <select
     value={filtroEstado}
     onChange={(e) => setFiltroEstado(e.target.value)}
-    className="min-h-12 w-full rounded-xl border border-orange-600/50 bg-black p-3 text-white outline-none"
+    className="min-h-12 w-full rounded-xl border border-zinc-800 bg-black p-3 text-white outline-none transition focus:border-orange-500"
   >
     <option value="">Todos los estados</option>
     <option value="pendiente">Pendiente</option>
@@ -668,21 +711,29 @@ async function guardarEdicionCita() {
   {citasFiltradas.map((cita) => (
     <div
       key={cita.ID}
-      className="rounded-2xl border border-orange-600/35 bg-black p-5 shadow-lg shadow-orange-950/20"
+      className="rounded-2xl border border-zinc-800 bg-black p-5 shadow-xl shadow-black/40"
     >
-      <h3 className="mb-3 text-xl font-black text-orange-500">
-        Cita programada
-      </h3>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[2px] text-orange-500">
+            Cita programada
+          </p>
+          <h3 className="mt-1 text-2xl font-black text-white">
+            {cita.Clientes?.Nombre ?? 'Cliente'}
+          </h3>
+        </div>
+        <p className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${claseEstadoCita(cita.Estado)}`}>
+          {cita.Estado}
+        </p>
+      </div>
 
-      <p className="text-sm leading-6 text-zinc-300">Fecha: {cita.Fecha}</p>
-      <p className="text-sm leading-6 text-zinc-300">Hora: {cita.Hora}</p>
-      <p className="text-sm leading-6 text-zinc-300">Cliente: {cita.Clientes?.Nombre}</p>
-      <p className="text-sm leading-6 text-zinc-300">Servicio: {cita.SERVICIOS?.['Nombre del servicio']}</p>
-      <p className="text-sm leading-6 text-zinc-300">Empleado: {cita.Empleados?.Nombre}</p>
-
-      <p className={`mt-4 inline-flex rounded-full border px-3 py-1 text-xs font-bold ${claseEstadoCita(cita.Estado)}`}>
-        Estado: {cita.Estado}
-      </p>
+      <div className="mt-4 grid gap-2 rounded-xl border border-zinc-900 bg-zinc-950 p-4 text-sm text-zinc-300">
+        <p>Servicio: {cita.SERVICIOS?.['Nombre del servicio']}</p>
+        <p>Empleado: {cita.Empleados?.Nombre}</p>
+        <p>
+          Horario: {cita.Fecha} · {formatoHoraAmPm(cita.Hora)}
+        </p>
+      </div>
 
       <p className="mt-5 text-xs font-bold uppercase tracking-[2px] text-zinc-600">
         Gestion
@@ -722,7 +773,7 @@ async function guardarEdicionCita() {
               eliminarCita(cita.ID)
             }
           }}
-          className="min-h-11 rounded-xl border border-red-600/50 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
+          className="col-span-2 min-h-11 rounded-xl border border-red-600/50 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
         >
           Eliminar
         </button>
@@ -731,17 +782,17 @@ async function guardarEdicionCita() {
     </div>
   ))}
 </div>
-  <div className="hidden md:block overflow-x-auto">
-   <table className="min-w-full text-left border-collapse">
-      <thead>
-        <tr className="text-orange-500 border-b border-orange-600/40">
-          <th className="py-3 px-3">Fecha</th>
-          <th className="py-3 px-3">Hora</th>
-          <th className="py-3 px-3">Cliente</th>
-          <th className="py-3 px-3">Servicio</th>
-          <th className="py-3 px-3">Empleado</th>
-          <th className="py-3 px-3">Estado</th>
-          <th className="py-3 px-3">Acciones</th>
+  <div className="hidden md:block overflow-x-auto rounded-2xl border border-zinc-800 bg-black">
+   <table className="min-w-full border-collapse text-left">
+      <thead className="bg-zinc-950">
+        <tr className="border-b border-zinc-800 text-xs uppercase tracking-[2px] text-zinc-500">
+          <th className="py-4 px-4">Fecha</th>
+          <th className="py-4 px-4">Hora</th>
+          <th className="py-4 px-4">Cliente</th>
+          <th className="py-4 px-4">Servicio</th>
+          <th className="py-4 px-4">Empleado</th>
+          <th className="py-4 px-4">Estado</th>
+          <th className="py-4 px-4">Acciones</th>
         </tr>
       </thead>
 
@@ -749,31 +800,24 @@ async function guardarEdicionCita() {
         {citasFiltradas.map((cita) => (
           <tr
             key={cita.ID}
-            className="border-b border-zinc-800 text-zinc-200 hover:bg-zinc-900/80 transition"
+            className="border-b border-zinc-900 text-zinc-200 transition last:border-b-0 hover:bg-zinc-950"
           >
-            <td className="py-3 px-3">{cita.Fecha}</td>
-            <td className="py-3 px-3">{cita.Hora}</td>
-            <td className="py-3 px-3">{cita.Clientes?.Nombre}</td>
-            <td className="py-3 px-3">
+            <td className="py-4 px-4 text-sm text-zinc-400">{cita.Fecha}</td>
+            <td className="py-4 px-4 font-bold text-zinc-100">{formatoHoraAmPm(cita.Hora)}</td>
+            <td className="py-4 px-4 font-black text-white">{cita.Clientes?.Nombre}</td>
+            <td className="py-4 px-4 text-sm text-zinc-300">
               {cita.SERVICIOS?.['Nombre del servicio']}
             </td>
-            <td className="py-3 px-3">{cita.Empleados?.Nombre}</td>
-            <td className="py-3 px-3">
+            <td className="py-4 px-4 text-sm text-zinc-300">{cita.Empleados?.Nombre}</td>
+            <td className="py-4 px-4">
               <span
-                className={
-                  cita.Estado === 'confirmada'
-                    ? 'text-green-400 font-bold'
-                    : cita.Estado === 'completada'
-                    ? 'text-blue-400 font-bold'
-                    : cita.Estado === 'cancelada'
-                    ? 'text-red-400 font-bold'
-                    : 'text-yellow-400 font-bold'
-                }
+                className={`rounded-full border px-3 py-1 text-xs font-bold ${claseEstadoCita(cita.Estado)}`}
               >
                 {cita.Estado}
               </span>
             </td>
-            <td className="py-3 px-3">
+            <td className="py-4 px-4">
+              <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => actualizarEstado(cita, 'confirmada')}
                 className="rounded-xl border border-green-600/50 px-3 py-2 text-sm font-bold text-green-200 transition hover:bg-green-600/10"
@@ -782,19 +826,19 @@ async function guardarEdicionCita() {
               </button>
               <button
                 onClick={() => actualizarEstado(cita, 'completada')}
-                className="ml-2 rounded-xl border border-blue-600/50 px-3 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-600/10"
+                className="rounded-xl border border-blue-600/50 px-3 py-2 text-sm font-bold text-blue-200 transition hover:bg-blue-600/10"
               >
                 Completar
               </button>
               <button
                 onClick={() => abrirWhatsAppManual(cita)}
-                className="ml-2 rounded-xl border border-emerald-600/50 px-3 py-2 text-sm font-bold text-emerald-200 transition hover:bg-emerald-600/10"
+                className="rounded-xl border border-emerald-600/50 px-3 py-2 text-sm font-bold text-emerald-200 transition hover:bg-emerald-600/10"
               >
                 WhatsApp
               </button>
               <button
                 onClick={() => abrirModalEditar(cita)}
-                className="ml-2 rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
+                className="rounded-xl border border-orange-600/60 px-3 py-2 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10"
               >
                 Editar
               </button>
@@ -804,10 +848,11 @@ async function guardarEdicionCita() {
                     eliminarCita(cita.ID)
                   }
                 }}
-                className="ml-2 rounded-xl border border-red-600/50 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
+                className="rounded-xl border border-red-600/50 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-600/10"
               >
                 Eliminar
               </button>
+              </div>
             </td>
           </tr>
         ))}
