@@ -8,33 +8,11 @@ import { obtenerContextoEquipo } from '@/lib/equipo'
 const PLANES_AUTOMATICOS = ['pro', 'business', 'premium']
 const PLANES_QR = ['trial', 'basico', 'pro', 'business', 'premium']
 
-type SaludWhatsApp = {
-  listo: boolean
-  salud?: {
-    ultimoRun?: string | null
-    enviados24h: number
-    fallidos24h: number
-    ultimos: {
-      id: string
-      estado: string
-      destinatario: string
-      minutos_antes: number
-      enviado_at: string
-      intento_count: number
-      ultimo_error?: string | null
-    }[]
-  } | null
-  variables: Record<string, boolean>
-}
-
 export default function AutomatizacionesPage() {
   const router = useRouter()
   const [reservaUrl, setReservaUrl] = useState('')
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [planActual, setPlanActual] = useState('')
-  const [saludWhatsApp, setSaludWhatsApp] = useState<SaludWhatsApp | null>(null)
-  const [probando, setProbando] = useState(false)
-  const [mensajePrueba, setMensajePrueba] = useState('')
 
   const tieneAutomatizaciones = PLANES_AUTOMATICOS.includes(planActual)
   const tieneQrPublico = PLANES_QR.includes(planActual)
@@ -52,24 +30,11 @@ export default function AutomatizacionesPage() {
       }
 
       if (token) {
-        const [response, statusResponse] = await Promise.all([
-          fetch('/api/suscripcion', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          fetch('/api/whatsapp/status', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-        ])
-        const statusResultado = statusResponse.ok
-          ? await statusResponse.json()
-          : null
-
-        setSaludWhatsApp(statusResultado)
-
+        const response = await fetch('/api/suscripcion', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         const resultado = response.ok ? await response.json() : null
         setPlanActual(String(resultado?.suscripcion?.plan ?? '').toLowerCase())
       }
@@ -78,54 +43,6 @@ export default function AutomatizacionesPage() {
 
     cargarDatos()
   }, [])
-
-  async function probarRecordatorios() {
-    setProbando(true)
-    setMensajePrueba('')
-
-    try {
-      const { data } = await supabase.auth.getSession()
-      const token = data.session?.access_token
-
-      if (!token) {
-        setMensajePrueba('No hay una sesion activa.')
-        setProbando(false)
-        return
-      }
-
-      const response = await fetch('/api/whatsapp/recordatorios-proximos', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => null)
-        setMensajePrueba(error?.error ?? 'La prueba no pudo ejecutarse.')
-        setProbando(false)
-        return
-      }
-
-      const resultado = await response.json()
-      setMensajePrueba(
-        `Revision lista: ${resultado.revisadas} citas, ${resultado.enviadosCliente} clientes, ${resultado.enviadosNegocio} negocios.`
-      )
-
-      const statusResponse = await fetch('/api/whatsapp/status', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-      if (statusResponse.ok) {
-        setSaludWhatsApp(await statusResponse.json())
-      }
-    } catch {
-      setMensajePrueba('No se pudo ejecutar la prueba.')
-    }
-
-    setProbando(false)
-  }
 
   async function copiarLinkReserva() {
     if (!reservaUrl) return
@@ -231,119 +148,34 @@ export default function AutomatizacionesPage() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-blue-600/40 bg-zinc-950 p-5 shadow-lg shadow-blue-950/10">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-blue-300">
-                Salud del workflow
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Ultima revision:{' '}
-                {saludWhatsApp?.salud?.ultimoRun
-                  ? new Date(saludWhatsApp.salud.ultimoRun).toLocaleString('es-CO')
-                  : 'sin ejecuciones registradas'}
-              </p>
-              <p className="mt-1 text-sm leading-6 text-zinc-400">
-                Configuracion:{' '}
-                {saludWhatsApp?.listo ? 'lista para enviar' : 'faltan variables'}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={probarRecordatorios}
-              disabled={probando}
-              className="min-h-12 rounded-xl border border-blue-500/60 px-5 py-3 font-bold text-blue-200 transition hover:bg-blue-600/10 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {probando ? 'Probando...' : 'Probar ahora'}
-            </button>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-zinc-800 bg-black p-4">
-              <p className="text-sm text-zinc-500">Enviados recientes</p>
-              <p className="mt-1 text-3xl font-black text-green-300">
-                {saludWhatsApp?.salud?.enviados24h ?? 0}
-              </p>
-            </div>
-            <div className="rounded-xl border border-zinc-800 bg-black p-4">
-              <p className="text-sm text-zinc-500">Fallidos recientes</p>
-              <p className="mt-1 text-3xl font-black text-red-300">
-                {saludWhatsApp?.salud?.fallidos24h ?? 0}
-              </p>
-            </div>
-            <div className="rounded-xl border border-zinc-800 bg-black p-4">
-              <p className="text-sm text-zinc-500">Endpoint</p>
-              <p className="mt-1 break-all text-sm font-bold text-blue-200">
-                /api/whatsapp/recordatorios-proximos
-              </p>
-            </div>
-          </div>
-
-          {mensajePrueba && (
-            <p className="mt-4 rounded-xl border border-blue-600/30 bg-black px-4 py-3 text-sm text-blue-100">
-              {mensajePrueba}
-            </p>
-          )}
-
-          <div className="mt-5 overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-zinc-800 text-zinc-500">
-                <tr>
-                  <th className="py-3 pr-4">Estado</th>
-                  <th className="py-3 pr-4">Destino</th>
-                  <th className="py-3 pr-4">Min</th>
-                  <th className="py-3 pr-4">Intentos</th>
-                  <th className="py-3 pr-4">Error</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(saludWhatsApp?.salud?.ultimos ?? []).map((item) => (
-                  <tr key={item.id} className="border-b border-zinc-900">
-                    <td className="py-3 pr-4 font-bold">
-                      <span
-                        className={
-                          item.estado === 'enviado'
-                            ? 'text-green-300'
-                            : 'text-red-300'
-                        }
-                      >
-                        {item.estado}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-4 text-zinc-300">{item.destinatario}</td>
-                    <td className="py-3 pr-4 text-zinc-300">{item.minutos_antes}</td>
-                    <td className="py-3 pr-4 text-zinc-300">{item.intento_count}</td>
-                    <td className="max-w-md py-3 pr-4 text-zinc-500">
-                      {item.ultimo_error ?? '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-4 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-lg shadow-orange-950/20 md:grid-cols-[1fr_auto] md:items-center">
+        <div className="mt-4 grid gap-6 rounded-2xl border border-orange-600/40 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20 lg:grid-cols-[1fr_320px] lg:items-center">
           <div>
-            <h2 className="text-2xl font-bold">QR publico para agendar</h2>
+            <p className="text-xs font-bold uppercase tracking-[3px] text-orange-500">
+              Link publico
+            </p>
+            <h2 className="mt-2 text-3xl font-black">QR para agendar</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
               Comparte este link o QR en recepcion, redes sociales e historias.
               El cliente escoge servicio, empleado, fecha y hora sin escribir
               primero al negocio.
             </p>
             {reservaUrl && tieneQrPublico && (
-              <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-                <div className="break-all rounded-xl border border-zinc-800 bg-black p-3 text-sm text-orange-200">
-                  {reservaUrl}
-                </div>
+              <div className="mt-5 rounded-2xl border border-zinc-800 bg-black p-4">
+                <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
+                  Enlace para compartir
+                </p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+                  <div className="break-all rounded-xl border border-orange-500/25 bg-zinc-950 p-4 text-sm font-bold text-orange-100">
+                    {reservaUrl}
+                  </div>
                 <button
                   type="button"
                   onClick={copiarLinkReserva}
-                  className="min-h-12 rounded-xl border border-orange-600/60 px-5 py-3 font-bold text-orange-200 transition hover:bg-orange-600/10"
+                    className="min-h-12 rounded-xl bg-orange-500 px-5 py-3 font-black text-black transition hover:bg-orange-400"
                 >
                   {linkCopiado ? 'Copiado' : 'Copiar link'}
                 </button>
+                </div>
               </div>
             )}
             {!tieneQrPublico && (
@@ -367,11 +199,21 @@ export default function AutomatizacionesPage() {
           </div>
 
           {reservaUrl && tieneQrPublico && (
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(reservaUrl)}`}
-              alt="QR publico para agendar"
-              className="mx-auto h-48 w-48 rounded-2xl border border-zinc-800 bg-white p-3"
-            />
+            <div className="mx-auto w-full max-w-xs rounded-[28px] border border-orange-500/30 bg-black p-5 text-center shadow-2xl shadow-orange-950/30">
+              <p className="text-xs font-bold uppercase tracking-[3px] text-orange-500">
+                Escanea y agenda
+              </p>
+              <div className="mt-4 rounded-2xl bg-white p-4">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(reservaUrl)}`}
+                  alt="QR publico para agendar"
+                  className="mx-auto h-56 w-56"
+                />
+              </div>
+              <p className="mt-4 text-sm font-bold text-zinc-200">
+                Listo para imprimir, pegar en recepcion o compartir en historias.
+              </p>
+            </div>
           )}
         </div>
 

@@ -49,15 +49,12 @@ export default function Navbar() {
     <nav className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/85 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-8">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-orange-500/40 bg-orange-600/10 text-lg font-black text-orange-300">
-            OB
-          </div>
           <div>
-            <h1 className="text-xl font-black tracking-[2px] text-white">
-              OBORO
+            <h1 className="text-2xl font-black tracking-[3px] text-orange-500">
+              OBORO BOOKING
             </h1>
-            <p className="text-xs font-bold uppercase tracking-[2px] text-orange-500/80">
-              Booking System
+            <p className="text-sm text-zinc-500">
+              Powered by Oboro Lab
             </p>
           </div>
         </Link>
