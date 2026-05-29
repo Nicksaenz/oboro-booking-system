@@ -4,6 +4,10 @@ import { construirDisponibilidad, horarioEstaDisponible } from '@/lib/agenda'
 
 const ESTADOS_VALIDOS = ['activa', 'activo', 'pagada', 'paid']
 const PLANES_CON_AGENDA_PUBLICA = ['trial', 'basico', 'pro', 'business', 'premium']
+const SELECT_NEGOCIO_PUBLICO =
+  'nombre_negocio, foto_negocio_url, direccion_negocio, google_maps_url, google_reviews_url, estado, fecha_vencimiento, plan'
+const SELECT_NEGOCIO_FALLBACK =
+  'nombre_negocio, foto_negocio_url, estado, fecha_vencimiento, plan'
 
 function limpiarTexto(valor: unknown, respaldo = '') {
   return typeof valor === 'string' ? valor.trim() : respaldo
@@ -24,6 +28,26 @@ function tieneAgendaPublica(suscripcion: any) {
   )
 }
 
+function columnaPerfilNoExiste(error?: { message?: string } | null) {
+  const mensaje = String(error?.message ?? '').toLowerCase()
+
+  return ['direccion_negocio', 'google_maps_url', 'google_reviews_url', 'foto_negocio_url'].some(
+    (columna) => mensaje.includes(columna)
+  )
+}
+
+function conPerfilFallback(data: any) {
+  return data
+    ? {
+        ...data,
+        foto_negocio_url: data.foto_negocio_url ?? null,
+        direccion_negocio: data.direccion_negocio ?? null,
+        google_maps_url: data.google_maps_url ?? null,
+        google_reviews_url: data.google_reviews_url ?? null,
+      }
+    : data
+}
+
 export async function GET(
   _request: Request,
   context: { params: Promise<{ usuarioId: string }> }
@@ -32,11 +56,22 @@ export async function GET(
     const { usuarioId } = await context.params
     const supabase = getSupabaseAdmin()
 
-    const { data: suscripcion, error: suscripcionError } = await supabase
+    let { data: suscripcion, error: suscripcionError } = await supabase
       .from('suscripciones')
-      .select('nombre_negocio, foto_negocio_url, estado, fecha_vencimiento, plan')
+      .select(SELECT_NEGOCIO_PUBLICO)
       .eq('usuario_id', usuarioId)
       .maybeSingle()
+
+    if (suscripcionError && columnaPerfilNoExiste(suscripcionError)) {
+      const fallback = await supabase
+        .from('suscripciones')
+        .select(SELECT_NEGOCIO_FALLBACK)
+        .eq('usuario_id', usuarioId)
+        .maybeSingle()
+
+      suscripcion = conPerfilFallback(fallback.data)
+      suscripcionError = fallback.error
+    }
 
     if (suscripcionError) {
       return NextResponse.json({ error: suscripcionError.message }, { status: 500 })
@@ -137,6 +172,9 @@ export async function GET(
       negocio: {
         nombre: suscripcion?.nombre_negocio ?? 'Oboro Booking',
         foto_url: suscripcion?.foto_negocio_url ?? null,
+        direccion: suscripcion?.direccion_negocio ?? null,
+        google_maps_url: suscripcion?.google_maps_url ?? null,
+        google_reviews_url: suscripcion?.google_reviews_url ?? null,
       },
       servicios: servicios ?? [],
       empleados: empleadosConPerfil,

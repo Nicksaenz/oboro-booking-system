@@ -26,6 +26,9 @@ type Suscripcion = {
   nombre_negocio?: string | null
   telefono?: string | null
   foto_negocio_url?: string | null
+  direccion_negocio?: string | null
+  google_maps_url?: string | null
+  google_reviews_url?: string | null
 }
 
 type AccesoSuscripcion = {
@@ -196,6 +199,9 @@ export default function DashboardPage() {
   const [suscripcion, setSuscripcion] = useState<Suscripcion | null>(null)
   const [acceso, setAcceso] = useState<AccesoSuscripcion | null>(null)
   const [nombreEditable, setNombreEditable] = useState('')
+  const [direccionEditable, setDireccionEditable] = useState('')
+  const [googleMapsEditable, setGoogleMapsEditable] = useState('')
+  const [googleReviewsEditable, setGoogleReviewsEditable] = useState('')
   const [fotoPreview, setFotoPreview] = useState('')
   const [guardandoPerfil, setGuardandoPerfil] = useState(false)
   const [cargando, setCargando] = useState(true)
@@ -417,6 +423,9 @@ export default function DashboardPage() {
     setSuscripcion(suscripcionJson.suscripcion)
     setAcceso(suscripcionJson.acceso ?? null)
     setNombreEditable(suscripcionJson.suscripcion?.nombre_negocio ?? '')
+    setDireccionEditable(suscripcionJson.suscripcion?.direccion_negocio ?? '')
+    setGoogleMapsEditable(suscripcionJson.suscripcion?.google_maps_url ?? '')
+    setGoogleReviewsEditable(suscripcionJson.suscripcion?.google_reviews_url ?? '')
     setFotoPreview('')
     setCargando(false)
   }
@@ -455,6 +464,9 @@ export default function DashboardPage() {
         },
         body: JSON.stringify({
           nombre_negocio: nombreEditable.trim(),
+          direccion_negocio: direccionEditable.trim(),
+          google_maps_url: googleMapsEditable.trim(),
+          google_reviews_url: googleReviewsEditable.trim(),
           foto_negocio_url: quitarFoto ? undefined : fotoOverride ?? fotoPreview,
           quitar_foto: quitarFoto,
         }),
@@ -467,6 +479,9 @@ export default function DashboardPage() {
 
       setSuscripcion(resultado.suscripcion)
       setNombreEditable(resultado.suscripcion?.nombre_negocio ?? '')
+      setDireccionEditable(resultado.suscripcion?.direccion_negocio ?? '')
+      setGoogleMapsEditable(resultado.suscripcion?.google_maps_url ?? '')
+      setGoogleReviewsEditable(resultado.suscripcion?.google_reviews_url ?? '')
       setFotoPreview('')
       setMensaje(
         quitarFoto
@@ -568,6 +583,60 @@ export default function DashboardPage() {
                     {guardandoPerfil ? 'Guardando...' : 'Guardar'}
                   </button>
                 </div>
+                <div className="mt-3 grid gap-3">
+                  <input
+                    value={direccionEditable}
+                    onChange={(event) => setDireccionEditable(event.target.value)}
+                    placeholder="Direccion visible para clientes"
+                    maxLength={160}
+                    className="min-h-12 rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-white outline-none transition focus:border-orange-500"
+                  />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <input
+                      value={googleMapsEditable}
+                      onChange={(event) => setGoogleMapsEditable(event.target.value)}
+                      placeholder="Link de Google Maps"
+                      className="min-h-12 rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-white outline-none transition focus:border-orange-500"
+                    />
+                    <input
+                      value={googleReviewsEditable}
+                      onChange={(event) => setGoogleReviewsEditable(event.target.value)}
+                      placeholder="Link de resenas de Google"
+                      className="min-h-12 rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-white outline-none transition focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+                {(suscripcion?.direccion_negocio ||
+                  suscripcion?.google_maps_url ||
+                  suscripcion?.google_reviews_url) && (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    {suscripcion?.direccion_negocio && (
+                      <p className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-xs leading-5 text-zinc-300">
+                        {suscripcion.direccion_negocio}
+                      </p>
+                    )}
+                    {suscripcion?.google_maps_url && (
+                      <a
+                        href={suscripcion.google_maps_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-xl border border-green-600/50 px-4 py-3 text-center text-xs font-bold text-green-200 transition hover:bg-green-600/10"
+                      >
+                        Ver ubicacion
+                      </a>
+                    )}
+                    {suscripcion?.google_reviews_url && (
+                      <a
+                        href={suscripcion.google_reviews_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-xl border border-yellow-500/50 px-4 py-3 text-center text-xs font-bold text-yellow-200 transition hover:bg-yellow-500/10"
+                      >
+                        Ver resenas
+                      </a>
+                    )}
+                  </div>
+                )}
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                   <label className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-xl border border-orange-600/60 px-4 text-sm font-bold text-orange-200 transition hover:bg-orange-600/10">
                     Subir foto del negocio

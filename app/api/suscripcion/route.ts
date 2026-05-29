@@ -6,6 +6,10 @@ const PLANES_PERMITIDOS = ['trial', 'basico', 'pro', 'business', 'premium'] as c
 const ESTADOS_ACTIVOS = ['activa', 'activo', 'pagada', 'paid']
 const ESTADOS_PRUEBA_PENDIENTE = ['pendiente', 'pendiente_pago']
 const MAX_FOTO_NEGOCIO_CHARS = 750_000
+const SELECT_PERFIL_NEGOCIO =
+  'estado, fecha_vencimiento, plan, nombre_negocio, telefono, foto_negocio_url, direccion_negocio, google_maps_url, google_reviews_url'
+const SELECT_PERFIL_FALLBACK =
+  'estado, fecha_vencimiento, plan, nombre_negocio, telefono, foto_negocio_url'
 type Plan = (typeof PLANES_PERMITIDOS)[number]
 
 function limpiarTexto(valor: unknown, respaldo = '') {
@@ -32,10 +36,49 @@ function fotoNegocioInvalida(valor: unknown) {
   return !foto.startsWith('data:image/') || foto.length > MAX_FOTO_NEGOCIO_CHARS
 }
 
-function columnaFotoNoExiste(error?: { message?: string } | null) {
-  return String(error?.message ?? '')
-    .toLowerCase()
-    .includes('foto_negocio_url')
+function columnaPerfilNoExiste(error?: { message?: string } | null) {
+  const mensaje = String(error?.message ?? '').toLowerCase()
+
+  return [
+    'foto_negocio_url',
+    'direccion_negocio',
+    'google_maps_url',
+    'google_reviews_url',
+  ].some((columna) => mensaje.includes(columna))
+}
+
+function conPerfilFallback<T extends Record<string, unknown> | null>(data: T) {
+  return data
+    ? {
+        ...data,
+        foto_negocio_url: data.foto_negocio_url ?? null,
+        direccion_negocio: data.direccion_negocio ?? null,
+        google_maps_url: data.google_maps_url ?? null,
+        google_reviews_url: data.google_reviews_url ?? null,
+      }
+    : data
+}
+
+function limpiarUrlGoogle(valor: unknown) {
+  if (typeof valor !== 'string') return ''
+
+  const texto = valor.trim()
+  if (!texto) return ''
+
+  try {
+    const url = new URL(texto)
+    const host = url.hostname.toLowerCase()
+    const permitido =
+      host === 'maps.app.goo.gl' ||
+      host === 'g.co' ||
+      host.endsWith('google.com') ||
+      host.endsWith('google.com.co') ||
+      host.endsWith('goo.gl')
+
+    return permitido && url.protocol.startsWith('http') ? url.toString() : ''
+  } catch {
+    return ''
+  }
 }
 
 function suscripcionActiva(suscripcion?: { estado?: string | null; fecha_vencimiento?: string | null } | null) {
@@ -84,10 +127,10 @@ async function activarPruebaPendiente(
       fecha_vencimiento: fechaVencimientoTrial.toISOString(),
     })
     .eq('usuario_id', usuarioId)
-    .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono, foto_negocio_url')
-    .single()
+      .select(SELECT_PERFIL_NEGOCIO)
+      .single()
 
-  if (error && columnaFotoNoExiste(error)) {
+  if (error && columnaPerfilNoExiste(error)) {
     const fallback = await supabaseAdmin
       .from('suscripciones')
       .update({
@@ -96,7 +139,7 @@ async function activarPruebaPendiente(
         fecha_vencimiento: fechaVencimientoTrial.toISOString(),
       })
       .eq('usuario_id', usuarioId)
-      .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono')
+      .select(SELECT_PERFIL_FALLBACK)
       .single()
 
     if (fallback.error) {
@@ -113,7 +156,7 @@ async function activarPruebaPendiente(
         }
       | null
 
-    return fallbackData ? { ...fallbackData, foto_negocio_url: null } : fallbackData
+    return conPerfilFallback(fallbackData)
   }
 
   if (error) {
@@ -181,18 +224,18 @@ export async function GET(request: Request) {
 
     let { data, error } = await supabaseAdmin
       .from('suscripciones')
-      .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono, foto_negocio_url')
+      .select(SELECT_PERFIL_NEGOCIO)
       .eq('usuario_id', contexto.negocioId)
       .maybeSingle()
 
-    if (error && columnaFotoNoExiste(error)) {
+    if (error && columnaPerfilNoExiste(error)) {
       const fallback = await supabaseAdmin
         .from('suscripciones')
-        .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono')
+        .select(SELECT_PERFIL_FALLBACK)
         .eq('usuario_id', contexto.negocioId)
         .maybeSingle()
 
-      data = fallback.data ? { ...fallback.data, foto_negocio_url: null } : null
+      data = conPerfilFallback(fallback.data) as typeof data
       error = fallback.error
     }
 
@@ -416,6 +459,9 @@ export async function PATCH(request: Request) {
     const fotoRecibida = body.foto_negocio_url
     const fotoNegocio = limpiarFotoNegocio(fotoRecibida)
     const quitarFoto = body.quitar_foto === true
+    const direccionNegocio = limpiarTexto(body.direccion_negocio)
+    const googleMapsUrl = limpiarUrlGoogle(body.google_maps_url)
+    const googleReviewsUrl = limpiarUrlGoogle(body.google_reviews_url)
     const cambios: Record<string, string | null> = {}
 
     if (!quitarFoto && fotoNegocioInvalida(fotoRecibida)) {
@@ -427,6 +473,18 @@ export async function PATCH(request: Request) {
 
     if (nombreNegocio) {
       cambios.nombre_negocio = nombreNegocio.slice(0, 80)
+    }
+
+    if ('direccion_negocio' in body) {
+      cambios.direccion_negocio = direccionNegocio ? direccionNegocio.slice(0, 160) : null
+    }
+
+    if ('google_maps_url' in body) {
+      cambios.google_maps_url = googleMapsUrl || null
+    }
+
+    if ('google_reviews_url' in body) {
+      cambios.google_reviews_url = googleReviewsUrl || null
     }
 
     if (quitarFoto) {
@@ -446,18 +504,33 @@ export async function PATCH(request: Request) {
       .from('suscripciones')
       .update(cambios)
       .eq('usuario_id', contexto.negocioId)
-      .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono, foto_negocio_url')
+      .select(SELECT_PERFIL_NEGOCIO)
       .single()
 
-    if (error && columnaFotoNoExiste(error) && !('foto_negocio_url' in cambios)) {
+    if (
+      error &&
+      columnaPerfilNoExiste(error) &&
+      Boolean(cambios.direccion_negocio || cambios.google_maps_url || cambios.google_reviews_url)
+    ) {
+      return NextResponse.json(
+        { error: 'Falta aplicar la migracion de Google Maps en Supabase.' },
+        { status: 400 }
+      )
+    }
+
+    if (error && columnaPerfilNoExiste(error)) {
+      const cambiosFallback = { ...cambios }
+      delete cambiosFallback.direccion_negocio
+      delete cambiosFallback.google_maps_url
+      delete cambiosFallback.google_reviews_url
       const fallback = await supabaseAdmin
         .from('suscripciones')
-        .update(cambios)
+        .update(cambiosFallback)
         .eq('usuario_id', contexto.negocioId)
-        .select('estado, fecha_vencimiento, plan, nombre_negocio, telefono')
+        .select(SELECT_PERFIL_FALLBACK)
         .single()
 
-      data = fallback.data ? { ...fallback.data, foto_negocio_url: null } : null
+      data = conPerfilFallback(fallback.data) as typeof data
       error = fallback.error
     }
 

@@ -14,9 +14,9 @@ const MIN_PASSWORD_LENGTH = 8
 const ESTADOS_PAGOS = ['activa', 'activo', 'pagada', 'paid']
 const BENEFICIOS_LANDING = [
   'Reservas por QR y link desde Basic',
+  'Ubicacion y resenas de Google Maps dentro de la reserva',
   'Agenda, clientes, servicios y equipo en un solo panel',
   'WhatsApp automatico incluido desde Basic',
-  'Finanzas y liquidaciones para negocios que ya tienen equipo',
 ]
 const DIFERENCIALES_LANDING = [
   ['Sin instalar app', 'Tus clientes reservan desde el navegador con un link o QR.'],
@@ -77,6 +77,7 @@ const PLANES_LANDING = [
       'Clientes, servicios, empleados y citas',
       'Dashboard de reservas',
       'Recordatorios automaticos al negocio y al cliente',
+      'Google Maps y resenas del negocio en el QR',
       'Resenas y calificacion por empleado',
     ],
   },
@@ -94,6 +95,7 @@ const PLANES_LANDING = [
       'Recordatorio automatico al negocio y al cliente final',
       'Foto del empleado en el recordatorio cuando Meta lo permite',
       'Ranking interno e historial de clientes',
+      'Perfil publico mas completo para convertir visitas',
       'Mayor control de agenda y operacion',
     ],
   },

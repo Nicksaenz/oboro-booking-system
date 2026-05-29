@@ -39,6 +39,7 @@ export const PLANES_OBORO: PlanOboro[] = [
       'Recordatorios automaticos por WhatsApp',
       'WhatsApp manual al cliente',
       'Perfil publico del negocio con foto',
+      'Ubicacion y resenas de Google Maps en reservas',
       'Resenas y calificacion por empleado',
       'Soporte inicial de Oboro Lab',
     ],
@@ -65,6 +66,7 @@ export const PLANES_OBORO: PlanOboro[] = [
       'Recordatorio automatico al negocio',
       'Ranking interno de profesionales',
       'Historial y seguimiento de clientes',
+      'Perfil publico mas completo para convertir visitas',
     ],
   },
   {
@@ -88,6 +90,7 @@ export const PLANES_OBORO: PlanOboro[] = [
       'Registro de gastos',
       'Liquidacion de colaboradores',
       'Reportes para decisiones y crecimiento',
+      'Control interno de reputacion y operacion',
     ],
   },
 ]

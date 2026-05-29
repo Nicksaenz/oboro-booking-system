@@ -9,12 +9,12 @@ export const WOMPI_PLANES: Record<
   basico: {
     nombre: 'Basico',
     precioCop: 40000,
-    descripcion: 'Agenda, QR, clientes, servicios y recordatorios automaticos.',
+    descripcion: 'Agenda, QR, Google Maps, clientes, servicios y recordatorios automaticos.',
   },
   pro: {
     nombre: 'Pro',
     precioCop: 90000,
-    descripcion: 'Mas equipo, confirmacion, reseñas, ranking e historial de clientes.',
+    descripcion: 'Mas equipo, confirmacion, resenas, ranking e historial de clientes.',
   },
   business: {
     nombre: 'Business',

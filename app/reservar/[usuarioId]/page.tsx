@@ -82,6 +82,9 @@ export default function ReservaPublicaPage() {
   const empleadoPreferido = searchParams.get('empleado')
   const [negocio, setNegocio] = useState('Oboro Booking')
   const [fotoNegocio, setFotoNegocio] = useState('')
+  const [direccionNegocio, setDireccionNegocio] = useState('')
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('')
+  const [googleReviewsUrl, setGoogleReviewsUrl] = useState('')
   const [servicios, setServicios] = useState<Servicio[]>([])
   const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [cargando, setCargando] = useState(true)
@@ -113,6 +116,9 @@ export default function ReservaPublicaPage() {
 
       setNegocio(data.negocio?.nombre ?? 'Oboro Booking')
       setFotoNegocio(data.negocio?.foto_url ?? '')
+      setDireccionNegocio(data.negocio?.direccion ?? '')
+      setGoogleMapsUrl(data.negocio?.google_maps_url ?? '')
+      setGoogleReviewsUrl(data.negocio?.google_reviews_url ?? '')
       setServicios(data.servicios ?? [])
       setEmpleados(data.empleados ?? [])
       if (
@@ -251,6 +257,35 @@ export default function ReservaPublicaPage() {
                 </p>
               </div>
             </div>
+            {(direccionNegocio || googleMapsUrl || googleReviewsUrl) && (
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                {direccionNegocio && (
+                  <p className="rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-xs leading-5 text-zinc-200 sm:col-span-3">
+                    {direccionNegocio}
+                  </p>
+                )}
+                {googleMapsUrl && (
+                  <a
+                    href={googleMapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg border border-green-400/40 bg-green-950/20 px-3 py-3 text-center text-xs font-black text-green-100 transition hover:bg-green-500/20"
+                  >
+                    Como llegar
+                  </a>
+                )}
+                {googleReviewsUrl && (
+                  <a
+                    href={googleReviewsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg border border-yellow-300/40 bg-yellow-950/20 px-3 py-3 text-center text-xs font-black text-yellow-100 transition hover:bg-yellow-400/20"
+                  >
+                    Resenas Google
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
