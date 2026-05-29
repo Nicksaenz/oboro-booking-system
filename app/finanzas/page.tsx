@@ -64,6 +64,7 @@ export default function FinanzasPage() {
   const [mensaje, setMensaje] = useState('')
   const [gastosActivos, setGastosActivos] = useState(true)
   const [accesoFinanzas, setAccesoFinanzas] = useState(true)
+  const [planFinanzas, setPlanFinanzas] = useState<'pro' | 'business'>('pro')
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [comision, setComision] = useState(50)
@@ -83,6 +84,7 @@ export default function FinanzasPage() {
       }, 0),
     [citas]
   )
+  const esBusiness = planFinanzas === 'business'
   const totalGastos = useMemo(
     () => gastos.reduce((total, gasto) => total + Number(gasto.monto ?? 0), 0),
     [gastos]
@@ -166,12 +168,16 @@ export default function FinanzasPage() {
     totalGastos > 0
       ? `Tus gastos suman ${formatoDinero(totalGastos)}.`
       : 'No hay gastos cargados en el mes.',
-    totalLiquidar > 0
-      ? `Liquidacion estimada para el equipo: ${formatoDinero(totalLiquidar)}.`
-      : 'No hay liquidaciones pendientes calculadas.',
-    utilidadDespuesLiquidacion >= 0
-      ? `Resultado despues de gastos y liquidaciones: ${formatoDinero(utilidadDespuesLiquidacion)}.`
-      : `El mes queda en negativo por ${formatoDinero(Math.abs(utilidadDespuesLiquidacion))}.`,
+    esBusiness
+      ? totalLiquidar > 0
+        ? `Liquidacion estimada para el equipo: ${formatoDinero(totalLiquidar)}.`
+        : 'No hay liquidaciones pendientes calculadas.'
+      : `Utilidad basica estimada: ${formatoDinero(utilidad)}.`,
+    esBusiness
+      ? utilidadDespuesLiquidacion >= 0
+        ? `Resultado despues de gastos y liquidaciones: ${formatoDinero(utilidadDespuesLiquidacion)}.`
+        : `El mes queda en negativo por ${formatoDinero(Math.abs(utilidadDespuesLiquidacion))}.`
+      : 'Sube a Business para activar liquidacion avanzada de colaboradores.',
   ]
 
   async function cargarFinanzas() {
@@ -202,6 +208,7 @@ export default function FinanzasPage() {
     }
 
     setAccesoFinanzas(true)
+    setPlanFinanzas(data.planFinanzas === 'business' ? 'business' : 'pro')
     setCitas(data.citas ?? [])
     setGastos(data.gastos ?? [])
     setGastosActivos(!data.gastosPendientes)
@@ -329,11 +336,12 @@ export default function FinanzasPage() {
               OBORO BOOKING
             </p>
             <h1 className="mt-2 text-4xl font-black leading-tight md:text-5xl">
-              Finanzas Business
+              {esBusiness ? 'Finanzas Business' : 'Finanzas Pro'}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-              Control ejecutivo de ingresos, gastos, utilidad y liquidacion de
-              colaboradores para tomar decisiones con datos.
+              {esBusiness
+                ? 'Control ejecutivo de ingresos, gastos, utilidad y liquidacion de colaboradores para tomar decisiones con datos.'
+                : 'Control basico de ingresos, gastos y utilidad para que el negocio mida el mes sin complicarse.'}
             </p>
           </div>
 
@@ -354,12 +362,11 @@ export default function FinanzasPage() {
         {!accesoFinanzas ? (
           <div className="mt-8 rounded-2xl border border-orange-600/40 bg-zinc-950 p-6 shadow-2xl shadow-orange-950/20">
             <h2 className="text-3xl font-black text-orange-500">
-              Disponible en Business
+              Disponible desde Pro
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-              Finanzas, gastos y liquidacion de colaboradores pertenecen al
-              plan Business. Actualiza el plan para activar esta parte del
-              negocio.
+              El plan Pro incluye finanzas basicas. Business activa la
+              liquidacion avanzada de colaboradores y analisis mas completo.
             </p>
             <button
               type="button"
@@ -402,7 +409,7 @@ export default function FinanzasPage() {
           </div>
         </form>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className={`mt-8 grid gap-4 md:grid-cols-2 ${esBusiness ? 'xl:grid-cols-4' : 'xl:grid-cols-3'}`}>
           <div className="rounded-2xl border border-green-600/40 bg-green-950/10 p-5 shadow-lg shadow-green-950/20">
             <p className="text-zinc-400">Ingresos del mes</p>
             <h2 className="mt-2 text-3xl font-black text-green-300">
@@ -427,15 +434,17 @@ export default function FinanzasPage() {
             <p className="mt-2 text-sm text-zinc-500">Ingresos menos gastos</p>
           </div>
 
-          <div className="rounded-2xl border border-blue-600/40 bg-blue-950/10 p-5 shadow-lg shadow-blue-950/20">
-            <p className="text-zinc-400">Despues de liquidar</p>
-            <h2 className={`mt-2 text-3xl font-black ${estadoFinancieroColor(utilidadDespuesLiquidacion)}`}>
-              {formatoDinero(utilidadDespuesLiquidacion)}
-            </h2>
-            <p className="mt-2 text-sm text-zinc-500">
-              Utilidad menos comisiones
-            </p>
-          </div>
+          {esBusiness && (
+            <div className="rounded-2xl border border-blue-600/40 bg-blue-950/10 p-5 shadow-lg shadow-blue-950/20">
+              <p className="text-zinc-400">Despues de liquidar</p>
+              <h2 className={`mt-2 text-3xl font-black ${estadoFinancieroColor(utilidadDespuesLiquidacion)}`}>
+                {formatoDinero(utilidadDespuesLiquidacion)}
+              </h2>
+              <p className="mt-2 text-sm text-zinc-500">
+                Utilidad menos comisiones
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
@@ -481,9 +490,11 @@ export default function FinanzasPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-zinc-800 bg-black p-4">
-                <p className="text-xs text-zinc-500">Por liquidar</p>
+                <p className="text-xs text-zinc-500">
+                  {esBusiness ? 'Por liquidar' : 'Plan actual'}
+                </p>
                 <p className="mt-1 text-xl font-black text-orange-300">
-                  {formatoDinero(totalLiquidar)}
+                  {esBusiness ? formatoDinero(totalLiquidar) : 'Pro'}
                 </p>
               </div>
               <div className="rounded-xl border border-zinc-800 bg-black p-4">
@@ -630,6 +641,7 @@ export default function FinanzasPage() {
           </div>
         </div>
 
+        {esBusiness ? (
         <div className="mt-8 rounded-2xl border border-green-600/40 bg-zinc-950 p-5 shadow-2xl shadow-green-950/20">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -740,6 +752,29 @@ export default function FinanzasPage() {
             </div>
           </div>
         </div>
+        ) : (
+          <div className="mt-8 rounded-2xl border border-blue-600/40 bg-blue-950/10 p-5 shadow-2xl shadow-blue-950/20">
+            <p className="text-xs font-bold uppercase tracking-[3px] text-blue-300">
+              Finanzas Pro
+            </p>
+            <h2 className="mt-2 text-2xl font-black">
+              Modulo basico activado
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300">
+              Pro permite ver ingresos, registrar gastos, medir utilidad,
+              revisar ticket promedio y entender el margen mensual. La
+              liquidacion avanzada por colaborador queda reservada para
+              Business.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push('/suscripcion')}
+              className="mt-5 min-h-12 rounded-xl border border-blue-400/60 px-5 py-3 text-sm font-bold text-blue-100 transition hover:bg-blue-500/10"
+            >
+              Ver Business
+            </button>
+          </div>
+        )}
           </>
         )}
       </section>

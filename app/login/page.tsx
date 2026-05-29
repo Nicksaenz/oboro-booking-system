@@ -95,6 +95,7 @@ const PLANES_LANDING = [
       'Recordatorio automatico al negocio y al cliente final',
       'Foto del empleado en el recordatorio cuando Meta lo permite',
       'Ranking interno e historial de clientes',
+      'Finanzas basicas: ingresos, gastos y utilidad',
       'Perfil publico mas completo para convertir visitas',
       'Mayor control de agenda y operacion',
     ],

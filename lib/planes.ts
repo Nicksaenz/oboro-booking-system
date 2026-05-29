@@ -66,6 +66,7 @@ export const PLANES_OBORO: PlanOboro[] = [
       'Recordatorio automatico al negocio',
       'Ranking interno de profesionales',
       'Historial y seguimiento de clientes',
+      'Finanzas basicas: ingresos, gastos y utilidad',
       'Perfil publico mas completo para convertir visitas',
     ],
   },

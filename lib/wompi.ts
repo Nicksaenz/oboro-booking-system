@@ -14,7 +14,7 @@ export const WOMPI_PLANES: Record<
   pro: {
     nombre: 'Pro',
     precioCop: 90000,
-    descripcion: 'Mas equipo, confirmacion, resenas, ranking e historial de clientes.',
+    descripcion: 'Mas equipo, confirmacion, resenas, ranking, historial y finanzas basicas.',
   },
   business: {
     nombre: 'Business',

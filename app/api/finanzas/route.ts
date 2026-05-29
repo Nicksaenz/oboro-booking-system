@@ -43,7 +43,7 @@ async function obtenerContextoServidor(user: UsuarioAutenticado) {
   }
 }
 
-async function tienePlanBusiness(usuarioId: string) {
+async function obtenerPlanFinanzas(usuarioId: string) {
   const supabase = getSupabaseAdmin()
   const { data, error } = await supabase
     .from('suscripciones')
@@ -51,7 +51,7 @@ async function tienePlanBusiness(usuarioId: string) {
     .eq('usuario_id', usuarioId)
     .maybeSingle()
 
-  if (error || !data) return false
+  if (error || !data) return null
 
   const plan = String(data.plan ?? '').toLowerCase()
   const estado = String(data.estado ?? '').toLowerCase()
@@ -59,11 +59,15 @@ async function tienePlanBusiness(usuarioId: string) {
     ? new Date(data.fecha_vencimiento).getTime()
     : Date.now()
 
-  return (
-    ['business', 'premium'].includes(plan) &&
+  const activo =
     ['activa', 'activo', 'pagada', 'paid'].includes(estado) &&
     vence >= Date.now()
-  )
+
+  if (!activo) return null
+  if (plan === 'business' || plan === 'premium') return 'business'
+  if (plan === 'pro') return 'pro'
+
+  return null
 }
 
 function puedeEditarFinanzas(request: Request) {
@@ -111,9 +115,11 @@ export async function GET(request: Request) {
       )
     }
 
-    if (!(await tienePlanBusiness(contexto.negocioId))) {
+    const planFinanzas = await obtenerPlanFinanzas(contexto.negocioId)
+
+    if (!planFinanzas) {
       return NextResponse.json(
-        { error: 'Finanzas esta disponible en el plan Business.' },
+        { error: 'Finanzas esta disponible desde el plan Pro.' },
         { status: 403 }
       )
     }
@@ -164,6 +170,7 @@ export async function GET(request: Request) {
     if (gastosError) {
       return NextResponse.json({
         mes: rango.mes,
+        planFinanzas,
         citas: citas ?? [],
         gastos: [],
         gastosPendientes: true,
@@ -172,6 +179,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       mes: rango.mes,
+      planFinanzas,
       citas: citas ?? [],
       gastos: gastos ?? [],
     })
@@ -200,9 +208,9 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!(await tienePlanBusiness(contexto.negocioId))) {
+    if (!(await obtenerPlanFinanzas(contexto.negocioId))) {
       return NextResponse.json(
-        { error: 'Finanzas esta disponible en el plan Business.' },
+        { error: 'Finanzas esta disponible desde el plan Pro.' },
         { status: 403 }
       )
     }
@@ -273,9 +281,9 @@ export async function DELETE(request: Request) {
       )
     }
 
-    if (!(await tienePlanBusiness(contexto.negocioId))) {
+    if (!(await obtenerPlanFinanzas(contexto.negocioId))) {
       return NextResponse.json(
-        { error: 'Finanzas esta disponible en el plan Business.' },
+        { error: 'Finanzas esta disponible desde el plan Pro.' },
         { status: 403 }
       )
     }
