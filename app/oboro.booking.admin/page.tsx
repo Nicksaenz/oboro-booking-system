@@ -121,7 +121,7 @@ export default function AdminCrmPage() {
     if (estado !== 'todos') params.set('estado', estado)
     if (plan !== 'todos') params.set('plan', plan)
 
-    const response = await fetch(`/api/admin/crm?${params.toString()}`, {
+    const response = await fetch(`/api/oboro.booking.admin/crm?${params.toString()}`, {
       headers: {
         'x-crm-admin-secret': secret,
       },
