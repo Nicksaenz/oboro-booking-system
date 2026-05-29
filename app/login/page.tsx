@@ -18,6 +18,29 @@ const BENEFICIOS_LANDING = [
   'Agenda, clientes, servicios y equipo en un solo panel',
   'WhatsApp automatico incluido desde Basic',
 ]
+const MODULOS_LANDING = [
+  [
+    'Reserva QR premium',
+    'Foto del negocio, mapa abierto, Google Reviews, profesional, horarios AM/PM y confirmacion clara para el cliente.',
+    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1300&q=85',
+  ],
+  [
+    'WhatsApp operativo',
+    'Recordatorios automaticos al cliente y al negocio, boton manual por cita y solicitud de resena al completar.',
+    'https://images.unsplash.com/photo-1611605698335-8b1569810432?auto=format&fit=crop&w=1300&q=85',
+  ],
+  [
+    'Finanzas por plan',
+    'Pro mide ingresos, gastos y utilidad. Business suma margen, ticket promedio, liquidaciones y resumen por colaborador.',
+    'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1300&q=85',
+  ],
+]
+const WHATSAPP_LANDING = [
+  ['Automatico', 'Avisos 20 y 5 minutos antes para cliente y negocio desde Basic.'],
+  ['Manual', 'Boton WhatsApp en cada cita para reenviar recordatorio listo.'],
+  ['Resenas', 'Al completar la cita se prepara el mensaje para pedir calificacion.'],
+  ['Diagnostico', 'Estado interno de plantillas, endpoint, webhook y envios recientes.'],
+]
 const DIFERENCIALES_LANDING = [
   ['Sin instalar app', 'Tus clientes reservan desde el navegador con un link o QR.'],
   ['Hecho para citas', 'Barberias, unas, spa, veterinarias, consultorios, asesores e independientes.'],
@@ -442,15 +465,15 @@ export default function LoginPage() {
       <section className="mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl gap-10 px-5 py-10 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:py-16">
         <div>
           <p className="inline-flex rounded-full border border-orange-500/35 bg-orange-500/10 px-4 py-2 text-sm font-bold text-orange-200">
-            7 dias gratis. QR incluido desde Basic.
+            7 dias gratis. QR, WhatsApp y Google Maps desde Basic.
           </p>
           <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[1.03] sm:text-6xl lg:text-6xl xl:text-7xl">
-            El sistema de reservas para negocios que trabajan con citas.
+            Reservas premium para negocios que viven de su agenda.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
-            Para barberias, spas, salones de unas, veterinarias, consultorios,
-            profesionales independientes y equipos que necesitan agenda, QR,
-            clientes, servicios y control diario en un solo lugar.
+            Oboro Booking une agenda, QR publico, Google Maps, resenas,
+            WhatsApp automatico, clientes, empleados, finanzas Pro y
+            liquidaciones Business en una experiencia seria para vender mas.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -500,6 +523,22 @@ export default function LoginPage() {
 
         <div className="space-y-4">
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black">
+            <div className="relative h-72 overflow-hidden sm:h-96">
+              <img
+                src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1400&q=85"
+                alt="Negocio de servicios usando reservas premium"
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+              <div className="absolute bottom-5 left-5 right-5">
+                <p className="text-xs font-bold uppercase tracking-[3px] text-orange-300">
+                  Experiencia del cliente
+                </p>
+                <h2 className="mt-2 text-3xl font-black text-white">
+                  QR con identidad, mapa y confianza
+                </h2>
+              </div>
+            </div>
             <div className="border-b border-white/10 bg-zinc-900 px-5 py-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -808,6 +847,46 @@ export default function LoginPage() {
           </p>
         )}
       </section>
+
+      <section className="border-y border-zinc-800 bg-zinc-950/70 px-5 py-16 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[4px] text-orange-500">
+                Plataforma completa
+              </p>
+              <h2 className="mt-3 max-w-4xl text-3xl font-black sm:text-5xl">
+                Todo lo que montamos para que la reserva se sienta de marca.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-6 text-zinc-400">
+              No es solo una agenda: es una experiencia de confianza antes,
+              durante y despues de cada cita.
+            </p>
+          </div>
+
+          <div className="mt-9 grid gap-5 lg:grid-cols-3">
+            {MODULOS_LANDING.map(([titulo, texto, imagen]) => (
+              <article
+                key={titulo}
+                className="group overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl shadow-black"
+              >
+                <div className="h-72 overflow-hidden sm:h-80 lg:h-96">
+                  <img
+                    src={imagen}
+                    alt={titulo}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-5">
+                  <h3 className="text-2xl font-black text-white">{titulo}</h3>
+                  <p className="mt-3 text-sm leading-6 text-zinc-400">{texto}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
         </div>
       </section>
 
@@ -824,15 +903,15 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
             {SECTORES_LANDING.map((sector, index) => (
               <article
                 key={sector.titulo}
-                className={`group overflow-hidden rounded-xl border border-white/10 bg-zinc-950 ${
+                className={`group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-xl shadow-black/30 ${
                   index === 0 ? 'md:col-span-2 xl:col-span-1' : ''
                 }`}
               >
-                <div className="relative h-56 overflow-hidden">
+                <div className="relative h-80 overflow-hidden xl:h-96">
                   <img
                     src={sector.imagen}
                     alt={`${sector.titulo} usando agenda de citas`}
@@ -888,6 +967,31 @@ export default function LoginPage() {
               </article>
             ))}
           </div>
+
+          <div className="mt-10 rounded-2xl border border-green-600/40 bg-green-950/10 p-5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-[4px] text-green-300">
+                  WhatsApp verificado
+                </p>
+                <h2 className="mt-2 text-3xl font-black">
+                  Automatizacion y envio manual conviven en el mismo flujo.
+                </h2>
+              </div>
+              <p className="max-w-md text-sm leading-6 text-zinc-400">
+                Si Meta falla o el negocio quiere insistir, Oboro conserva el
+                boton manual con plantilla lista para enviar.
+              </p>
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-4">
+              {WHATSAPP_LANDING.map(([titulo, texto]) => (
+                <article key={titulo} className="rounded-xl border border-green-500/20 bg-black p-4">
+                  <h3 className="font-black text-green-300">{titulo}</h3>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">{texto}</p>
+                </article>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -899,12 +1003,12 @@ export default function LoginPage() {
                 Planes
               </p>
               <h2 className="mt-2 text-3xl font-black sm:text-5xl">
-                Precios competitivos, con QR incluido en todos.
+                Planes con valor real, no solo mas usuarios.
               </h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-zinc-400">
-              Cada plan incluye herramientas reales de reserva, seguimiento y
-              recordatorios para justificar el valor mensual desde el primer dia.
+              Basic automatiza reservas. Pro mide operacion y finanzas basicas.
+              Business controla equipo, utilidad y liquidaciones con mas rigor.
             </p>
           </div>
 
