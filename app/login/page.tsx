@@ -47,38 +47,6 @@ const DIFERENCIALES_LANDING = [
   ['Menos chats perdidos', 'Cada reserva llega con servicio, fecha, hora, profesional y recordatorio automatico.'],
   ['Listo para crecer', 'Empieza solo y suma empleados, accesos y finanzas al ritmo del negocio.'],
 ]
-const SECTORES_LANDING = [
-  {
-    titulo: 'Barberias',
-    texto: 'Agenda cortes, barba, tintes y turnos con profesionales disponibles.',
-    imagen:
-      'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    titulo: 'Unas y belleza',
-    texto: 'Organiza manicura, pedicura, pestanas, cejas y servicios por duracion.',
-    imagen:
-      'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    titulo: 'Spa y estetica',
-    texto: 'Controla cabinas, tratamientos, masajes y reservas recurrentes.',
-    imagen:
-      'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    titulo: 'Veterinarias',
-    texto: 'Recibe citas para consultas, vacunas, peluqueria y controles.',
-    imagen:
-      'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    titulo: 'Independientes',
-    texto: 'Profesionales que venden tiempo, sesiones, asesorias o atencion personalizada.',
-    imagen:
-      'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=80',
-  },
-]
 const CARRUSEL_NEGOCIOS = [
   {
     titulo: 'Barberias',
@@ -121,7 +89,7 @@ const PLANES_LANDING = [
   {
     id: 'basico' as const,
     nombre: 'Basic',
-    precio: '$40.000',
+    precio: '$39.900',
     detalle: 'Ideal para independientes y negocios pequenos que quieren agenda, QR y automatizacion.',
     funciones: [
       '7 dias gratis al crear la cuenta',
@@ -480,7 +448,7 @@ export default function LoginPage() {
           </div>
           <div className="hidden items-center gap-6 text-sm font-bold text-zinc-300 md:flex">
             <a href="#beneficios" className="transition hover:text-orange-400">Beneficios</a>
-            <a href="#sectores" className="transition hover:text-orange-400">Negocios</a>
+            <a href="#negocios" className="transition hover:text-orange-400">Negocios</a>
             <a href="#precios" className="transition hover:text-orange-400">Precios</a>
             <a href="mailto:contacto@oborolab.com" className="transition hover:text-orange-400">Contacto</a>
             <a href="#registro" className="transition hover:text-orange-400">Entrar</a>
@@ -548,7 +516,7 @@ export default function LoginPage() {
               <p className="mt-1 text-xs leading-5 text-zinc-500">Para redes y volantes</p>
             </div>
             <div className="border-l border-sky-500/50 pl-4">
-            <p className="text-2xl font-black text-white">$40.000</p>
+            <p className="text-2xl font-black text-white">$39.900</p>
               <p className="mt-1 text-xs leading-5 text-zinc-500">Plan inicial mensual</p>
             </div>
           </div>
@@ -883,7 +851,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="overflow-hidden border-y border-zinc-900 bg-black py-10">
+      <section id="negocios" className="overflow-hidden border-y border-zinc-900 bg-black py-10">
         <div className="mx-auto mb-6 flex max-w-7xl flex-col gap-3 px-5 sm:px-8 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-[4px] text-orange-500">
@@ -956,49 +924,6 @@ export default function LoginPage() {
                   <h3 className="text-2xl font-black text-white">{titulo}</h3>
                   <p className="mt-3 text-sm leading-6 text-zinc-400">{texto}</p>
                 </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="sectores" className="px-5 pb-14 sm:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[4px] text-orange-500">
-                Para quien es
-              </p>
-              <h2 className="mt-3 max-w-3xl text-3xl font-black sm:text-5xl">
-                Una agenda premium para negocios que venden tiempo y confianza.
-              </h2>
-            </div>
-          </div>
-
-          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-            {SECTORES_LANDING.map((sector, index) => (
-              <article
-                key={sector.titulo}
-                className={`group overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-xl shadow-black/30 ${
-                  index === 0 ? 'md:col-span-2 xl:col-span-1' : ''
-                }`}
-              >
-                <div className="relative h-80 overflow-hidden xl:h-96">
-                  <img
-                    src={sector.imagen}
-                    alt={`${sector.titulo} usando agenda de citas`}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-2xl font-black text-white">
-                      {sector.titulo}
-                    </h3>
-                  </div>
-                </div>
-                <p className="min-h-24 p-4 text-sm leading-6 text-zinc-300">
-                  {sector.texto}
-                </p>
               </article>
             ))}
           </div>
@@ -1094,6 +1019,11 @@ export default function LoginPage() {
                     : 'border-orange-600/35 shadow-orange-950/20'
                 }`}
               >
+                {index === 0 && (
+                  <span className="absolute right-4 top-4 rounded-full bg-orange-500 px-3 py-1 text-xs font-black uppercase tracking-[2px] text-black shadow-lg shadow-orange-950/30">
+                    Oferta
+                  </span>
+                )}
                 {index === 1 && (
                   <span className="absolute right-5 top-5 rounded-full bg-emerald-500 px-3 py-1 text-xs font-black text-black">
                     Recomendado

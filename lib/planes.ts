@@ -19,8 +19,8 @@ export const PLANES_OBORO: PlanOboro[] = [
   {
     id: 'basico',
     nombre: 'Basico',
-    precio: '$40.000 COP / mes',
-    precioCop: 40000,
+    precio: '$39.900 COP / mes',
+    precioCop: 39900,
     recomendado: false,
     detalle: 'Para negocios pequenos que quieren agenda, QR y recordatorios automaticos sin complicarse.',
     limites: {

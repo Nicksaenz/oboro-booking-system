@@ -8,7 +8,7 @@ export const WOMPI_PLANES: Record<
 > = {
   basico: {
     nombre: 'Basico',
-    precioCop: 40000,
+    precioCop: 39900,
     descripcion: 'Agenda, QR, Google Maps, clientes, servicios y recordatorios automaticos.',
   },
   pro: {
