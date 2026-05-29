@@ -66,6 +66,7 @@ const METRICAS_INICIALES: Metricas = {
 }
 
 const ESTADOS_INGRESO = ['confirmada', 'completada', 'pendiente']
+const MAX_FOTO_NEGOCIO_CHARS = 650_000
 
 function formatoCop(valor: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -143,7 +144,7 @@ async function optimizarImagenNegocio(file: File) {
     img.onerror = () => reject(new Error('No se pudo procesar la imagen'))
     img.src = dataUrl
   })
-  const maxSize = 900
+  const maxSize = 720
   const escala = Math.min(1, maxSize / Math.max(imagen.width, imagen.height))
   const width = Math.max(1, Math.round(imagen.width * escala))
   const height = Math.max(1, Math.round(imagen.height * escala))
@@ -158,7 +159,19 @@ async function optimizarImagenNegocio(file: File) {
   canvas.height = height
   context.drawImage(imagen, 0, 0, width, height)
 
-  return canvas.toDataURL('image/jpeg', 0.78)
+  let calidad = 0.72
+  let resultado = canvas.toDataURL('image/jpeg', calidad)
+
+  while (resultado.length > MAX_FOTO_NEGOCIO_CHARS && calidad > 0.42) {
+    calidad -= 0.08
+    resultado = canvas.toDataURL('image/jpeg', calidad)
+  }
+
+  if (resultado.length > MAX_FOTO_NEGOCIO_CHARS) {
+    throw new Error('La imagen sigue muy pesada. Intenta con una foto mas liviana.')
+  }
+
+  return resultado
 }
 
 export default function DashboardPage() {
@@ -370,12 +383,13 @@ export default function DashboardPage() {
       setMensaje('')
       const foto = await optimizarImagenNegocio(file)
       setFotoPreview(foto)
+      await guardarPerfilNegocio(false, foto)
     } catch (error) {
       setMensaje(error instanceof Error ? error.message : 'No se pudo cargar la imagen.')
     }
   }
 
-  async function guardarPerfilNegocio(quitarFoto = false) {
+  async function guardarPerfilNegocio(quitarFoto = false, fotoOverride?: string) {
     const { data: sessionData } = await supabase.auth.getSession()
     const token = sessionData.session?.access_token
 
@@ -396,7 +410,7 @@ export default function DashboardPage() {
         },
         body: JSON.stringify({
           nombre_negocio: nombreEditable.trim(),
-          foto_negocio_url: quitarFoto ? undefined : fotoPreview,
+          foto_negocio_url: quitarFoto ? undefined : fotoOverride ?? fotoPreview,
           quitar_foto: quitarFoto,
         }),
       })
@@ -409,7 +423,13 @@ export default function DashboardPage() {
       setSuscripcion(resultado.suscripcion)
       setNombreEditable(resultado.suscripcion?.nombre_negocio ?? '')
       setFotoPreview('')
-      setMensaje('Perfil del negocio actualizado.')
+      setMensaje(
+        quitarFoto
+          ? 'Foto del negocio eliminada.'
+          : fotoOverride
+            ? 'Foto del negocio guardada. Ya aparecera en reservas.'
+            : 'Perfil del negocio actualizado.'
+      )
     } catch (error) {
       setMensaje(error instanceof Error ? error.message : 'No se pudo guardar el perfil.')
     } finally {
@@ -525,7 +545,7 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <p className="mt-3 text-xs leading-5 text-zinc-500">
-                  Esta imagen aparece solo dentro del panel para que el negocio se sienta identificado.
+                  Esta imagen aparece en el panel y en la pagina publica de reservas.
                 </p>
               </div>
             )}

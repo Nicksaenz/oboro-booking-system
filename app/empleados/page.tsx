@@ -15,6 +15,8 @@ type Empleado = {
   Activo: boolean
 }
 
+const MAX_FOTO_EMPLEADO_CHARS = 450_000
+
 function leerArchivoComoDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
@@ -40,7 +42,7 @@ async function optimizarFotoEmpleado(file: File) {
     img.onerror = () => reject(new Error('No se pudo procesar la imagen'))
     img.src = dataUrl
   })
-  const maxSize = 520
+  const maxSize = 420
   const escala = Math.min(1, maxSize / Math.max(imagen.width, imagen.height))
   const width = Math.max(1, Math.round(imagen.width * escala))
   const height = Math.max(1, Math.round(imagen.height * escala))
@@ -55,7 +57,19 @@ async function optimizarFotoEmpleado(file: File) {
   canvas.height = height
   context.drawImage(imagen, 0, 0, width, height)
 
-  return canvas.toDataURL('image/jpeg', 0.78)
+  let calidad = 0.72
+  let resultado = canvas.toDataURL('image/jpeg', calidad)
+
+  while (resultado.length > MAX_FOTO_EMPLEADO_CHARS && calidad > 0.42) {
+    calidad -= 0.08
+    resultado = canvas.toDataURL('image/jpeg', calidad)
+  }
+
+  if (resultado.length > MAX_FOTO_EMPLEADO_CHARS) {
+    throw new Error('La foto sigue muy pesada. Intenta con una imagen mas liviana.')
+  }
+
+  return resultado
 }
 
 export default function EmpleadosPage() {
@@ -186,7 +200,7 @@ export default function EmpleadosPage() {
     try {
       const foto = await optimizarFotoEmpleado(file)
       setFotoEmpleado(foto)
-      setMensaje('')
+      setMensaje('Foto lista. Guarda el empleado para conservarla.')
     } catch (error) {
       setMensaje(error instanceof Error ? error.message : 'No se pudo cargar la foto.')
     }
@@ -214,7 +228,7 @@ export default function EmpleadosPage() {
       const foto = await optimizarFotoEmpleado(file)
       setEditFotoEmpleado(foto)
       setEditQuitarFoto(false)
-      setMensaje('')
+      setMensaje('Foto lista. Guarda los cambios para conservarla.')
     } catch (error) {
       setMensaje(error instanceof Error ? error.message : 'No se pudo cargar la foto.')
     }

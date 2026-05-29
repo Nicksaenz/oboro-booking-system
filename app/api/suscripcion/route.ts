@@ -5,6 +5,7 @@ import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
 const PLANES_PERMITIDOS = ['trial', 'basico', 'pro', 'business', 'premium'] as const
 const ESTADOS_ACTIVOS = ['activa', 'activo', 'pagada', 'paid']
 const ESTADOS_PRUEBA_PENDIENTE = ['pendiente', 'pendiente_pago']
+const MAX_FOTO_NEGOCIO_CHARS = 750_000
 type Plan = (typeof PLANES_PERMITIDOS)[number]
 
 function limpiarTexto(valor: unknown, respaldo = '') {
@@ -17,9 +18,18 @@ function limpiarFotoNegocio(valor: unknown) {
   const foto = valor.trim()
   if (!foto) return ''
   if (!foto.startsWith('data:image/')) return ''
-  if (foto.length > 750_000) return ''
+  if (foto.length > MAX_FOTO_NEGOCIO_CHARS) return ''
 
   return foto
+}
+
+function fotoNegocioInvalida(valor: unknown) {
+  if (typeof valor !== 'string') return false
+
+  const foto = valor.trim()
+  if (!foto) return false
+
+  return !foto.startsWith('data:image/') || foto.length > MAX_FOTO_NEGOCIO_CHARS
 }
 
 function columnaFotoNoExiste(error?: { message?: string } | null) {
@@ -403,9 +413,17 @@ export async function PATCH(request: Request) {
     }
 
     const nombreNegocio = limpiarTexto(body.nombre_negocio)
-    const fotoNegocio = limpiarFotoNegocio(body.foto_negocio_url)
+    const fotoRecibida = body.foto_negocio_url
+    const fotoNegocio = limpiarFotoNegocio(fotoRecibida)
     const quitarFoto = body.quitar_foto === true
     const cambios: Record<string, string | null> = {}
+
+    if (!quitarFoto && fotoNegocioInvalida(fotoRecibida)) {
+      return NextResponse.json(
+        { error: 'La foto del negocio es muy pesada o tiene un formato no valido.' },
+        { status: 400 }
+      )
+    }
 
     if (nombreNegocio) {
       cambios.nombre_negocio = nombreNegocio.slice(0, 80)
