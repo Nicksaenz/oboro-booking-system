@@ -29,6 +29,15 @@ type Empleado = {
   }[]
 }
 
+type ReservaCreada = {
+  citaId: string
+  cliente: string
+  servicio: string
+  empleado: string
+  fecha: string
+  hora: string
+}
+
 function Estrellas({ valor }: { valor: number }) {
   return (
     <span className="inline-flex items-center gap-0.5" aria-label={`${valor} de 5`}>
@@ -77,6 +86,7 @@ export default function ReservaPublicaPage() {
   const [agendaDisponible, setAgendaDisponible] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+  const [reservaCreada, setReservaCreada] = useState<ReservaCreada | null>(null)
   const [form, setForm] = useState({
     nombre: '',
     numero: '',
@@ -111,6 +121,7 @@ export default function ReservaPublicaPage() {
   }, [usuarioId])
 
   function actualizarCampo(campo: keyof typeof form, valor: string) {
+    setReservaCreada(null)
     setForm((actual) => ({
       ...actual,
       [campo]: valor,
@@ -137,7 +148,15 @@ export default function ReservaPublicaPage() {
       return
     }
 
-    setMensaje('Reserva creada. El negocio recibira tu solicitud.')
+    setReservaCreada({
+      citaId: data.citaId,
+      cliente: form.nombre,
+      servicio: servicioSeleccionado?.['Nombre del servicio'] ?? 'Servicio',
+      empleado: empleadoSeleccionado?.Nombre ?? 'Profesional',
+      fecha: form.fecha,
+      hora: form.hora,
+    })
+    setMensaje('Reservaste tu cita. El negocio recibio tu solicitud.')
     setForm({
       nombre: '',
       numero: '',
@@ -431,6 +450,36 @@ export default function ReservaPublicaPage() {
                 {guardando ? 'Reservando...' : 'Reservar cita'}
               </button>
             </form>
+          )}
+
+          {reservaCreada && (
+            <div className="mt-5 rounded-lg border border-green-500/40 bg-green-950/20 p-5 shadow-lg shadow-green-950/20">
+              <p className="text-xs font-bold uppercase tracking-[3px] text-green-300">
+                Reserva recibida
+              </p>
+              <h3 className="mt-2 text-2xl font-black text-white">
+                Reservaste tu cita
+              </h3>
+              <div className="mt-4 grid gap-2 text-sm text-zinc-300">
+                <p>Cliente: {reservaCreada.cliente}</p>
+                <p>Servicio: {reservaCreada.servicio}</p>
+                <p>Profesional: {reservaCreada.empleado}</p>
+                <p>
+                  Horario: {formatoFechaCorta(reservaCreada.fecha)} ·{' '}
+                  {formatoHoraAmPm(reservaCreada.hora)}
+                </p>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-zinc-400">
+                Guarda este enlace para confirmar, cancelar, reprogramar y calificar
+                tu experiencia cuando la cita haya sido completada.
+              </p>
+              <a
+                href={`/reserva/${reservaCreada.citaId}`}
+                className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg border border-green-400/60 px-4 text-sm font-bold text-green-100 transition hover:bg-green-500/10"
+              >
+                Ver o gestionar mi cita
+              </a>
+            </div>
           )}
 
           {(servicioSeleccionado || empleadoSeleccionado || form.fecha) && (

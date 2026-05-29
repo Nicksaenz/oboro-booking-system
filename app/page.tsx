@@ -97,6 +97,21 @@ function formatoFecha(fecha: string | null) {
   })
 }
 
+function formatoHoraAmPm(hora: string | null) {
+  if (!hora) return 'Sin hora'
+
+  const [horasTexto, minutosTexto = '00'] = hora.split(':')
+  const horas = Number(horasTexto)
+  const minutos = Number(minutosTexto)
+
+  if (Number.isNaN(horas)) return hora
+
+  const periodo = horas >= 12 ? 'PM' : 'AM'
+  const hora12 = horas % 12 || 12
+
+  return `${hora12}:${String(minutos).padStart(2, '0')} ${periodo}`
+}
+
 function normalizarPlan(plan?: string | null) {
   const valor = String(plan ?? 'trial').toLowerCase()
 
@@ -220,6 +235,9 @@ export default function DashboardPage() {
   const plan = normalizarPlan(suscripcion?.plan)
   const negocio = suscripcion?.nombre_negocio || 'Tu negocio'
   const fotoNegocio = fotoPreview || suscripcion?.foto_negocio_url || ''
+  const reservasPendientes = proximasCitas.filter(
+    (cita) => String(cita.Estado ?? '').toLowerCase() === 'pendiente'
+  )
   const puedeEditarPerfil = acceso?.rol === 'admin'
   const fechaVencimiento = suscripcion?.fecha_vencimiento
     ? new Date(suscripcion.fecha_vencimiento).toLocaleDateString('es-CO')
@@ -612,6 +630,37 @@ export default function DashboardPage() {
 
         <div className="mt-8 grid gap-5 xl:grid-cols-[1fr_0.78fr]">
           <section className="rounded-2xl border border-orange-600/35 bg-zinc-950 p-5 shadow-2xl shadow-orange-950/20">
+            {reservasPendientes.length > 0 && (
+              <div className="mb-5 rounded-2xl border border-green-500/40 bg-green-950/20 p-4 shadow-lg shadow-green-950/10">
+                <p className="text-xs font-bold uppercase tracking-[3px] text-green-300">
+                  Te reservaron
+                </p>
+                <h3 className="mt-2 text-2xl font-black text-white">
+                  {reservasPendientes.length === 1
+                    ? 'Tienes una reserva nueva por confirmar'
+                    : `Tienes ${reservasPendientes.length} reservas nuevas por confirmar`}
+                </h3>
+                <div className="mt-4 grid gap-2">
+                  {reservasPendientes.slice(0, 3).map((cita) => (
+                    <Link
+                      key={cita.ID}
+                      href="/citas"
+                      className="rounded-xl border border-green-500/20 bg-black px-4 py-3 transition hover:border-green-400/60"
+                    >
+                      <p className="font-bold text-green-100">
+                        {cita.Clientes?.Nombre || 'Cliente sin nombre'} reservo con{' '}
+                        {cita.Empleados?.Nombre || 'tu equipo'}
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-400">
+                        {cita.SERVICIOS?.['Nombre del servicio'] || 'Servicio'} ·{' '}
+                        {formatoFecha(cita.Fecha)} · {formatoHoraAmPm(cita.Hora)}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-2xl font-black">Proximas citas</h2>
@@ -664,7 +713,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-left sm:text-right">
                         <p className="font-bold text-zinc-100">{formatoFecha(cita.Fecha)}</p>
-                        <p className="text-sm text-zinc-500">{cita.Hora || 'Sin hora'}</p>
+                        <p className="text-sm text-zinc-500">{formatoHoraAmPm(cita.Hora)}</p>
                       </div>
                     </div>
                   </article>
