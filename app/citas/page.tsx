@@ -19,6 +19,7 @@ export default function CitasPage() {
   const [fecha, setFecha] = useState('')
   const [hora, setHora] = useState('')
   const [mensaje, setMensaje] = useState('')
+  const [nombreNegocio, setNombreNegocio] = useState('Oboro Booking')
 
   const [filtroEmpleado, setFiltroEmpleado] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('')
@@ -90,7 +91,7 @@ function construirMensajeWhatsApp(cita: any) {
   const hora = formatoHoraAmPm(cita.Hora ?? '')
 
   return [
-    `Hola ${cliente}, te recordamos tu cita en Oboro Booking.`,
+    `Hola ${cliente}, te recordamos tu cita en ${nombreNegocio}.`,
     '',
     `Servicio: ${servicio}`,
     `Profesional: ${empleado}`,
@@ -210,11 +211,17 @@ const citasHoy = citas.filter((cita) => cita.Fecha === new Date().toISOString().
     const citasRes = await citasQuery
       .order('Fecha', { ascending: true })
       .order('Hora', { ascending: true })
+    const { data: suscripcionData } = await supabase
+      .from('suscripciones')
+      .select('nombre_negocio')
+      .eq('usuario_id', acceso.negocioId)
+      .maybeSingle()
 
     setClientes(clientesRes.data || [])
     setServicios(serviciosRes.data || [])
     setEmpleados(empleadosRes.data || [])
     setCitas(citasRes.data || [])
+    setNombreNegocio(suscripcionData?.nombre_negocio ?? 'Oboro Booking')
   }
 
   async function guardarCita(e: React.FormEvent) {
