@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Oboro Lab icon">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="42%" r="72%">
-      <stop offset="0%" stop-color="#111111"/>
-      <stop offset="62%" stop-color="#050505"/>
-      <stop offset="100%" stop-color="#000000"/>
-    </radialGradient>
     <linearGradient id="orange" x1="210" y1="150" x2="820" y2="840" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#ffb241"/>
       <stop offset="42%" stop-color="#ff7a00"/>
@@ -19,20 +14,19 @@
       </feMerge>
     </filter>
   </defs>
-  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
   <path
-    d="M512 198a314 314 0 1 0 244 512"
+    d="M512 142a370 370 0 1 0 288 601"
     fill="none"
     stroke="url(#orange)"
-    stroke-width="116"
+    stroke-width="128"
     stroke-linecap="round"
     filter="url(#glow)"
   />
   <path
-    d="M785 622v116h-116"
+    d="M838 662v132h-132"
     fill="none"
     stroke="url(#orange)"
-    stroke-width="106"
+    stroke-width="118"
     stroke-linecap="round"
     stroke-linejoin="round"
     filter="url(#glow)"

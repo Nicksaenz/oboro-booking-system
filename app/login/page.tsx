@@ -656,34 +656,6 @@ export default function LoginPage() {
           >
           {esRegistro && (
             <>
-              <div className="grid gap-3">
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('telefono-registro')?.focus()}
-                  className="flex min-h-12 items-center justify-between rounded-xl border border-white/15 bg-white/[0.03] px-4 text-left font-bold text-zinc-100 transition hover:border-orange-500/70 hover:bg-orange-600/10"
-                >
-                  <span>Registrarse con celular y correo</span>
-                  <span className="text-orange-400">Telefono</span>
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className="flex min-h-12 cursor-not-allowed items-center justify-between rounded-xl border border-white/10 bg-zinc-900/70 px-4 text-left font-bold text-zinc-500"
-                  title="Google se puede activar mas adelante con Supabase Auth."
-                >
-                  <span>Registrarse con Google</span>
-                  <span>Proximamente</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('correo-registro')?.focus()}
-                  className="flex min-h-12 items-center justify-between rounded-xl border border-white/15 bg-white/[0.03] px-4 text-left font-bold text-zinc-100 transition hover:border-orange-500/70 hover:bg-orange-600/10"
-                >
-                  <span>Registrarse con correo</span>
-                  <span className="text-orange-400">Email</span>
-                </button>
-              </div>
-
               <div className="rounded-xl border border-orange-600/40 bg-black p-3">
                 <p className="mb-3 text-sm font-bold text-orange-200">
                   Plan para iniciar la prueba gratis

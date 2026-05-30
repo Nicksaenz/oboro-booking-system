@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Post IG Oboro Booking</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #050505;
+        font-family:
+          Inter, Arial, Helvetica, sans-serif;
+      }
+
+      .post {
+        position: relative;
+        width: 1080px;
+        height: 1350px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 78% 12%, rgba(255, 111, 0, 0.28), transparent 30%),
+          radial-gradient(circle at 10% 84%, rgba(255, 111, 0, 0.18), transparent 30%),
+          linear-gradient(145deg, #050505 0%, #090909 42%, #160802 100%);
+        color: #fff;
+        isolation: isolate;
+      }
+
+      .post::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+        background-size: 76px 76px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 86%);
+        z-index: -2;
+      }
+
+      .post::after {
+        content: "";
+        position: absolute;
+        right: -210px;
+        top: 165px;
+        width: 650px;
+        height: 650px;
+        border: 2px solid rgba(255, 111, 0, 0.28);
+        border-radius: 50%;
+        box-shadow: 0 0 90px rgba(255, 111, 0, 0.18);
+        z-index: -1;
+      }
+
+      .brand {
+        position: absolute;
+        left: 70px;
+        top: 62px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .brand img {
+        width: 76px;
+        height: 76px;
+        object-fit: contain;
+      }
+
+      .brand strong {
+        display: block;
+        color: #ff6b00;
+        font-size: 30px;
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: 4px;
+      }
+
+      .brand span {
+        display: block;
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+      }
+
+      .badge {
+        position: absolute;
+        right: 70px;
+        top: 76px;
+        border: 1px solid rgba(255, 111, 0, 0.55);
+        border-radius: 999px;
+        padding: 16px 24px;
+        background: rgba(255, 111, 0, 0.1);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 950;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        position: absolute;
+        left: 70px;
+        top: 188px;
+        width: 590px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 82px;
+        line-height: 0.96;
+        font-weight: 950;
+        letter-spacing: -2px;
+      }
+
+      h1 em {
+        color: #ff6b00;
+        font-style: normal;
+        text-shadow: 0 0 42px rgba(255, 111, 0, 0.4);
+      }
+
+      .subtitle {
+        margin-top: 28px;
+        max-width: 560px;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 28px;
+        line-height: 1.25;
+        font-weight: 700;
+      }
+
+      .subtitle strong {
+        color: #fff;
+      }
+
+      .phone {
+        position: absolute;
+        right: 56px;
+        top: 430px;
+        width: 350px;
+        height: 636px;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-radius: 58px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 34%),
+          #050505;
+        box-shadow:
+          0 40px 120px rgba(0, 0, 0, 0.75),
+          0 0 80px rgba(255, 111, 0, 0.16);
+        padding: 28px;
+      }
+
+      .phone::before {
+        content: "";
+        position: absolute;
+        left: 126px;
+        top: 17px;
+        width: 108px;
+        height: 9px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .screen-title {
+        margin-top: 36px;
+        color: #ff6b00;
+        font-size: 18px;
+        font-weight: 950;
+        letter-spacing: 3px;
+      }
+
+      .screen-heading {
+        margin-top: 10px;
+        font-size: 31px;
+        line-height: 1;
+        font-weight: 950;
+      }
+
+      .screen-card {
+        margin-top: 20px;
+        border: 1px solid rgba(255, 111, 0, 0.45);
+        border-radius: 25px;
+        padding: 20px;
+        background: rgba(255, 111, 0, 0.08);
+      }
+
+      .screen-card small {
+        display: block;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .screen-card b {
+        display: block;
+        margin-top: 8px;
+        font-size: 22px;
+        line-height: 1.1;
+      }
+
+      .screen-button {
+        margin-top: 20px;
+        border-radius: 20px;
+        background: #ff5a00;
+        padding: 18px;
+        color: #fff;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 950;
+      }
+
+      .screen-list {
+        margin-top: 22px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .screen-list div {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        padding: 15px 16px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .screen-list span {
+        color: #ff6b00;
+      }
+
+      .features {
+        position: absolute;
+        left: 70px;
+        top: 690px;
+        width: 540px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .feature {
+        min-height: 78px;
+        border: 1px solid rgba(255, 111, 0, 0.32);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.035);
+        padding: 15px 18px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .feature .icon {
+        display: flex;
+        width: 42px;
+        height: 42px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: #ff6b00;
+        color: #fff;
+        font-size: 22px;
+        font-weight: 950;
+        grid-row: 1 / 3;
+      }
+
+      .feature h2 {
+        margin: 0;
+        color: #fff;
+        font-size: 21px;
+        line-height: 1.05;
+        font-weight: 950;
+        grid-column: 2;
+      }
+
+      .feature p {
+        margin: 5px 0 0;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 14px;
+        line-height: 1.28;
+        font-weight: 700;
+        grid-column: 2;
+      }
+
+      .cta {
+        position: absolute;
+        left: 70px;
+        right: 70px;
+        bottom: 66px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 28px;
+        align-items: center;
+        border: 1px solid rgba(255, 111, 0, 0.5);
+        border-radius: 36px;
+        background:
+          linear-gradient(90deg, rgba(255, 111, 0, 0.24), rgba(255, 111, 0, 0.04)),
+          rgba(0, 0, 0, 0.5);
+        padding: 32px 36px;
+      }
+
+      .cta p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 21px;
+        line-height: 1.3;
+        font-weight: 750;
+      }
+
+      .cta strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #fff;
+        font-size: 33px;
+        line-height: 1;
+        font-weight: 950;
+      }
+
+      .cta a {
+        min-width: 245px;
+        border-radius: 22px;
+        background: #ff5a00;
+        padding: 21px 24px;
+        color: #fff;
+        text-align: center;
+        text-decoration: none;
+        font-size: 20px;
+        font-weight: 950;
+      }
+
+      .watermark {
+        position: absolute;
+        left: 68px;
+        bottom: 245px;
+        color: rgba(255, 255, 255, 0.08);
+        font-size: 104px;
+        line-height: 0.8;
+        font-weight: 950;
+        letter-spacing: -8px;
+        z-index: -1;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="post" aria-label="Post publicitario de Oboro Booking para Instagram">
+      <section class="brand">
+        <img src="oboro-labs-symbol-hd.png" alt="Oboro Lab" />
+        <div>
+          <strong>OBORO</strong>
+          <span>Booking</span>
+        </div>
+      </section>
+
+      <div class="badge">Agenda digital premium</div>
+
+      <section class="hero">
+        <h1>Tu agenda, tus clientes y tus pagos <em>en orden.</em></h1>
+        <p class="subtitle">
+          Convierte mensajes sueltos en reservas claras con
+          <strong>QR, WhatsApp automático, clientes, equipo y control del negocio.</strong>
+        </p>
+      </section>
+
+      <section class="features">
+        <article class="feature">
+          <div class="icon">QR</div>
+          <h2>Reservas por link o QR</h2>
+          <p>El cliente agenda desde Instagram, WhatsApp o recepción.</p>
+        </article>
+        <article class="feature">
+          <div class="icon">WA</div>
+          <h2>Recordatorios por WhatsApp</h2>
+          <p>Menos olvidos, menos chats repetidos y más citas confirmadas.</p>
+        </article>
+        <article class="feature">
+          <div class="icon">$</div>
+          <h2>Finanzas y pagos</h2>
+          <p>Ingresos, gastos y control para vender con más claridad.</p>
+        </article>
+        <article class="feature">
+          <div class="icon">+</div>
+          <h2>Clientes y empleados</h2>
+          <p>Todo conectado en un panel moderno para negocios de servicios.</p>
+        </article>
+      </section>
+
+      <section class="phone" aria-hidden="true">
+        <div class="screen-title">OBORO BOOKING</div>
+        <div class="screen-heading">Nueva reserva</div>
+        <div class="screen-card">
+          <small>Servicio</small>
+          <b>Tattoo, barbería, uñas, belleza o spa</b>
+        </div>
+        <div class="screen-card">
+          <small>Estado</small>
+          <b>Confirmada por WhatsApp</b>
+        </div>
+        <div class="screen-button">Agendar cita</div>
+        <div class="screen-list">
+          <div><span>●</span> Clientes organizados</div>
+          <div><span>●</span> Equipo conectado</div>
+        </div>
+      </section>
+
+      <div class="watermark">OBORO</div>
+
+      <section class="cta">
+        <p>
+          <strong>Vende citas sin perder el control.</strong>
+          Software para barberías, salones, estudios de tattoo, uñas, estética, spa y negocios por agenda.
+        </p>
+        <a href="https://booking.oborolab.com">Ver demo</a>
+      </section>
+    </main>
+  </body>
+</html>
