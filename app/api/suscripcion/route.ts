@@ -4,7 +4,7 @@ import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
 
 const PLANES_PERMITIDOS = ['trial', 'basico', 'pro', 'business', 'premium'] as const
 const ESTADOS_ACTIVOS = ['activa', 'activo', 'pagada', 'paid']
-const ESTADOS_PRUEBA_PENDIENTE = ['pendiente', 'pendiente_pago']
+const ESTADOS_PRUEBA_PENDIENTE = ['pendiente']
 const MAX_FOTO_NEGOCIO_CHARS = 750_000
 const SELECT_PERFIL_NEGOCIO =
   'estado, fecha_vencimiento, plan, nombre_negocio, telefono, foto_negocio_url, direccion_negocio, google_maps_url, google_reviews_url'

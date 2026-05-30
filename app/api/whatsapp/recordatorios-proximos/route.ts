@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { getSupabaseAdmin, supabaseAnonKey, supabaseUrl } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 import {
   CitaRecordatorio,
   sendAppointmentReminder,
@@ -24,26 +23,13 @@ const RECORDATORIOS_MINUTOS = [20, 5]
 const VENTANA_MINUTOS = 2
 const ESTADOS_ACTIVOS = ['pendiente', 'confirmada']
 
-async function isAuthorized(request: Request) {
+function isAuthorized(request: Request) {
   const cronSecret = process.env.CRON_SECRET
   const authorization = request.headers.get('authorization')
 
   if (cronSecret && authorization === `Bearer ${cronSecret}`) return true
 
-  const token = authorization?.replace('Bearer ', '')
-
-  if (!token) return false
-
-  const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  })
-  const { data } = await supabaseAuth.auth.getUser()
-
-  return Boolean(data.user)
+  return false
 }
 
 function getBogotaParts(date = new Date()) {
@@ -158,19 +144,28 @@ async function registrarIntento({
   }
 
   if (existente?.id) {
-    await supabase
+    const { error: updateError } = await supabase
       .from('whatsapp_recordatorios_envios')
       .update(cambios)
       .eq('id', existente.id)
+
+    if (updateError) {
+      throw updateError
+    }
+
     return
   }
 
-  await supabase.from('whatsapp_recordatorios_envios').insert([
+  const { error: insertError } = await supabase.from('whatsapp_recordatorios_envios').insert([
     {
       ...cambios,
       intento_count: 1,
     },
   ])
+
+  if (insertError) {
+    throw insertError
+  }
 }
 
 export async function GET(request: Request) {
@@ -181,7 +176,7 @@ export async function GET(request: Request) {
     )
   }
 
-  if (!(await isAuthorized(request))) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
