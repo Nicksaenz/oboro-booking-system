@@ -43,7 +43,7 @@ const WHATSAPP_LANDING = [
 ]
 const DIFERENCIALES_LANDING = [
   ['Sin instalar app', 'Tus clientes reservan desde el navegador con un link o QR.'],
-  ['Hecho para citas', 'Barberias, unas, spa, veterinarias, consultorios, asesores e independientes.'],
+  ['Hecho para citas', 'Barberias, unas, tattoo studios, spa, veterinarias, consultorios, asesores e independientes.'],
   ['Menos chats perdidos', 'Cada reserva llega con servicio, fecha, hora, profesional y recordatorio automatico.'],
   ['Listo para crecer', 'Empieza solo y suma empleados, accesos y finanzas al ritmo del negocio.'],
 ]
@@ -55,12 +55,17 @@ const CARRUSEL_NEGOCIOS = [
   },
   {
     titulo: 'Salones de belleza',
-    detalle: 'Servicios, horarios y reseñas visibles',
+    detalle: 'Servicios, horarios y resenas visibles',
     imagen: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1100&q=85',
   },
   {
-    titulo: 'Uñas y estética',
-    detalle: 'Reservas por QR desde redes y recepción',
+    titulo: 'Estudios de tattoo',
+    detalle: 'Sesiones, artistas, senas y recordatorios',
+    imagen: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?auto=format&fit=crop&w=1100&q=85',
+  },
+  {
+    titulo: 'Unas y estetica',
+    detalle: 'Reservas por QR desde redes y recepcion',
     imagen: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1100&q=85',
   },
   {
@@ -860,6 +865,11 @@ export default function LoginPage() {
             <h2 className="mt-2 max-w-3xl text-3xl font-black sm:text-5xl">
               Una sola plataforma para agendas que no se pueden detener.
             </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-400 sm:text-base">
+              Sirve para negocios que venden por cita: barberias, salones de belleza,
+              estudios de tattoo, unas, estetica, spa, veterinarias, consultorios,
+              asesores y profesionales independientes.
+            </p>
           </div>
           <a
             href="mailto:contacto@oborolab.com"
