@@ -52,6 +52,17 @@ export default function AutomatizacionesPage() {
     setTimeout(() => setLinkCopiado(false), 2500)
   }
 
+  function descargarQrReserva() {
+    if (!reservaUrl) return
+
+    const enlace = document.createElement('a')
+    enlace.href = `/api/qr?data=${encodeURIComponent(reservaUrl)}`
+    enlace.download = 'oboro-qr-agendamiento.png'
+    document.body.appendChild(enlace)
+    enlace.click()
+    enlace.remove()
+  }
+
   return (
     <main className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-10">
       <section className="mx-auto w-full max-w-7xl">
@@ -164,7 +175,7 @@ export default function AutomatizacionesPage() {
                 <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
                   Enlace para compartir
                 </p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
                   <div className="break-all rounded-xl border border-orange-500/25 bg-zinc-950 p-4 text-sm font-bold text-orange-100">
                     {reservaUrl}
                   </div>
@@ -174,6 +185,13 @@ export default function AutomatizacionesPage() {
                     className="min-h-12 rounded-xl bg-orange-500 px-5 py-3 font-black text-black transition hover:bg-orange-400"
                 >
                   {linkCopiado ? 'Copiado' : 'Copiar link'}
+                </button>
+                <button
+                  type="button"
+                  onClick={descargarQrReserva}
+                  className="min-h-12 rounded-xl border border-orange-500/60 px-5 py-3 font-black text-orange-100 transition hover:bg-orange-500/10"
+                >
+                  Descargar QR
                 </button>
                 </div>
               </div>
@@ -213,6 +231,13 @@ export default function AutomatizacionesPage() {
               <p className="mt-4 text-sm font-bold text-zinc-200">
                 Listo para imprimir, pegar en recepcion o compartir en historias.
               </p>
+              <button
+                type="button"
+                onClick={descargarQrReserva}
+                className="mt-4 min-h-11 w-full rounded-xl bg-orange-500 px-4 py-2 text-sm font-black text-black transition hover:bg-orange-400"
+              >
+                Descargar QR en PNG
+              </button>
             </div>
           )}
         </div>
